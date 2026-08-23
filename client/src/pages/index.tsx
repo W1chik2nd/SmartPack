@@ -162,8 +162,6 @@ export default function Home({ user, onOpenTrips }: Props) {
           </button>
         </nav>
       </div>
-
-      <footer className="footer">{t("dashFooter")}</footer>
     </div>
   );
 }
