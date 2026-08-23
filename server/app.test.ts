@@ -48,11 +48,20 @@ async function get(path: string, token?: string) {
   return { status: res.status, body: await res.json() };
 }
 
+// A complete sign-up payload: account fields plus the style questionnaire.
+const annaProfile = {
+  name: "Anna",
+  age: 28,
+  heightCm: 168,
+  weightKg: 55,
+  style: "Business",
+};
+
 test("register creates an account and returns a session", async () => {
   const { status, body } = await post("/api/register", {
     email: "anna@example.com",
-    name: "Anna",
     password: "correct-horse",
+    ...annaProfile,
   });
   assert.equal(status, 201);
   assert.equal(body.user.email, "anna@example.com");
@@ -63,9 +72,9 @@ test("register creates an account and returns a session", async () => {
 
 test("register rejects invalid email, short password, missing name", async () => {
   const bad = [
-    { email: "not-an-email", name: "A", password: "long-enough" },
-    { email: "ok@example.com", name: "A", password: "short" },
-    { email: "ok@example.com", name: "", password: "long-enough" },
+    { ...annaProfile, email: "not-an-email", password: "long-enough" },
+    { ...annaProfile, email: "ok@example.com", password: "short" },
+    { ...annaProfile, email: "ok@example.com", password: "long-enough", name: "" },
   ];
   for (const payload of bad) {
     const { status } = await post("/api/register", payload);
@@ -73,11 +82,74 @@ test("register rejects invalid email, short password, missing name", async () =>
   }
 });
 
+test("register without the questionnaire stores nothing", async () => {
+  // Product rule: sign-up only counts once the questionnaire is complete.
+  // Account-only payloads and partial/invalid questionnaires must all fail…
+  const attempts = [
+    { email: "ben@example.com", password: "long-enough-pass" },
+    { email: "ben@example.com", password: "long-enough-pass", name: "Ben" },
+    {
+      email: "ben@example.com",
+      password: "long-enough-pass",
+      ...annaProfile,
+      age: 0,
+    },
+    {
+      email: "ben@example.com",
+      password: "long-enough-pass",
+      ...annaProfile,
+      heightCm: "tall",
+    },
+    {
+      email: "ben@example.com",
+      password: "long-enough-pass",
+      ...annaProfile,
+      weightKg: -5,
+    },
+    {
+      email: "ben@example.com",
+      password: "long-enough-pass",
+      ...annaProfile,
+      style: "",
+    },
+  ];
+  for (const payload of attempts) {
+    const { status } = await post("/api/register", payload);
+    assert.equal(status, 400);
+  }
+
+  // …and leave no account behind: the same credentials cannot sign in.
+  const login = await post("/api/login", {
+    email: "ben@example.com",
+    password: "long-enough-pass",
+  });
+  assert.equal(login.status, 401);
+});
+
+test("check-email flags duplicates without creating anything", async () => {
+  const taken = await post("/api/check-email", { email: "anna@example.com" });
+  assert.equal(taken.status, 409);
+
+  const free = await post("/api/check-email", { email: "free@example.com" });
+  assert.equal(free.status, 200);
+
+  const invalid = await post("/api/check-email", { email: "nope" });
+  assert.equal(invalid.status, 400);
+
+  // The availability check must not reserve or create the account.
+  const login = await post("/api/login", {
+    email: "free@example.com",
+    password: "whatever-pass",
+  });
+  assert.equal(login.status, 401);
+});
+
 test("register rejects duplicate email (case-insensitive)", async () => {
   const { status } = await post("/api/register", {
     email: "ANNA@example.com",
-    name: "Anna 2",
     password: "another-pass",
+    ...annaProfile,
+    name: "Anna 2",
   });
   assert.equal(status, 409);
 });
@@ -141,9 +213,11 @@ test("passwords are stored hashed, never in plain text", async () => {
   // stored credential is a salted scrypt hash: the same password must verify,
   // and the API must never return hash or salt fields anywhere.
   const reg = await post("/api/register", {
-    email: "ben@example.com",
-    name: "Ben",
+    email: "chloe@example.com",
     password: "plain-text-secret",
+    ...annaProfile,
+    name: "Chloe",
+    style: "Streetwear",
   });
   assert.equal(reg.status, 201);
   const serialized = JSON.stringify(reg.body);

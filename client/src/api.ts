@@ -36,14 +36,35 @@ async function request<T>(
   return body as T;
 }
 
+/** Step-1 credentials, held in memory until the questionnaire completes. */
+export type Credentials = {
+  email: string;
+  password: string;
+};
+
+/** The style questionnaire — registration is only accepted with all of it. */
+export type Profile = {
+  name: string;
+  age: number;
+  heightCm: number;
+  weightKg: number;
+  style: string;
+};
+
+export function checkEmail(email: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>("/api/check-email", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
 export function register(
-  email: string,
-  name: string,
-  password: string
+  credentials: Credentials,
+  profile: Profile
 ): Promise<AuthResponse> {
   return request<AuthResponse>("/api/register", {
     method: "POST",
-    body: JSON.stringify({ email, name, password }),
+    body: JSON.stringify({ ...credentials, ...profile }),
   });
 }
 

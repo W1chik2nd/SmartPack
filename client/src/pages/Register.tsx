@@ -1,13 +1,17 @@
 import { useState, type FormEvent } from "react";
-import { register, setToken, type User } from "../api";
+import { checkEmail, type Credentials } from "../api";
 
 type Props = {
-  onAuthed: (user: User) => void;
+  onContinue: (credentials: Credentials) => void;
   onSwitch: () => void;
 };
 
-export default function Register({ onAuthed, onSwitch }: Props) {
-  const [name, setName] = useState("");
+/**
+ * Sign-up step 1 of 2: account credentials only. Nothing is sent to the
+ * database here — the account is created in one call after the style
+ * questionnaire (step 2), so an abandoned sign-up stores nothing.
+ */
+export default function Register({ onContinue, onSwitch }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -36,9 +40,10 @@ export default function Register({ onAuthed, onSwitch }: Props) {
 
     setBusy(true);
     try {
-      const { token, user } = await register(email, name, password);
-      setToken(token);
-      onAuthed(user);
+      // Fail fast on taken/invalid emails so users don't fill the
+      // questionnaire for nothing. Creates no account.
+      await checkEmail(email);
+      onContinue({ email, password });
     } catch (err) {
       fail(err instanceof Error ? err.message : "Registration failed.");
     } finally {
@@ -56,6 +61,7 @@ export default function Register({ onAuthed, onSwitch }: Props) {
 
       <div className="auth-panel">
         <div className="auth-headline">
+          <p className="auth-step">Step 1 of 2</p>
           <h1>Create your SmartPack account</h1>
           <p>One account. Every outfit. Every trip.</p>
         </div>
@@ -71,18 +77,6 @@ export default function Register({ onAuthed, onSwitch }: Props) {
               {error}
             </div>
           )}
-
-          <div className="field">
-            <label htmlFor="reg-name">Name</label>
-            <input
-              id="reg-name"
-              type="text"
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
 
           <div className="field">
             <label htmlFor="reg-email">Email</label>
@@ -125,7 +119,7 @@ export default function Register({ onAuthed, onSwitch }: Props) {
           </div>
 
           <button className="btn-primary" type="submit" disabled={busy}>
-            {busy ? "Creating Account…" : "Create Account"}
+            {busy ? "Checking…" : "Continue"}
           </button>
 
           <div className="auth-switch">
