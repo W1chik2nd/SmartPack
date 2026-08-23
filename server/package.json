@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --experimental-strip-types index.ts",
-    "start": "node --experimental-strip-types index.ts"
+    "start": "node --experimental-strip-types index.ts",
+    "test": "node --experimental-strip-types --test app.test.ts"
   }
 }

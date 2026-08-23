@@ -1,0 +1,207 @@
+// SmartPack auth API.
+//
+// Architecture note (AGENTS.md §3): all auth logic lives here on the server.
+// Clients (web now, SwiftUI later) only call these endpoints and render the
+// result — no business rules or validation logic beyond pure UI concerns.
+//
+// createApp() is separated from the listening entry point (index.ts) so tests
+// can run the exact same handler against a throwaway database.
+import { type IncomingMessage, type ServerResponse } from "node:http";
+import { DatabaseSync } from "node:sqlite";
+import { scryptSync, randomBytes, timingSafeEqual, randomUUID } from "node:crypto";
+
+// Password hashing (AGENTS.md §5): passwords require a password-specific KDF,
+// not a general-purpose hash like SHA256. We use scrypt because it is a
+// memory-hard password KDF that ships with Node — bcrypt/argon2 would add a
+// native dependency for no gain at this stage (switching later only means
+// re-hashing on next login, since hashes are per-user salted anyway).
+function hashPassword(password: string, salt: string): Buffer {
+  return scryptSync(password, salt, 64);
+}
+
+type UserRow = {
+  id: string;
+  email: string;
+  name: string;
+  pass_salt: string;
+  pass_hash: string;
+};
+
+function publicUser(u: UserRow) {
+  return { id: u.id, email: u.email, name: u.name };
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export type App = {
+  handle: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
+  close: () => void;
+};
+
+export function createApp(dbPath: string): App {
+  const db = new DatabaseSync(dbPath);
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id          TEXT PRIMARY KEY,
+      email       TEXT NOT NULL UNIQUE COLLATE NOCASE,
+      name        TEXT NOT NULL,
+      pass_salt   TEXT NOT NULL,
+      pass_hash   TEXT NOT NULL,
+      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE TABLE IF NOT EXISTS sessions (
+      token       TEXT PRIMARY KEY,
+      user_id     TEXT NOT NULL REFERENCES users(id),
+      created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+  `);
+
+  function json(res: ServerResponse, status: number, body: unknown): void {
+    res.writeHead(status, {
+      "Content-Type": "application/json; charset=utf-8",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    });
+    res.end(JSON.stringify(body));
+  }
+
+  // Trust boundary (AGENTS.md §4): request bodies are external input, so this
+  // is the one place we validate shape and size. Internal helpers below trust
+  // their callers.
+  function readBody(req: IncomingMessage): Promise<any> {
+    return new Promise((resolve, reject) => {
+      let raw = "";
+      req.on("data", (c) => {
+        raw += c;
+        if (raw.length > 1_000_000) reject(new Error("body too large"));
+      });
+      req.on("end", () => {
+        try {
+          resolve(raw ? JSON.parse(raw) : {});
+        } catch {
+          reject(new Error("invalid JSON"));
+        }
+      });
+      req.on("error", reject);
+    });
+  }
+
+  function bearerToken(req: IncomingMessage): string | undefined {
+    const auth = req.headers.authorization;
+    return auth?.startsWith("Bearer ") ? auth.slice(7) : undefined;
+  }
+
+  function userForToken(token: string | undefined): UserRow | null {
+    if (!token) return null;
+    const row = db
+      .prepare(
+        `SELECT u.* FROM sessions s JOIN users u ON u.id = s.user_id WHERE s.token = ?`
+      )
+      .get(token) as UserRow | undefined;
+    return row ?? null;
+  }
+
+  function createSession(userId: string): string {
+    const token = randomBytes(32).toString("hex");
+    db.prepare(`INSERT INTO sessions (token, user_id) VALUES (?, ?)`).run(
+      token,
+      userId
+    );
+    return token;
+  }
+
+  async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    const url = new URL(req.url ?? "/", "http://localhost");
+
+    if (req.method === "OPTIONS") {
+      json(res, 204, {});
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/register") {
+      const { email, name, password } = await readBody(req);
+      if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
+        json(res, 400, { error: "Please enter a valid email address." });
+        return;
+      }
+      if (typeof name !== "string" || name.trim().length < 1) {
+        json(res, 400, { error: "Please enter your name." });
+        return;
+      }
+      if (typeof password !== "string" || password.length < 8) {
+        json(res, 400, { error: "Password must be at least 8 characters." });
+        return;
+      }
+      const exists = db
+        .prepare(`SELECT 1 FROM users WHERE email = ?`)
+        .get(email.trim());
+      if (exists) {
+        json(res, 409, { error: "An account with this email already exists." });
+        return;
+      }
+      const id = randomUUID();
+      const salt = randomBytes(16).toString("hex");
+      const hash = hashPassword(password, salt).toString("hex");
+      db.prepare(
+        `INSERT INTO users (id, email, name, pass_salt, pass_hash) VALUES (?, ?, ?, ?, ?)`
+      ).run(id, email.trim(), name.trim(), salt, hash);
+
+      const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(id) as UserRow;
+      json(res, 201, { token: createSession(id), user: publicUser(user) });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/login") {
+      const { email, password } = await readBody(req);
+      if (typeof email !== "string" || typeof password !== "string") {
+        json(res, 400, { error: "Email and password are required." });
+        return;
+      }
+      const user = db
+        .prepare(`SELECT * FROM users WHERE email = ?`)
+        .get(email.trim()) as UserRow | undefined;
+      if (!user) {
+        json(res, 401, { error: "Incorrect email or password." });
+        return;
+      }
+      const expected = Buffer.from(user.pass_hash, "hex");
+      const actual = hashPassword(password, user.pass_salt);
+      // timingSafeEqual: comparing secrets with === would leak match length
+      // through timing; not paranoia — this is the standard for credentials.
+      if (expected.length !== actual.length || !timingSafeEqual(expected, actual)) {
+        json(res, 401, { error: "Incorrect email or password." });
+        return;
+      }
+      json(res, 200, { token: createSession(user.id), user: publicUser(user) });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/me") {
+      const user = userForToken(bearerToken(req));
+      if (!user) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      json(res, 200, { user: publicUser(user) });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/logout") {
+      const token = bearerToken(req);
+      if (token) db.prepare(`DELETE FROM sessions WHERE token = ?`).run(token);
+      json(res, 200, { ok: true });
+      return;
+    }
+
+    json(res, 404, { error: "Not found." });
+  }
+
+  return {
+    handle: (req, res) =>
+      handle(req, res).catch((err) => {
+        json(res, 500, { error: err?.message ?? "Internal error." });
+      }),
+    close: () => db.close(),
+  };
+}
