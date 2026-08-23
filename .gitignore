@@ -5,6 +5,3 @@ server/data/
 .DS_Store
 .pnpm-store/
 .vite/
-
-# Secrets: real env files stay local; only .env.example is committed
-.env
