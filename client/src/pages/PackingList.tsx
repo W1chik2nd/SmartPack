@@ -18,8 +18,8 @@ function useDebounced<T>(value: T, ms: number): T {
 }
 
 export default function PackingList() {
-  // 0 = 精简出行 (pack lightest) · 100 = 帮造型 (most variety). The sketch draws
-  // the slider vertically with 帮造型 on top, so the visual top is 100.
+  // 0 = 精简出行 (pack lightest) · 100 = 丰富造型 (most variety). The sketch draws
+  // the slider vertically with 丰富造型 on top, so the visual top is 100.
   const [balance, setBalance] = useState(50);
   const debouncedBalance = useDebounced(balance, 250);
 
