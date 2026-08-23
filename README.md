@@ -63,27 +63,35 @@ client/   React + TypeScript + Vite front end (Apple-inspired design)
 
 ### Requirements
 
-- Node.js 22.5+ (uses the built-in `node:sqlite` module)
-- pnpm (client dependencies only; the server has none)
+- Node.js 22.6+ (uses the built-in `node:sqlite` module and type stripping)
+- npm (or pnpm) — the client is an npm workspace; the server has zero dependencies
 
 ### Run
 
-1. Start the API server (creates `server/data/smartpack.db` automatically):
+One command from the repository root starts both the API server (port 4177) and the front end (port 5177):
 
-   ```sh
-   cd server
-   node --experimental-strip-types index.ts
-   # listening on http://localhost:4177
-   ```
+```sh
+npm install   # first time only
+npm run dev   # server + client together; open http://localhost:5177
+```
 
-2. Start the front end in a second terminal:
+The API server creates `server/data/smartpack.db` automatically on first start.
 
-   ```sh
-   cd client
-   pnpm install
-   pnpm dev
-   # open http://localhost:5177
-   ```
+<details>
+<summary>Run the two processes separately (optional)</summary>
+
+```sh
+# terminal 1 — API server
+cd server
+node --experimental-strip-types index.ts
+
+# terminal 2 — front end
+cd client
+pnpm install
+pnpm dev
+```
+
+</details>
 
 Registered accounts are stored in SQLite (passwords hashed with scrypt), and sign-in validates against the database. The Vite dev server proxies `/api/*` to the API server.
 
