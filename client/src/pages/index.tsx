@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { weather, type User, type Weather } from "../api";
 import ChatWidget from "../components/ChatWidget";
+import { useLang } from "../i18n/useLang";
+import { CITIES, storedCity, storeCity, type City } from "../i18n/cities";
 
 type Props = {
   user: User;
+  onOpenTrips: () => void;
 };
 
 // Placeholder navigation targets. Wire real routes here as the pages land.
-// TODO: replace with real navigation once wardrobe/trips/profile pages exist.
+// TODO: replace with real navigation once wardrobe/profile pages exist.
 const TODO_LINKS = {
   weather: () => {},
   checklist: () => {},
@@ -15,51 +18,46 @@ const TODO_LINKS = {
   outfit: () => {},
   itinerary: () => {},
   wardrobe: () => {},
-  trips: () => {},
   profile: () => {},
 };
 
-function greetingFor(hour: number): string {
-  if (hour < 5) return "Good night";
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-}
-
-export default function Home({ user }: Props) {
+export default function Home({ user, onOpenTrips }: Props) {
+  const { lang, t } = useLang();
   const [now, setNow] = useState(new Date());
+  const [city, setCity] = useState<City>(storedCity);
   const [wx, setWx] = useState<Weather | null>(null);
   const [wxError, setWxError] = useState(false);
 
   // Live clock: half-minute ticks keep date, time, and greeting current.
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 30_000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setNow(new Date()), 30_000);
+    return () => clearInterval(timer);
   }, []);
 
-  // Weather: try browser geolocation, fall back to the server's default city.
+  // Weather follows the picked city; the choice persists across sessions.
   useEffect(() => {
-    const load = (lat?: number, lon?: number) =>
-      weather(lat, lon)
-        .then(setWx)
-        .catch(() => setWxError(true));
-    if (!navigator.geolocation) {
-      load();
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      (pos) => load(pos.coords.latitude, pos.coords.longitude),
-      () => load(),
-      { timeout: 5_000 }
-    );
-  }, []);
+    setWx(null);
+    setWxError(false);
+    weather(city.lat, city.lon)
+      .then(setWx)
+      .catch(() => setWxError(true));
+  }, [city]);
 
-  const dateLong = now.toLocaleDateString("en-GB", {
+  function greeting(): string {
+    const hour = now.getHours();
+    if (hour < 5) return t("goodNight");
+    if (hour < 12) return t("goodMorning");
+    if (hour < 18) return t("goodAfternoon");
+    return t("goodEvening");
+  }
+
+  const locale = lang === "zh" ? "zh-CN" : "en-GB";
+  const dateLong = now.toLocaleDateString(locale, {
     weekday: "long",
     day: "numeric",
     month: "long",
   });
-  const timeShort = now.toLocaleTimeString("en-GB", {
+  const timeShort = now.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -71,7 +69,7 @@ export default function Home({ user }: Props) {
       {/* Greeting bar */}
       <header className="dash-greeting">
         <h1>
-          {greetingFor(now.getHours())}, {user.name}.
+          {greeting()}, {user.name}.
         </h1>
         <p>
           {dateLong} · {timeShort}
@@ -83,15 +81,33 @@ export default function Home({ user }: Props) {
         <section className="today-card" aria-label="Today">
           <div className="today-header">
             <button className="today-dates" onClick={TODO_LINKS.dates}>
-              Upcoming · {dateLong} <span aria-hidden="true">›</span>
+              {t("upcoming")} · {dateLong} <span aria-hidden="true">›</span>
             </button>
-            <span className="today-location">Location</span>
+            <label className="today-location">
+              <span className="visually-hidden">{t("cityLabel")}</span>
+              <select
+                value={city.id}
+                onChange={(e) => {
+                  const next = CITIES.find((c) => c.id === e.target.value);
+                  if (next) {
+                    storeCity(next.id);
+                    setCity(next);
+                  }
+                }}
+              >
+                {CITIES.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {lang === "zh" ? c.zh : c.en}
+                  </option>
+                ))}
+              </select>
+            </label>
           </div>
 
           <div className="today-body">
             <div className="today-left">
               <button className="today-weather" onClick={TODO_LINKS.weather}>
-                <h2>Today's Weather</h2>
+                <h2>{t("todaysWeather")}</h2>
                 {wx ? (
                   <p className="weather-reading">
                     {Math.round(wx.tempC)}°C
@@ -99,21 +115,21 @@ export default function Home({ user }: Props) {
                   </p>
                 ) : (
                   <p className="weather-reading weather-pending">
-                    {wxError ? "Unavailable" : "Loading…"}
+                    {wxError ? t("weatherUnavailable") : t("weatherLoading")}
                   </p>
                 )}
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
 
               <button className="today-checklist" onClick={TODO_LINKS.checklist}>
-                <h2>Checklist</h2>
+                <h2>{t("checklist")}</h2>
                 <span className="check-mark" aria-hidden="true" />
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
             </div>
 
             <button className="today-outfit" onClick={TODO_LINKS.outfit}>
-              <h2>Today's Outfit</h2>
+              <h2>{t("todaysOutfit")}</h2>
               {/* Geometric garment drawing (shirt + trousers), CSS only */}
               <span className="outfit-figure" aria-hidden="true">
                 <span className="outfit-shirt" />
@@ -123,7 +139,7 @@ export default function Home({ user }: Props) {
             </button>
 
             <button className="today-itinerary" onClick={TODO_LINKS.itinerary}>
-              <h2>Itinerary</h2>
+              <h2>{t("itinerary")}</h2>
               <span className="itinerary-timeline" aria-hidden="true" />
               <span className="card-arrow" aria-hidden="true">›</span>
             </button>
@@ -134,23 +150,20 @@ export default function Home({ user }: Props) {
         <nav className="dash-nav" aria-label="Sections">
           <button onClick={TODO_LINKS.wardrobe}>
             <span className="nav-tile-mark red" aria-hidden="true" />
-            Digital Wardrobe
+            {t("digitalWardrobe")}
           </button>
-          <button onClick={TODO_LINKS.trips}>
+          <button onClick={onOpenTrips}>
             <span className="nav-tile-mark yellow" aria-hidden="true" />
-            Trip Planner
+            {t("tripPlanner")}
           </button>
           <button onClick={TODO_LINKS.profile}>
             <span className="nav-tile-mark blue" aria-hidden="true" />
-            My Profile
+            {t("myProfile")}
           </button>
         </nav>
       </div>
 
-      <footer className="footer">
-        SmartPack — an AI scenario wardrobe. Sections open detailed pages as
-        they are built.
-      </footer>
+      <footer className="footer">{t("dashFooter")}</footer>
     </div>
   );
 }
