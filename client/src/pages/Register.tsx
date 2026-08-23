@@ -25,10 +25,10 @@ export default function Register({ onAuthed, onSwitch }: Props) {
     e.preventDefault();
     setError(null);
 
-    if (password.length < 8) {
-      fail("Password must be at least 8 characters.");
-      return;
-    }
+    // The confirm field never leaves the browser, so this is the one check
+    // that belongs here. All other rules (password length, email format,
+    // duplicates) are enforced by the API — the trust boundary — and its
+    // error messages are shown as-is.
     if (password !== confirm) {
       fail("Passwords do not match.");
       return;
@@ -56,8 +56,14 @@ export default function Register({ onAuthed, onSwitch }: Props) {
       <form
         className={`auth-card${shake ? " shake" : ""}`}
         onSubmit={handleSubmit}
+        aria-busy={busy}
       >
-        {error && <div className="error-banner">{error}</div>}
+        {/* role="alert" makes screen readers announce failures immediately */}
+        {error && (
+          <div className="error-banner" role="alert">
+            {error}
+          </div>
+        )}
 
         <div className="field">
           <label htmlFor="reg-name">Name</label>
@@ -91,8 +97,12 @@ export default function Register({ onAuthed, onSwitch }: Props) {
             autoComplete="new-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            aria-describedby="reg-password-hint"
             required
           />
+          <p className="field-hint" id="reg-password-hint">
+            At least 8 characters.
+          </p>
         </div>
 
         <div className="field">

@@ -40,8 +40,14 @@ export default function Login({ onAuthed, onSwitch }: Props) {
       <form
         className={`auth-card${shake ? " shake" : ""}`}
         onSubmit={handleSubmit}
+        aria-busy={busy}
       >
-        {error && <div className="error-banner">{error}</div>}
+        {/* role="alert" makes screen readers announce failures immediately */}
+        {error && (
+          <div className="error-banner" role="alert">
+            {error}
+          </div>
+        )}
 
         <div className="field">
           <label htmlFor="login-email">Email</label>
