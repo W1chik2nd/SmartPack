@@ -8,19 +8,41 @@
   z-index: 200;
   width: 56px;
   height: 56px;
-  font-family: inherit;
-  font-size: 18px;
-  font-weight: var(--weight-heavy);
-  color: var(--white);
-  background: var(--red);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
   border: var(--border);
   border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 
+/* Geometric speech-bubble mark: white bubble outline on the button, the
+   three primary dots inside. Inverts on hover for a clear affordance. */
+.chat-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.chat-icon-bubble {
+  fill: var(--black);
+}
+
+.chat-icon-dot-red {
+  fill: var(--red);
+}
+
+.chat-icon-dot-yellow {
+  fill: var(--yellow);
+}
+
+.chat-icon-dot-blue {
+  fill: var(--blue);
+}
+
 .chat-launcher:hover {
-  background: var(--blue);
+  background: var(--yellow);
 }
 
 .chat-launcher:focus-visible {

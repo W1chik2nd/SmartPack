@@ -110,7 +110,20 @@ export default function ChatWidget() {
         aria-expanded={open}
         aria-label={open ? "Close SmartPack assistant" : "Open SmartPack assistant"}
       >
-        AI
+        {/* Bauhaus speech bubble: rectangle + triangle tail, three primary
+            dots. Pure geometry, colored via theme tokens in chat.css. */}
+        <svg
+          className="chat-icon"
+          viewBox="0 0 28 28"
+          aria-hidden="true"
+          focusable="false"
+        >
+          <rect className="chat-icon-bubble" x="2" y="4" width="24" height="15" />
+          <polygon className="chat-icon-bubble" points="8,19 8,26 15,19" />
+          <circle className="chat-icon-dot-red" cx="8.5" cy="11.5" r="2.2" />
+          <circle className="chat-icon-dot-yellow" cx="14" cy="11.5" r="2.2" />
+          <circle className="chat-icon-dot-blue" cx="19.5" cy="11.5" r="2.2" />
+        </svg>
       </button>
     </>
   );
