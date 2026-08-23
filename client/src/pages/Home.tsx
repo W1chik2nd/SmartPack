@@ -1,4 +1,5 @@
 import type { User } from "../api";
+import ChatWidget from "../components/ChatWidget";
 
 type Props = {
   user: User;
@@ -7,6 +8,7 @@ type Props = {
 export default function Home({ user }: Props) {
   return (
     <div className="home">
+      <ChatWidget />
       <section className="hero">
         <p className="eyebrow">Welcome back, {user.name}</p>
         <h1>
