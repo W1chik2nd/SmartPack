@@ -3,6 +3,7 @@
    Geometry first, primary-color accents, flat surfaces, thick lines. */
 
 @import "./theme.css";
+@import "./auth.css";
 
 * {
   margin: 0;
@@ -119,165 +120,7 @@ body {
   color: var(--text);
 }
 
-/* ---------- auth pages ---------- */
-
-.auth-page {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 104px var(--space-3) var(--space-4);
-  animation: fadeIn 0.3s ease both;
-}
-
-.auth-headline {
-  width: 100%;
-  max-width: 440px;
-  text-align: left;
-  margin-bottom: var(--space-3);
-}
-
-.auth-headline h1 {
-  font-size: 36px;
-  font-weight: var(--weight-heavy);
-  letter-spacing: -0.01em;
-  line-height: 1.1;
-  text-transform: uppercase;
-}
-
-/* Functional underline: yellow bar anchors the headline to the form below */
-.auth-headline h1::after {
-  content: "";
-  display: block;
-  width: 72px;
-  height: 10px;
-  margin-top: var(--space-2);
-  background: var(--yellow);
-}
-
-.auth-headline p {
-  margin-top: var(--space-2);
-  font-size: 17px;
-  font-weight: var(--weight-regular);
-  color: var(--text-secondary);
-}
-
-.auth-card {
-  width: 100%;
-  max-width: 440px;
-  background: var(--surface);
-  border: var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-4) var(--space-3);
-}
-
-.auth-card.shake {
-  animation: shake 0.3s ease;
-}
-
-.field {
-  margin-bottom: var(--space-2);
-}
-
-.field label {
-  display: block;
-  font-size: 13px;
-  font-weight: var(--weight-bold);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text);
-  margin-bottom: var(--space-1);
-}
-
-.field input {
-  width: 100%;
-  height: 48px;
-  padding: 0 var(--space-2);
-  font-size: 16px;
-  font-family: inherit;
-  color: var(--text);
-  background: var(--white);
-  border: 2px solid var(--black);
-  border-radius: var(--radius);
-  outline: none;
-}
-
-.field input:focus {
-  /* flat focus ring, not a glow */
-  outline: 3px solid var(--yellow);
-  outline-offset: 0;
-  border-color: var(--blue);
-}
-
-.field-hint {
-  margin-top: var(--space-1);
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.error-banner {
-  margin-bottom: var(--space-2);
-  padding: 12px var(--space-2);
-  font-size: 14px;
-  font-weight: var(--weight-bold);
-  color: var(--white);
-  background: var(--danger);
-  border: var(--border);
-  border-radius: var(--radius);
-  animation: fadeIn 0.2s ease both;
-}
-
-.btn-primary {
-  width: 100%;
-  height: 52px;
-  margin-top: var(--space-1);
-  font-size: 16px;
-  font-weight: var(--weight-heavy);
-  font-family: inherit;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--white);
-  background: var(--blue);
-  border: var(--border);
-  border-radius: var(--radius);
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: var(--yellow);
-  color: var(--black);
-}
-
-.btn-primary:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-.auth-switch {
-  margin-top: var(--space-3);
-  text-align: left;
-  font-size: 14px;
-  color: var(--text-secondary);
-}
-
-.auth-switch button {
-  font-size: 14px;
-  font-weight: var(--weight-bold);
-  font-family: inherit;
-  color: var(--blue);
-  background: none;
-  border: none;
-  border-bottom: 2px solid var(--blue);
-  cursor: pointer;
-  padding: 0;
-}
-
-.auth-switch button:hover {
-  color: var(--red);
-  border-bottom-color: var(--red);
-}
+/* ---------- auth pages: see auth.css ---------- */
 
 /* ---------- home page ---------- */
 
@@ -395,8 +238,124 @@ body {
   .hero h1 {
     font-size: 36px;
   }
-  .auth-headline h1 {
-    font-size: 28px;
+}
+
+/* ---------- landing (first screen, unauthenticated) ---------- */
+
+.landing {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  animation: fadeIn 0.3s ease both;
+}
+
+/* 世界地图剪影铺满,作背景。整体偏左,让右下角留给行李箱。 */
+.landing-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+  opacity: 0.55;
+  pointer-events: none;
+  user-select: none;
+}
+
+.landing-hero {
+  position: relative;
+  z-index: 1;
+  padding: 64px 56px 0;
+}
+
+.landing-title {
+  font-size: 56px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.02em;
+  color: var(--blue);
+  line-height: 1;
+}
+
+.landing-tagline {
+  margin-top: 14px;
+  max-width: 460px;
+  font-size: 20px;
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* 右下角行李箱容器。整体略微上移,不要下探太多。 */
+.landing-luggage {
+  position: absolute;
+  right: 6vw;
+  bottom: 4vh;
+  z-index: 1;
+}
+
+.landing-suitcase {
+  width: clamp(220px, 26vw, 380px);
+  height: auto;
+  display: block;
+  /* Bauhaus 平面硬边阴影,不用柔和拟物阴影(§8) */
+  filter: drop-shadow(6px 6px 0 var(--black));
+}
+
+/* 进入按钮 = 箭头本体,箭身上写「继续旅程」。
+   用 clip-path 裁出右向箭头;描边会被 clip-path 裁掉,
+   所以用硬边阴影(Bauhaus 平面阴影)来给轮廓。 */
+.landing-enter {
+  position: absolute;
+  left: 6%;
+  top: 42%;
+  width: 54%;
+  height: 26%;
+  display: flex;
+  align-items: center;
+  padding: 0 32% 0 9%;
+  font-family: inherit;
+  font-size: clamp(13px, 1.15vw, 17px);
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  color: var(--white);
+  background: var(--red);
+  border: none;
+  cursor: pointer;
+  clip-path: polygon(0 25%, 62% 25%, 62% 0, 100% 50%, 62% 100%, 62% 75%, 0 75%);
+  filter: drop-shadow(4px 4px 0 var(--text));
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.landing-enter:hover {
+  background: var(--blue);
+  transform: translateX(4px);
+}
+
+.landing-enter:active {
+  transform: translateX(0) scale(0.97);
+}
+
+/* clip-path 会裁掉 outline/box-shadow,所以焦点态用变色来指示。 */
+.landing-enter:focus-visible {
+  background: var(--blue);
+}
+
+@media (max-width: 600px) {
+  .landing-hero {
+    padding: 40px 28px 0;
+  }
+  .landing-title {
+    font-size: 40px;
+  }
+  .landing-tagline {
+    font-size: 17px;
+  }
+  .landing-luggage {
+    right: 50%;
+    transform: translateX(50%);
+    bottom: 4vh;
   }
 }
 
@@ -405,11 +364,16 @@ body {
   .auth-page,
   .home,
   .error-banner,
-  .auth-card.shake {
+  .auth-card.shake,
+  .landing {
     animation: none;
   }
   .nav-link,
-  .btn-primary {
+  .btn-primary,
+  .landing-enter,
+  .landing-enter:hover,
+  .landing-enter:active {
     transition: none;
+    transform: none;
   }
 }

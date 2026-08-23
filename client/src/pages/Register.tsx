@@ -48,86 +48,94 @@ export default function Register({ onAuthed, onSwitch }: Props) {
 
   return (
     <div className="auth-page">
-      <div className="auth-headline">
-        <h1>Create your SmartPack account</h1>
-        <p>One account. Every outfit. Every trip.</p>
+      {/* Left visual panel; hidden on mobile (auth.css). Decorative only,
+          so the image carries no alt text for screen readers. */}
+      <div className="auth-visual" aria-hidden="true">
+        <img src="/auth-visual.jpeg" alt="" />
       </div>
 
-      <form
-        className={`auth-card${shake ? " shake" : ""}`}
-        onSubmit={handleSubmit}
-        aria-busy={busy}
-      >
-        {/* role="alert" makes screen readers announce failures immediately */}
-        {error && (
-          <div className="error-banner" role="alert">
-            {error}
+      <div className="auth-panel">
+        <div className="auth-headline">
+          <h1>Create your SmartPack account</h1>
+          <p>One account. Every outfit. Every trip.</p>
+        </div>
+
+        <form
+          className={`auth-card${shake ? " shake" : ""}`}
+          onSubmit={handleSubmit}
+          aria-busy={busy}
+        >
+          {/* role="alert" makes screen readers announce failures immediately */}
+          {error && (
+            <div className="error-banner" role="alert">
+              {error}
+            </div>
+          )}
+
+          <div className="field">
+            <label htmlFor="reg-name">Name</label>
+            <input
+              id="reg-name"
+              type="text"
+              autoComplete="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+            />
           </div>
-        )}
 
-        <div className="field">
-          <label htmlFor="reg-name">Name</label>
-          <input
-            id="reg-name"
-            type="text"
-            autoComplete="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
+          <div className="field">
+            <label htmlFor="reg-email">Email</label>
+            <input
+              id="reg-email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-        <div className="field">
-          <label htmlFor="reg-email">Email</label>
-          <input
-            id="reg-email"
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+          <div className="field">
+            <label htmlFor="reg-password">Password</label>
+            <input
+              id="reg-password"
+              type="password"
+              autoComplete="new-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              aria-describedby="reg-password-hint"
+              required
+            />
+            <p className="field-hint" id="reg-password-hint">
+              At least 8 characters.
+            </p>
+          </div>
 
-        <div className="field">
-          <label htmlFor="reg-password">Password</label>
-          <input
-            id="reg-password"
-            type="password"
-            autoComplete="new-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            aria-describedby="reg-password-hint"
-            required
-          />
-          <p className="field-hint" id="reg-password-hint">
-            At least 8 characters.
-          </p>
-        </div>
+          <div className="field">
+            <label htmlFor="reg-confirm">Confirm Password</label>
+            <input
+              id="reg-confirm"
+              type="password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+              required
+            />
+          </div>
 
-        <div className="field">
-          <label htmlFor="reg-confirm">Confirm Password</label>
-          <input
-            id="reg-confirm"
-            type="password"
-            autoComplete="new-password"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            required
-          />
-        </div>
-
-        <button className="btn-primary" type="submit" disabled={busy}>
-          {busy ? "Creating Account…" : "Create Account"}
-        </button>
-
-        <div className="auth-switch">
-          Already have an account?{" "}
-          <button type="button" onClick={onSwitch}>
-            Sign in.
+          <button className="btn-primary" type="submit" disabled={busy}>
+            {busy ? "Creating Account…" : "Create Account"}
           </button>
-        </div>
-      </form>
+
+          <div className="auth-switch">
+            Already have an account?{" "}
+            <button type="button" onClick={onSwitch}>
+              Sign in.
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
