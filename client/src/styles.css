@@ -1,19 +1,8 @@
-/* SmartPack — Apple-inspired design system */
+/* SmartPack — Bauhaus styling (AGENTS.md §8).
+   All colors and style tokens come from theme.css; nothing is hardcoded here.
+   Geometry first, primary-color accents, flat surfaces, thick lines. */
 
-:root {
-  --bg: #f5f5f7;
-  --surface: rgba(255, 255, 255, 0.72);
-  --text: #1d1d1f;
-  --text-secondary: #6e6e73;
-  --accent: #0071e3;
-  --accent-hover: #0077ed;
-  --danger: #ff3b30;
-  --border: rgba(0, 0, 0, 0.08);
-  --radius-lg: 18px;
-  --radius-md: 12px;
-  --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
-    "Helvetica Neue", "Segoe UI", Arial, sans-serif;
-}
+@import "./theme.css";
 
 * {
   margin: 0;
@@ -32,21 +21,11 @@ body {
   background: var(--bg);
   color: var(--text);
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
-/* ---------- animations ---------- */
-
-@keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(24px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+/* ---------- motion ----------
+   Functionalism: movement only where it communicates state change.
+   One entrance fade per page, nothing decorative. */
 
 @keyframes fadeIn {
   from {
@@ -57,34 +36,16 @@ body {
   }
 }
 
-@keyframes gradientDrift {
-  0% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-  100% {
-    background-position: 0% 50%;
-  }
-}
-
 @keyframes shake {
   0%,
   100% {
     transform: translateX(0);
   }
-  20% {
-    transform: translateX(-8px);
+  25% {
+    transform: translateX(-6px);
   }
-  40% {
-    transform: translateX(8px);
-  }
-  60% {
-    transform: translateX(-5px);
-  }
-  80% {
-    transform: translateX(5px);
+  75% {
+    transform: translateX(6px);
   }
 }
 
@@ -96,53 +57,66 @@ body {
   left: 0;
   right: 0;
   z-index: 100;
-  height: 48px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 28px;
-  background: rgba(251, 251, 253, 0.8);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border-bottom: 1px solid var(--border);
+  padding: 0 var(--space-3);
+  background: var(--bg);
+  border-bottom: var(--border);
 }
 
 .nav-brand {
-  font-size: 17px;
-  font-weight: 600;
-  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.01em;
   color: var(--text);
-  text-decoration: none;
+  text-transform: uppercase;
   cursor: pointer;
   background: none;
   border: none;
   font-family: inherit;
+}
+
+/* Brand mark: the three Bauhaus primaries as a functional logo, not imagery */
+.nav-brand::before {
+  content: "";
+  width: 14px;
+  height: 14px;
+  background: var(--red);
+  box-shadow: 18px 0 0 var(--yellow), 36px 0 0 var(--blue);
+  margin-right: 46px;
 }
 
 .nav-actions {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: var(--space-2);
 }
 
 .nav-link {
-  font-size: 13px;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
   color: var(--text);
   background: none;
-  border: none;
+  border: 2px solid var(--black);
+  padding: 6px 14px;
   cursor: pointer;
   font-family: inherit;
-  opacity: 0.8;
-  transition: opacity 0.2s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .nav-link:hover {
-  opacity: 1;
+  background: var(--black);
+  color: var(--white);
 }
 
 .nav-user {
-  font-size: 13px;
-  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text);
 }
 
 /* ---------- auth pages ---------- */
@@ -153,116 +127,127 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 96px 24px 48px;
-  animation: fadeIn 0.5s ease both;
+  padding: 104px var(--space-3) var(--space-4);
+  animation: fadeIn 0.3s ease both;
 }
 
 .auth-headline {
-  text-align: center;
-  margin-bottom: 40px;
-  animation: fadeUp 0.7s cubic-bezier(0.28, 0.11, 0.32, 1) both;
+  width: 100%;
+  max-width: 440px;
+  text-align: left;
+  margin-bottom: var(--space-3);
 }
 
 .auth-headline h1 {
-  font-size: 40px;
-  font-weight: 600;
-  letter-spacing: -0.015em;
+  font-size: 36px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.01em;
   line-height: 1.1;
+  text-transform: uppercase;
+}
+
+/* Functional underline: yellow bar anchors the headline to the form below */
+.auth-headline h1::after {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 10px;
+  margin-top: var(--space-2);
+  background: var(--yellow);
 }
 
 .auth-headline p {
-  margin-top: 12px;
-  font-size: 19px;
+  margin-top: var(--space-2);
+  font-size: 17px;
+  font-weight: var(--weight-regular);
   color: var(--text-secondary);
-  font-weight: 400;
 }
 
 .auth-card {
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   background: var(--surface);
-  backdrop-filter: saturate(180%) blur(20px);
-  -webkit-backdrop-filter: saturate(180%) blur(20px);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 36px 32px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.06);
-  animation: fadeUp 0.7s cubic-bezier(0.28, 0.11, 0.32, 1) 0.12s both;
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4) var(--space-3);
 }
 
 .auth-card.shake {
-  animation: shake 0.45s ease;
+  animation: shake 0.3s ease;
 }
 
 .field {
-  margin-bottom: 16px;
+  margin-bottom: var(--space-2);
 }
 
 .field label {
   display: block;
   font-size: 13px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  margin-bottom: 6px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin-bottom: var(--space-1);
 }
 
 .field input {
   width: 100%;
   height: 48px;
-  padding: 0 16px;
+  padding: 0 var(--space-2);
   font-size: 16px;
   font-family: inherit;
   color: var(--text);
-  background: rgba(255, 255, 255, 0.85);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  background: var(--white);
+  border: 2px solid var(--black);
+  border-radius: var(--radius);
   outline: none;
-  transition: border-color 0.25s ease, box-shadow 0.25s ease;
 }
 
 .field input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.15);
+  /* flat focus ring, not a glow */
+  outline: 3px solid var(--yellow);
+  outline-offset: 0;
+  border-color: var(--blue);
 }
 
 .field-hint {
-  margin-top: 6px;
+  margin-top: var(--space-1);
   font-size: 12px;
   color: var(--text-secondary);
 }
 
 .error-banner {
-  margin-bottom: 16px;
-  padding: 12px 16px;
+  margin-bottom: var(--space-2);
+  padding: 12px var(--space-2);
   font-size: 14px;
-  color: var(--danger);
-  background: rgba(255, 59, 48, 0.08);
-  border: 1px solid rgba(255, 59, 48, 0.2);
-  border-radius: var(--radius-md);
-  animation: fadeIn 0.3s ease both;
+  font-weight: var(--weight-bold);
+  color: var(--white);
+  background: var(--danger);
+  border: var(--border);
+  border-radius: var(--radius);
+  animation: fadeIn 0.2s ease both;
 }
 
 .btn-primary {
   width: 100%;
-  height: 48px;
-  margin-top: 8px;
+  height: 52px;
+  margin-top: var(--space-1);
   font-size: 16px;
-  font-weight: 500;
+  font-weight: var(--weight-heavy);
   font-family: inherit;
-  color: #fff;
-  background: var(--accent);
-  border: none;
-  border-radius: 980px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  background: var(--blue);
+  border: var(--border);
+  border-radius: var(--radius);
   cursor: pointer;
-  transition: background 0.25s ease, transform 0.15s ease, opacity 0.2s ease;
+  transition: background 0.15s ease, color 0.15s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
-.btn-primary:active:not(:disabled) {
-  transform: scale(0.97);
+  background: var(--yellow);
+  color: var(--black);
 }
 
 .btn-primary:disabled {
@@ -271,159 +256,160 @@ body {
 }
 
 .auth-switch {
-  margin-top: 24px;
-  text-align: center;
+  margin-top: var(--space-3);
+  text-align: left;
   font-size: 14px;
   color: var(--text-secondary);
 }
 
 .auth-switch button {
   font-size: 14px;
+  font-weight: var(--weight-bold);
   font-family: inherit;
-  color: var(--accent);
+  color: var(--blue);
   background: none;
   border: none;
+  border-bottom: 2px solid var(--blue);
   cursor: pointer;
   padding: 0;
 }
 
 .auth-switch button:hover {
-  text-decoration: underline;
+  color: var(--red);
+  border-bottom-color: var(--red);
 }
 
 /* ---------- home page ---------- */
 
 .home {
-  animation: fadeIn 0.5s ease both;
+  animation: fadeIn 0.3s ease both;
 }
 
 .hero {
-  padding: 140px 24px 80px;
-  text-align: center;
-  background: linear-gradient(
-    120deg,
-    #f5f5f7 0%,
-    #e8f0fe 35%,
-    #f3e8fe 65%,
-    #f5f5f7 100%
-  );
-  background-size: 300% 300%;
-  animation: gradientDrift 18s ease infinite;
+  padding: 128px var(--space-3) var(--space-5);
+  max-width: 980px;
+  margin: 0 auto;
+  text-align: left;
 }
 
 .hero .eyebrow {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--accent);
-  letter-spacing: 0.02em;
-  animation: fadeUp 0.7s cubic-bezier(0.28, 0.11, 0.32, 1) both;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--black);
+  background: var(--yellow);
+  padding: 6px 12px;
+  border: 2px solid var(--black);
 }
 
 .hero h1 {
-  margin-top: 10px;
+  margin-top: var(--space-3);
   font-size: 56px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.07;
-  animation: fadeUp 0.7s cubic-bezier(0.28, 0.11, 0.32, 1) 0.1s both;
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+  text-transform: uppercase;
+  max-width: 720px;
 }
 
 .hero p.sub {
-  margin: 18px auto 0;
+  margin-top: var(--space-3);
   max-width: 560px;
-  font-size: 21px;
+  font-size: 19px;
+  font-weight: var(--weight-regular);
   color: var(--text-secondary);
-  line-height: 1.4;
-  animation: fadeUp 0.7s cubic-bezier(0.28, 0.11, 0.32, 1) 0.2s both;
+  line-height: 1.5;
 }
 
 .feature-grid {
   max-width: 980px;
   margin: 0 auto;
-  padding: 64px 24px 96px;
+  padding: 0 var(--space-3) var(--space-5);
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
+  gap: var(--space-3);
 }
 
 .feature-card {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 32px 28px;
-  transition: transform 0.35s cubic-bezier(0.28, 0.11, 0.32, 1),
-    box-shadow 0.35s ease;
-  animation: fadeUp 0.7s cubic-bezier(0.28, 0.11, 0.32, 1) both;
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-3);
+  text-align: left;
 }
 
-.feature-card:nth-child(1) { animation-delay: 0.25s; }
-.feature-card:nth-child(2) { animation-delay: 0.35s; }
-.feature-card:nth-child(3) { animation-delay: 0.45s; }
-
-.feature-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.08);
-}
-
+/* Geometric markers replace pictorial icons: square / circle / triangle in
+   the three primaries identify the three feature groups. */
 .feature-card .icon {
-  font-size: 34px;
-  line-height: 1;
+  width: 40px;
+  height: 40px;
+}
+
+.feature-card:nth-child(1) .icon {
+  background: var(--red);
+}
+
+.feature-card:nth-child(2) .icon {
+  background: var(--yellow);
+  border-radius: 50%;
+}
+
+.feature-card:nth-child(3) .icon {
+  background: transparent;
+  width: 0;
+  height: 0;
+  border-left: 20px solid transparent;
+  border-right: 20px solid transparent;
+  border-bottom: 40px solid var(--blue);
 }
 
 .feature-card h3 {
-  margin-top: 16px;
-  font-size: 21px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  margin-top: var(--space-2);
+  font-size: 20px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .feature-card p {
-  margin-top: 8px;
+  margin-top: var(--space-1);
   font-size: 15px;
   color: var(--text-secondary);
   line-height: 1.5;
 }
 
 .footer {
-  padding: 32px 24px 48px;
-  text-align: center;
-  font-size: 12px;
-  color: var(--text-secondary);
-  border-top: 1px solid var(--border);
+  max-width: 980px;
+  margin: 0 auto;
+  padding: var(--space-3);
+  text-align: left;
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  border-top: var(--border);
 }
 
 @media (max-width: 600px) {
   .hero h1 {
-    font-size: 38px;
+    font-size: 36px;
   }
   .auth-headline h1 {
-    font-size: 30px;
+    font-size: 28px;
   }
 }
 
-/* Accessibility: honor the user's motion preference — replace movement-based
-   animation with a plain fade and stop the drifting hero gradient. */
+/* Accessibility: no motion for users who ask for none */
 @media (prefers-reduced-motion: reduce) {
-  .auth-headline,
-  .auth-card,
-  .hero .eyebrow,
-  .hero h1,
-  .hero p.sub,
-  .feature-card {
-    animation: fadeIn 0.3s ease both;
-  }
+  .auth-page,
+  .home,
+  .error-banner,
   .auth-card.shake {
     animation: none;
   }
-  .hero {
-    animation: none;
-  }
-  .feature-card,
-  .feature-card:hover {
+  .nav-link,
+  .btn-primary {
     transition: none;
-    transform: none;
-  }
-  .btn-primary:active:not(:disabled) {
-    transform: none;
   }
 }
