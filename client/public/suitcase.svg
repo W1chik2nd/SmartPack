@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 300" role="img" aria-label="Packed suitcases with folded clothes">
+  <!-- Fallback art; replace this file with the real illustration (same path) to use it. -->
+  <!-- Yellow case (back) -->
+  <rect x="150" y="86" width="120" height="168" rx="16" fill="#F4C430" stroke="#1D1D1F" stroke-width="4"/>
+  <rect x="176" y="60" width="26" height="34" rx="8" fill="none" stroke="#1D1D1F" stroke-width="4"/>
+  <line x1="176" y1="70" x2="202" y2="70" stroke="#1D1D1F" stroke-width="4"/>
+  <line x1="234" y1="86" x2="234" y2="254" stroke="#1D1D1F" stroke-width="3" opacity="0.5"/>
+
+  <!-- Teal case (front) -->
+  <rect x="70" y="110" width="120" height="150" rx="16" fill="#8FD8C8" stroke="#1D1D1F" stroke-width="4"/>
+  <rect x="96" y="86" width="26" height="30" rx="8" fill="none" stroke="#1D1D1F" stroke-width="4"/>
+  <line x1="96" y1="94" x2="122" y2="94" stroke="#1D1D1F" stroke-width="4"/>
+  <g stroke="#1D1D1F" stroke-width="3" opacity="0.55">
+    <line x1="96" y1="110" x2="96" y2="260"/>
+    <line x1="120" y1="110" x2="120" y2="260"/>
+    <line x1="144" y1="110" x2="144" y2="260"/>
+    <line x1="168" y1="110" x2="168" y2="260"/>
+  </g>
+  <!-- luggage tag -->
+  <rect x="150" y="150" width="34" height="24" rx="4" fill="#fff" stroke="#1D1D1F" stroke-width="3"/>
+
+  <!-- Folded clothes stack (front-left) -->
+  <g stroke="#1D1D1F" stroke-width="4">
+    <rect x="18" y="196" width="84" height="20" rx="4" fill="#E76F8F"/>
+    <rect x="14" y="216" width="92" height="20" rx="4" fill="#C9A7E0"/>
+    <rect x="20" y="236" width="80" height="20" rx="4" fill="#F4C430"/>
+    <rect x="16" y="256" width="88" height="20" rx="4" fill="#8FB8E0"/>
+  </g>
+
+  <!-- 箭头不在插画里画:它由页面上的「继续旅程」按钮承担(见 styles.css .landing-enter)。 -->
+</svg>
