@@ -7,6 +7,34 @@
   animation: fadeIn 0.5s ease both;
 }
 
+/* 返回主页:和 Trip Planner 的返回键同一套观感。
+   外层容器负责与下面的网格共用 1080 宽度,按钮本身才能左对齐而不是被居中。 */
+.wardrobe-backbar {
+  max-width: 1080px;
+  margin: 0 auto 16px;
+}
+
+.wardrobe-back {
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  background: var(--white);
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+
+.wardrobe-back:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+.wardrobe-back:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
 .wardrobe-header {
   display: flex;
   align-items: center;

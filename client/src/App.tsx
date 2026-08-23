@@ -151,7 +151,9 @@ function Shell() {
       {route === "trips" && user && (
         <TripPlanner user={user} onBack={() => setRoute("home")} />
       )}
-      {route === "wardrobe" && user && <Wardrobe />}
+      {route === "wardrobe" && user && (
+        <Wardrobe onBack={() => setRoute("home")} />
+      )}
     </>
   );
 }

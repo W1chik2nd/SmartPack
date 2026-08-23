@@ -11,6 +11,7 @@ import {
   type WardrobeItem,
 } from "../api";
 import { toDataUrl } from "../lib/image";
+import { useLang } from "../i18n/useLang";
 import "./Wardrobe.css";
 
 /** 正在识别中的临时卡片:还没落库,所以没有真实 id。 */
@@ -57,7 +58,12 @@ function TShirtSketch() {
   );
 }
 
-export default function Wardrobe() {
+type Props = {
+  onBack: () => void;
+};
+
+export default function Wardrobe({ onBack }: Props) {
+  const { t } = useLang();
   const [items, setItems] = useState<WardrobeItem[]>([]);
   const [pending, setPending] = useState<PendingItem[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -167,6 +173,12 @@ export default function Wardrobe() {
 
   return (
     <main className="wardrobe">
+      <div className="wardrobe-backbar">
+        <button type="button" className="wardrobe-back" onClick={onBack}>
+          ‹ {t("backToHome")}
+        </button>
+      </div>
+
       <header className="wardrobe-header">
         <h1 className="wardrobe-title">服装品类列表</h1>
         <button
