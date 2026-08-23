@@ -7,21 +7,21 @@ import { CITIES, storedCity, storeCity, type City } from "../i18n/cities";
 type Props = {
   user: User;
   onOpenTrips: () => void;
+  onOpenWardrobe: () => void;
 };
 
 // Placeholder navigation targets. Wire real routes here as the pages land.
-// TODO: replace with real navigation once wardrobe/profile pages exist.
+// TODO: replace with real navigation once the profile/detail pages exist.
 const TODO_LINKS = {
   weather: () => {},
   checklist: () => {},
   dates: () => {},
   outfit: () => {},
   itinerary: () => {},
-  wardrobe: () => {},
   profile: () => {},
 };
 
-export default function Home({ user, onOpenTrips }: Props) {
+export default function Home({ user, onOpenTrips, onOpenWardrobe }: Props) {
   const { lang, t } = useLang();
   const [now, setNow] = useState(new Date());
   const [city, setCity] = useState<City>(storedCity);
@@ -148,7 +148,7 @@ export default function Home({ user, onOpenTrips }: Props) {
 
         {/* Right: primary navigation tiles */}
         <nav className="dash-nav" aria-label="Sections">
-          <button onClick={TODO_LINKS.wardrobe}>
+          <button onClick={onOpenWardrobe}>
             <span className="nav-tile-mark red" aria-hidden="true" />
             {t("digitalWardrobe")}
           </button>

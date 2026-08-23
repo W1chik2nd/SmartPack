@@ -9,6 +9,23 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { DatabaseSync } from "node:sqlite";
 import { scryptSync, randomBytes, timingSafeEqual, randomUUID } from "node:crypto";
+import {
+  recognizeClothing,
+  searchKeyword,
+  visionConfigured,
+  NotClothingError,
+} from "./vision.ts";
+import { searchProducts, ecommerceProvider } from "./ecommerce.ts";
+import {
+  createUploadSession,
+  getUploadSession,
+  attachImage,
+  consumeImage,
+  endUploadSession,
+} from "./upload-session.ts";
+import { createWardrobeStore } from "./wardrobe.ts";
+import { handleWardrobeRoutes } from "./wardrobe-routes.ts";
+import { dirname, join } from "node:path";
 import { aiConfigured, chatCompletion, type ChatMessage } from "./ai.ts";
 import { buildSystemPrompt } from "./prompts.ts";
 import { currentWeather, DEFAULT_COORDS } from "./weather.ts";
@@ -81,6 +98,9 @@ export function createApp(dbPath: string): App {
     );
   `);
 
+  // 照片存数据库同级的 photos/ 目录:测试用临时库时会自动隔离到临时目录。
+  const wardrobe = createWardrobeStore(db, join(dirname(dbPath), "photos"));
+
   // Dev databases created before the questionnaire existed lack the profile
   // columns; CREATE TABLE IF NOT EXISTS won't add them, so patch in place.
   const existing = new Set(
@@ -109,13 +129,13 @@ export function createApp(dbPath: string): App {
 
   // Trust boundary (AGENTS.md §4): request bodies are external input, so this
   // is the one place we validate shape and size. Internal helpers below trust
-  // their callers.
-  function readBody(req: IncomingMessage): Promise<any> {
+  // their callers. maxBytes is per-route: image upload needs a higher cap.
+  function readBody(req: IncomingMessage, maxBytes = 1_000_000): Promise<any> {
     return new Promise((resolve, reject) => {
       let raw = "";
       req.on("data", (c) => {
         raw += c;
-        if (raw.length > 1_000_000) reject(new Error("body too large"));
+        if (raw.length > maxBytes) reject(new Error("body too large"));
       });
       req.on("end", () => {
         try {
@@ -351,13 +371,174 @@ export function createApp(dbPath: string): App {
       return;
     }
 
+    // 拍照识别 → (可选)电商搜同款。识别是硬依赖,搜同款未配置时优雅降级。
+    if (req.method === "POST" && url.pathname === "/api/wardrobe/recognize") {
+      const user = userForToken(bearerToken(req));
+      if (!user) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      if (!visionConfigured()) {
+        json(res, 503, {
+          error:
+            "识别服务未配置:请在 server/.env 填入 VISION_API_KEY(见 .env.example)。",
+        });
+        return;
+      }
+      const { image } = await readBody(req, 8_000_000);
+      if (typeof image !== "string" || !image.startsWith("data:image/")) {
+        json(res, 400, { error: "image must be a data:image/* URL." });
+        return;
+      }
+      let item;
+      try {
+        item = await recognizeClothing(image);
+      } catch (err: any) {
+        // 不是衣物 / 认不出衣物:这是用户操作问题(拍错了),不是服务故障。
+        // 用 422 区分开,前端据此提示重拍且不把这张加进衣柜。
+        if (err instanceof NotClothingError) {
+          json(res, 422, { error: err.message, notClothing: true });
+          return;
+        }
+        json(res, 502, { error: `识别失败:${err?.message ?? "unknown"}` });
+        return;
+      }
+      const provider = ecommerceProvider();
+      let products: Awaited<ReturnType<typeof searchProducts>> = [];
+      let productsError: string | undefined;
+      if (provider) {
+        try {
+          products = await searchProducts(searchKeyword(item));
+        } catch (err: any) {
+          // 搜同款失败不拖垮识别结果,报告但不报错。
+          productsError = err?.message ?? "unknown";
+        }
+      }
+      // 识别结果连同细节字段一起落库,这些细节是后续穿搭推荐要分析的原料。
+      const saved = wardrobe.add(user.id, {
+        title: item.title,
+        category: item.category,
+        subtype: item.subtype,
+        colors: item.colors,
+        fit: item.fit,
+        material: item.material,
+        seasons: item.seasons,
+        styleTags: item.styleTags,
+        details: item.details,
+        photoDataUrl: image,
+      });
+      json(res, 201, { item: saved, provider, products, productsError });
+      return;
+    }
+
+    // 衣柜路由(列表/编辑/删除/照片)拆到独立模块,见 wardrobe-routes.ts。
+    if (
+      await handleWardrobeRoutes({
+        req,
+        res,
+        url,
+        wardrobe,
+        json,
+        readBody,
+        userFromHeader: () => userForToken(bearerToken(req)),
+        userFromQuery: () =>
+          userForToken(url.searchParams.get("token") ?? undefined),
+      })
+    ) {
+      return;
+    }
+
+    // 电脑端(已登录)创建扫码上传会话,token 会被编进二维码。
+    if (req.method === "POST" && url.pathname === "/api/upload-session") {
+      const user = userForToken(bearerToken(req));
+      if (!user) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      const session = createUploadSession(user.id);
+      json(res, 201, { uploadToken: session.token });
+      return;
+    }
+
+    // 手机端凭 uploadToken 直传照片 —— 故意不要求登录态:
+    // token 本身就是一次性凭证,这正是免去手机重新登录的关键。
+    if (req.method === "POST" && url.pathname === "/api/upload-session/photo") {
+      const { uploadToken, image } = await readBody(req, 8_000_000);
+      if (typeof uploadToken !== "string" || typeof image !== "string") {
+        json(res, 400, { error: "uploadToken and image are required." });
+        return;
+      }
+      if (!image.startsWith("data:image/")) {
+        json(res, 400, { error: "image must be a data:image/* URL." });
+        return;
+      }
+      if (!attachImage(uploadToken, image)) {
+        json(res, 404, { error: "上传链接已失效,请在电脑上重新生成二维码。" });
+        return;
+      }
+      json(res, 200, { ok: true });
+      return;
+    }
+
+    // 电脑端轮询:照片到了就取回(取回即销毁会话)。
+    if (req.method === "GET" && url.pathname === "/api/upload-session/photo") {
+      const user = userForToken(bearerToken(req));
+      if (!user) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      const uploadToken = url.searchParams.get("uploadToken") ?? "";
+      const session = getUploadSession(uploadToken);
+      if (!session) {
+        json(res, 404, { error: "上传链接已失效。" });
+        return;
+      }
+      // 只能取自己创建的会话,防止拿别人的 token 捞照片。
+      if (session.userId !== user.id) {
+        json(res, 403, { error: "Forbidden." });
+        return;
+      }
+      json(res, 200, { image: consumeImage(uploadToken) });
+      return;
+    }
+
+    // 电脑关闭二维码弹窗:显式结束会话,不必等 TTL 过期。
+    if (req.method === "DELETE" && url.pathname === "/api/upload-session") {
+      const user = userForToken(bearerToken(req));
+      if (!user) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      const uploadToken = url.searchParams.get("uploadToken") ?? "";
+      const session = getUploadSession(uploadToken);
+      // 只能结束自己的会话。已不存在也算成功(幂等)。
+      if (session && session.userId === user.id) {
+        endUploadSession(uploadToken);
+      }
+      json(res, 200, { ok: true });
+      return;
+    }
+
     json(res, 404, { error: "Not found." });
   }
 
   return {
     handle: (req, res) =>
       handle(req, res).catch((err) => {
-        json(res, 500, { error: err?.message ?? "Internal error." });
+        const message = err?.message ?? "Internal error.";
+        // 请求体超限是用户能自己解决的问题(照片太大),之前被无差别转成 500,
+        // 前端只看到看不懂的 "Request failed (500)"。给它专门的状态码和提示。
+        if (message === "body too large") {
+          json(res, 413, {
+            error: "照片太大,请重新拍一张(或换张分辨率低一些的图片)。",
+          });
+          return;
+        }
+        if (message === "invalid JSON") {
+          json(res, 400, { error: "请求格式错误。" });
+          return;
+        }
+        json(res, 500, { error: message });
       }),
     close: () => db.close(),
   };

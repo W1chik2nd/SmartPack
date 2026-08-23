@@ -7,6 +7,8 @@ import Register from "./pages/Register";
 import Questionnaire from "./pages/Questionnaire";
 import Home from "./pages/index";
 import TripPlanner from "./pages/TripPlanner";
+import Wardrobe from "./pages/Wardrobe";
+import PhoneUpload from "./pages/PhoneUpload";
 
 type Route =
   | "landing"
@@ -14,7 +16,11 @@ type Route =
   | "register"
   | "questionnaire"
   | "home"
-  | "trips";
+  | "trips"
+  | "wardrobe";
+
+/** ?upload=<token> 是手机扫码进来的上传页,免登录。 */
+const uploadToken = new URLSearchParams(window.location.search).get("upload");
 
 function Shell() {
   const { lang, setLang, t } = useLang();
@@ -26,6 +32,11 @@ function Shell() {
   const [booting, setBooting] = useState(true);
 
   useEffect(() => {
+    // 手机上传页不需要登录态,跳过 me() 免得白等一次请求。
+    if (uploadToken) {
+      setBooting(false);
+      return;
+    }
     me()
       .then(({ user }) => {
         setUser(user);
@@ -64,6 +75,11 @@ function Shell() {
   );
 
   if (booting) return null;
+
+  // 手机扫码进来的上传页:免登录,优先于其他路由。
+  if (uploadToken) {
+    return <PhoneUpload uploadToken={uploadToken} />;
+  }
 
   // 落地页是满屏铺版,不显示顶部导航;语言切换单独浮在角上。
   if (route === "landing") {
@@ -126,10 +142,17 @@ function Shell() {
         />
       )}
       {route === "home" && user && (
-        <Home user={user} onOpenTrips={() => setRoute("trips")} />
+        <Home
+          user={user}
+          onOpenTrips={() => setRoute("trips")}
+          onOpenWardrobe={() => setRoute("wardrobe")}
+        />
       )}
       {route === "trips" && user && (
         <TripPlanner user={user} onBack={() => setRoute("home")} />
+      )}
+      {route === "wardrobe" && user && (
+        <Wardrobe onBack={() => setRoute("home")} />
       )}
     </>
   );
