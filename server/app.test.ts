@@ -276,6 +276,34 @@ test("chat requires a session and a configured provider", async () => {
   assert.match(unconfigured.body.error, /AI_API_KEY/);
 });
 
+test("packing requires a session and returns a plan for the slider value", async () => {
+  const anon = await get("/api/packing?balance=50");
+  assert.equal(anon.status, 401);
+
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+
+  const lean = await get("/api/packing?balance=0", token);
+  assert.equal(lean.status, 200);
+  assert.equal(lean.body.plan.balance, 0);
+  assert.ok(lean.body.plan.categories.length > 0);
+  assert.equal(lean.body.plan.essentials[0].label, "身份证");
+
+  // The slider changes the plan: more variety packs more items.
+  const varied = await get("/api/packing?balance=100", token);
+  const count = (p: any) =>
+    p.categories.reduce((n: number, c: any) => n + c.items.length, 0);
+  assert.ok(count(varied.body.plan) > count(lean.body.plan));
+
+  // A missing/garbage balance falls back to the middle rather than erroring.
+  const noParam = await get("/api/packing", token);
+  assert.equal(noParam.status, 200);
+  assert.equal(noParam.body.plan.balance, 50);
+});
+
 test("chat validates the message payload at the boundary", async () => {
   const login = await post("/api/login", {
     email: "anna@example.com",

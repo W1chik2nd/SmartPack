@@ -5,8 +5,9 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Questionnaire from "./pages/Questionnaire";
 import Home from "./pages/Home";
+import PackingList from "./pages/PackingList";
 
-type Route = "landing" | "login" | "register" | "questionnaire" | "home";
+type Route = "landing" | "login" | "register" | "questionnaire" | "home" | "packing";
 
 export default function App() {
   const [route, setRoute] = useState<Route>("landing");
@@ -59,6 +60,12 @@ export default function App() {
         <div className="nav-actions">
           {user ? (
             <>
+              <button
+                className="nav-link"
+                onClick={() => setRoute(route === "packing" ? "home" : "packing")}
+              >
+                {route === "packing" ? "Home" : "Packing List"}
+              </button>
               <span className="nav-user">{user.name}</span>
               <button className="nav-link" onClick={handleSignOut}>
                 Sign Out
@@ -96,7 +103,8 @@ export default function App() {
           onBack={() => setRoute("register")}
         />
       )}
-      {route === "home" && user && <Home user={user} />}
+      {route === "home" && user && <Home user={user} onOpenPacking={() => setRoute("packing")} />}
+      {route === "packing" && user && <PackingList />}
     </>
   );
 }

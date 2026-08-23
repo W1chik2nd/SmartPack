@@ -3,9 +3,10 @@ import ChatWidget from "../components/ChatWidget";
 
 type Props = {
   user: User;
+  onOpenPacking: () => void;
 };
 
-export default function Home({ user }: Props) {
+export default function Home({ user, onOpenPacking }: Props) {
   return (
     <div className="home">
       <ChatWidget />
@@ -40,6 +41,9 @@ export default function Home({ user }: Props) {
             Enter a destination and itinerary; get day-by-day outfits for
             meetings, commutes, and dinners — plus a minimal luggage plan.
           </p>
+          <button className="nav-link" onClick={onOpenPacking}>
+            Open Packing List
+          </button>
         </div>
         <div className="feature-card">
           <div className="icon" aria-hidden="true" />
