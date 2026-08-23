@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
-import { me, setToken, logout, type User } from "./api";
+import { me, setToken, logout, type Credentials, type User } from "./api";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Questionnaire from "./pages/Questionnaire";
 import Home from "./pages/Home";
 
-type Route = "landing" | "login" | "register" | "home";
+type Route = "landing" | "login" | "register" | "questionnaire" | "home";
 
 export default function App() {
   const [route, setRoute] = useState<Route>("landing");
   const [user, setUser] = useState<User | null>(null);
+  // Step-1 credentials live only in memory while the questionnaire is open;
+  // nothing is persisted anywhere until /api/register succeeds.
+  const [pendingCreds, setPendingCreds] = useState<Credentials | null>(null);
   const [booting, setBooting] = useState(true);
 
   useEffect(() => {
@@ -24,6 +28,7 @@ export default function App() {
 
   function handleAuthed(u: User) {
     setUser(u);
+    setPendingCreds(null);
     setRoute("home");
   }
 
@@ -76,7 +81,20 @@ export default function App() {
         <Login onAuthed={handleAuthed} onSwitch={() => setRoute("register")} />
       )}
       {route === "register" && (
-        <Register onAuthed={handleAuthed} onSwitch={() => setRoute("login")} />
+        <Register
+          onContinue={(creds) => {
+            setPendingCreds(creds);
+            setRoute("questionnaire");
+          }}
+          onSwitch={() => setRoute("login")}
+        />
+      )}
+      {route === "questionnaire" && pendingCreds && (
+        <Questionnaire
+          credentials={pendingCreds}
+          onAuthed={handleAuthed}
+          onBack={() => setRoute("register")}
+        />
       )}
       {route === "home" && user && <Home user={user} />}
     </>
