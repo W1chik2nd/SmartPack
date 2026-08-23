@@ -1,20 +1,34 @@
 import { useEffect, useState } from "react";
-import { me, setToken, logout, type User } from "./api";
+import { me, setToken, logout, type Credentials, type User } from "./api";
+import { LangProvider, useLang } from "./i18n/useLang";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Home from "./pages/Home";
+import Questionnaire from "./pages/Questionnaire";
+import Home from "./pages/index";
+import TripPlanner from "./pages/TripPlanner";
 import Wardrobe from "./pages/Wardrobe";
 import PhoneUpload from "./pages/PhoneUpload";
 
-type Route = "landing" | "login" | "register" | "home" | "wardrobe";
+type Route =
+  | "landing"
+  | "login"
+  | "register"
+  | "questionnaire"
+  | "home"
+  | "trips"
+  | "wardrobe";
 
 /** ?upload=<token> 是手机扫码进来的上传页,免登录。 */
 const uploadToken = new URLSearchParams(window.location.search).get("upload");
 
-export default function App() {
+function Shell() {
+  const { lang, setLang, t } = useLang();
   const [route, setRoute] = useState<Route>("landing");
   const [user, setUser] = useState<User | null>(null);
+  // Step-1 credentials live only in memory while the questionnaire is open;
+  // nothing is persisted anywhere until /api/register succeeds.
+  const [pendingCreds, setPendingCreds] = useState<Credentials | null>(null);
   const [booting, setBooting] = useState(true);
 
   useEffect(() => {
@@ -34,6 +48,7 @@ export default function App() {
 
   function handleAuthed(u: User) {
     setUser(u);
+    setPendingCreds(null);
     setRoute("home");
   }
 
@@ -48,6 +63,17 @@ export default function App() {
     setRoute("landing");
   }
 
+  // One toggle for the whole app; the stored value survives refresh/redirect.
+  const langToggle = (
+    <button
+      className="nav-link nav-lang"
+      onClick={() => setLang(lang === "en" ? "zh" : "en")}
+      aria-label={lang === "en" ? "切换到中文" : "Switch to English"}
+    >
+      {lang === "en" ? "中文" : "EN"}
+    </button>
+  );
+
   if (booting) return null;
 
   // 手机扫码进来的上传页:免登录,优先于其他路由。
@@ -55,32 +81,41 @@ export default function App() {
     return <PhoneUpload uploadToken={uploadToken} />;
   }
 
-  // 落地页是满屏铺版,不显示顶部导航。
+  // 落地页是满屏铺版,不显示顶部导航;语言切换单独浮在角上。
   if (route === "landing") {
-    return <Landing onEnter={() => setRoute("login")} />;
+    return (
+      <>
+        <div className="landing-lang">{langToggle}</div>
+        <Landing onEnter={() => setRoute("login")} />
+      </>
+    );
   }
 
   return (
     <>
       <nav className="nav">
-        <button className="nav-brand" onClick={() => setRoute(user ? "home" : "landing")}>
+        <button
+          className="nav-brand"
+          onClick={() => setRoute(user ? "home" : "landing")}
+        >
           SmartPack
         </button>
         <div className="nav-actions">
+          {langToggle}
           {user ? (
             <>
               <span className="nav-user">{user.name}</span>
               <button className="nav-link" onClick={handleSignOut}>
-                Sign Out
+                {t("navSignOut")}
               </button>
             </>
           ) : (
             <>
               <button className="nav-link" onClick={() => setRoute("login")}>
-                Sign In
+                {t("navSignIn")}
               </button>
               <button className="nav-link" onClick={() => setRoute("register")}>
-                Create Account
+                {t("navCreateAccount")}
               </button>
             </>
           )}
@@ -91,12 +126,40 @@ export default function App() {
         <Login onAuthed={handleAuthed} onSwitch={() => setRoute("register")} />
       )}
       {route === "register" && (
-        <Register onAuthed={handleAuthed} onSwitch={() => setRoute("login")} />
+        <Register
+          onContinue={(creds) => {
+            setPendingCreds(creds);
+            setRoute("questionnaire");
+          }}
+          onSwitch={() => setRoute("login")}
+        />
+      )}
+      {route === "questionnaire" && pendingCreds && (
+        <Questionnaire
+          credentials={pendingCreds}
+          onAuthed={handleAuthed}
+          onBack={() => setRoute("register")}
+        />
       )}
       {route === "home" && user && (
-        <Home user={user} onNext={() => setRoute("wardrobe")} />
+        <Home
+          user={user}
+          onOpenTrips={() => setRoute("trips")}
+          onOpenWardrobe={() => setRoute("wardrobe")}
+        />
+      )}
+      {route === "trips" && user && (
+        <TripPlanner user={user} onBack={() => setRoute("home")} />
       )}
       {route === "wardrobe" && user && <Wardrobe />}
     </>
+  );
+}
+
+export default function App() {
+  return (
+    <LangProvider>
+      <Shell />
+    </LangProvider>
   );
 }

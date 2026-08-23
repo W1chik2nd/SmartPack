@@ -77,6 +77,18 @@ npm run dev   # server + client together; open http://localhost:5177
 
 The API server creates `server/data/smartpack.db` automatically on first start.
 
+### AI assistant (optional)
+
+The home page has a chat assistant backed by `/api/chat`. To enable it, give the server an API key:
+
+```sh
+cp server/.env.example server/.env
+# edit server/.env and set AI_API_KEY (OpenAI-compatible providers work;
+# switch vendors via AI_BASE_URL / AI_MODEL — see the comments in the file)
+```
+
+`server/.env` is gitignored — never commit real keys. Without a key the endpoint responds 503 and the chat shows a clear "not configured" message; everything else works normally.
+
 <details>
 <summary>Run the two processes separately (optional)</summary>
 

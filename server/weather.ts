@@ -1,0 +1,49 @@
+// Weather adapter — Open-Meteo (https://open-meteo.com), free and keyless,
+// so the dashboard works with zero configuration. Lives on the server
+// (AGENTS.md §3) so the future iOS client gets weather from our API, not
+// from a vendor SDK.
+
+export type Weather = {
+  tempC: number;
+  condition: string;
+};
+
+// Fallback when the browser denies geolocation: the team's home base.
+export const DEFAULT_COORDS = { lat: 53.8008, lon: -1.5491 }; // Leeds, UK
+
+// WMO weather interpretation codes → short labels.
+function describe(code: number): string {
+  if (code === 0) return "Clear";
+  if (code <= 2) return "Partly cloudy";
+  if (code === 3) return "Overcast";
+  if (code === 45 || code === 48) return "Fog";
+  if (code <= 57) return "Drizzle";
+  if (code <= 67) return "Rain";
+  if (code <= 77) return "Snow";
+  if (code <= 82) return "Showers";
+  if (code <= 86) return "Snow showers";
+  if (code >= 95) return "Thunderstorm";
+  return "—";
+}
+
+export async function currentWeather(lat: number, lon: number): Promise<Weather> {
+  const url =
+    `https://api.open-meteo.com/v1/forecast` +
+    `?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Weather service failed (${res.status})`);
+  }
+  // Third-party response = untrusted external data: check the shape we use.
+  const data = (await res.json()) as {
+    current?: { temperature_2m?: number; weather_code?: number };
+  };
+  const current = data.current;
+  if (!current || typeof current.temperature_2m !== "number") {
+    throw new Error("Weather service returned no data.");
+  }
+  return {
+    tempC: current.temperature_2m,
+    condition: describe(current.weather_code ?? -1),
+  };
+}

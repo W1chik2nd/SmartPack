@@ -1,13 +1,19 @@
 import { useState, type FormEvent } from "react";
-import { register, setToken, type User } from "../api";
+import { checkEmail, type Credentials } from "../api";
+import { useLang } from "../i18n/useLang";
 
 type Props = {
-  onAuthed: (user: User) => void;
+  onContinue: (credentials: Credentials) => void;
   onSwitch: () => void;
 };
 
-export default function Register({ onAuthed, onSwitch }: Props) {
-  const [name, setName] = useState("");
+/**
+ * Sign-up step 1 of 2: account credentials only. Nothing is sent to the
+ * database here — the account is created in one call after the style
+ * questionnaire (step 2), so an abandoned sign-up stores nothing.
+ */
+export default function Register({ onContinue, onSwitch }: Props) {
+  const { t } = useLang();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -30,15 +36,16 @@ export default function Register({ onAuthed, onSwitch }: Props) {
     // duplicates) are enforced by the API — the trust boundary — and its
     // error messages are shown as-is.
     if (password !== confirm) {
-      fail("Passwords do not match.");
+      fail(t("passwordsMismatch"));
       return;
     }
 
     setBusy(true);
     try {
-      const { token, user } = await register(email, name, password);
-      setToken(token);
-      onAuthed(user);
+      // Fail fast on taken/invalid emails so users don't fill the
+      // questionnaire for nothing. Creates no account.
+      await checkEmail(email);
+      onContinue({ email, password });
     } catch (err) {
       fail(err instanceof Error ? err.message : "Registration failed.");
     } finally {
@@ -56,8 +63,9 @@ export default function Register({ onAuthed, onSwitch }: Props) {
 
       <div className="auth-panel">
         <div className="auth-headline">
-          <h1>Create your SmartPack account</h1>
-          <p>One account. Every outfit. Every trip.</p>
+          <p className="auth-step">{t("step1")}</p>
+          <h1>{t("registerTitle")}</h1>
+          <p>{t("registerSubtitle")}</p>
         </div>
 
         <form
@@ -73,19 +81,7 @@ export default function Register({ onAuthed, onSwitch }: Props) {
           )}
 
           <div className="field">
-            <label htmlFor="reg-name">Name</label>
-            <input
-              id="reg-name"
-              type="text"
-              autoComplete="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-          </div>
-
-          <div className="field">
-            <label htmlFor="reg-email">Email</label>
+            <label htmlFor="reg-email">{t("email")}</label>
             <input
               id="reg-email"
               type="email"
@@ -97,7 +93,7 @@ export default function Register({ onAuthed, onSwitch }: Props) {
           </div>
 
           <div className="field">
-            <label htmlFor="reg-password">Password</label>
+            <label htmlFor="reg-password">{t("password")}</label>
             <input
               id="reg-password"
               type="password"
@@ -108,12 +104,12 @@ export default function Register({ onAuthed, onSwitch }: Props) {
               required
             />
             <p className="field-hint" id="reg-password-hint">
-              At least 8 characters.
+              {t("passwordHint")}
             </p>
           </div>
 
           <div className="field">
-            <label htmlFor="reg-confirm">Confirm Password</label>
+            <label htmlFor="reg-confirm">{t("confirmPassword")}</label>
             <input
               id="reg-confirm"
               type="password"
@@ -125,13 +121,13 @@ export default function Register({ onAuthed, onSwitch }: Props) {
           </div>
 
           <button className="btn-primary" type="submit" disabled={busy}>
-            {busy ? "Creating Account…" : "Create Account"}
+            {busy ? t("checking") : t("continueBtn")}
           </button>
 
           <div className="auth-switch">
-            Already have an account?{" "}
+            {t("haveAccount")}{" "}
             <button type="button" onClick={onSwitch}>
-              Sign in.
+              {t("signInLink")}
             </button>
           </div>
         </form>

@@ -26,6 +26,9 @@ import {
 import { createWardrobeStore } from "./wardrobe.ts";
 import { handleWardrobeRoutes } from "./wardrobe-routes.ts";
 import { dirname, join } from "node:path";
+import { aiConfigured, chatCompletion, type ChatMessage } from "./ai.ts";
+import { buildSystemPrompt } from "./prompts.ts";
+import { currentWeather, DEFAULT_COORDS } from "./weather.ts";
 
 // Password hashing (AGENTS.md §5): passwords require a password-specific KDF,
 // not a general-purpose hash like SHA256. We use scrypt because it is a
@@ -42,6 +45,10 @@ type UserRow = {
   name: string;
   pass_salt: string;
   pass_hash: string;
+  age: number | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  style: string | null;
 };
 
 function publicUser(u: UserRow) {
@@ -49,6 +56,20 @@ function publicUser(u: UserRow) {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// Scenario catalog (AGENTS.md §3): the set of packing scenarios lives on the
+// server, not the client. Both web and the future iOS client render whatever
+// this returns, so the list — and later the packing rules keyed off each id —
+// stay in one place. `image` points at a client-served asset; a missing file
+// degrades to the card's placeholder, so new scenarios need no code change.
+const SCENARIOS = [
+  { id: "commute", label: "通勤", image: "/scenarios/commute.jpg" },
+  { id: "travel", label: "旅行", image: "/scenarios/travel.jpg" },
+  { id: "business", label: "出差", image: "/scenarios/business.jpg" },
+  { id: "date", label: "约会", image: "/scenarios/date.jpg" },
+  { id: "sport", label: "运动", image: "/scenarios/sport.jpg" },
+  { id: "formal", label: "正式场合", image: "/scenarios/formal.jpg" },
+] as const;
 
 export type App = {
   handle: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
@@ -64,6 +85,10 @@ export function createApp(dbPath: string): App {
       name        TEXT NOT NULL,
       pass_salt   TEXT NOT NULL,
       pass_hash   TEXT NOT NULL,
+      age         INTEGER,
+      height_cm   REAL,
+      weight_kg   REAL,
+      style       TEXT,
       created_at  TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS sessions (
@@ -75,6 +100,22 @@ export function createApp(dbPath: string): App {
 
   // 照片存数据库同级的 photos/ 目录:测试用临时库时会自动隔离到临时目录。
   const wardrobe = createWardrobeStore(db, join(dirname(dbPath), "photos"));
+
+  // Dev databases created before the questionnaire existed lack the profile
+  // columns; CREATE TABLE IF NOT EXISTS won't add them, so patch in place.
+  const existing = new Set(
+    (db.prepare(`PRAGMA table_info(users)`).all() as { name: string }[]).map(
+      (c) => c.name
+    )
+  );
+  for (const [col, type] of [
+    ["age", "INTEGER"],
+    ["height_cm", "REAL"],
+    ["weight_kg", "REAL"],
+    ["style", "TEXT"],
+  ] as const) {
+    if (!existing.has(col)) db.exec(`ALTER TABLE users ADD COLUMN ${col} ${type}`);
+  }
 
   function json(res: ServerResponse, status: number, body: unknown): void {
     res.writeHead(status, {
@@ -139,18 +180,58 @@ export function createApp(dbPath: string): App {
       return;
     }
 
-    if (req.method === "POST" && url.pathname === "/api/register") {
-      const { email, name, password } = await readBody(req);
+    // Pre-check for step 1 of sign-up: lets the client reject a duplicate
+    // email before the questionnaire, without creating anything.
+    if (req.method === "POST" && url.pathname === "/api/check-email") {
+      const { email } = await readBody(req);
       if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
         json(res, 400, { error: "Please enter a valid email address." });
+        return;
+      }
+      const exists = db
+        .prepare(`SELECT 1 FROM users WHERE email = ?`)
+        .get(email.trim());
+      if (exists) {
+        json(res, 409, { error: "An account with this email already exists." });
+        return;
+      }
+      json(res, 200, { ok: true });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/register") {
+      // Registration is a single atomic call: account fields AND the style
+      // questionnaire together. The client collects them across two screens,
+      // but nothing touches the database until the questionnaire is done —
+      // an abandoned sign-up leaves no trace (product rule, enforced here).
+      const { email, password, name, age, heightCm, weightKg, style } =
+        await readBody(req);
+      if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
+        json(res, 400, { error: "Please enter a valid email address." });
+        return;
+      }
+      if (typeof password !== "string" || password.length < 8) {
+        json(res, 400, { error: "Password must be at least 8 characters." });
         return;
       }
       if (typeof name !== "string" || name.trim().length < 1) {
         json(res, 400, { error: "Please enter your name." });
         return;
       }
-      if (typeof password !== "string" || password.length < 8) {
-        json(res, 400, { error: "Password must be at least 8 characters." });
+      if (!Number.isInteger(age) || age < 1 || age > 120) {
+        json(res, 400, { error: "Please enter a valid age." });
+        return;
+      }
+      if (!Number.isFinite(heightCm) || heightCm <= 0) {
+        json(res, 400, { error: "Please enter a valid height in cm." });
+        return;
+      }
+      if (!Number.isFinite(weightKg) || weightKg <= 0) {
+        json(res, 400, { error: "Please enter a valid weight in kg." });
+        return;
+      }
+      if (typeof style !== "string" || style.trim().length < 1) {
+        json(res, 400, { error: "Please choose a preferred style." });
         return;
       }
       const exists = db
@@ -164,8 +245,19 @@ export function createApp(dbPath: string): App {
       const salt = randomBytes(16).toString("hex");
       const hash = hashPassword(password, salt).toString("hex");
       db.prepare(
-        `INSERT INTO users (id, email, name, pass_salt, pass_hash) VALUES (?, ?, ?, ?, ?)`
-      ).run(id, email.trim(), name.trim(), salt, hash);
+        `INSERT INTO users (id, email, name, pass_salt, pass_hash, age, height_cm, weight_kg, style)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+      ).run(
+        id,
+        email.trim(),
+        name.trim(),
+        salt,
+        hash,
+        age,
+        heightCm,
+        weightKg,
+        style.trim()
+      );
 
       const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(id) as UserRow;
       json(res, 201, { token: createSession(id), user: publicUser(user) });
@@ -197,6 +289,32 @@ export function createApp(dbPath: string): App {
       return;
     }
 
+    // Live weather for the dashboard. Coordinates are optional query params;
+    // without them we fall back to the default city rather than failing the card.
+    if (req.method === "GET" && url.pathname === "/api/weather") {
+      const lat = Number(url.searchParams.get("lat") ?? DEFAULT_COORDS.lat);
+      const lon = Number(url.searchParams.get("lon") ?? DEFAULT_COORDS.lon);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+        json(res, 400, { error: "Invalid coordinates." });
+        return;
+      }
+      const weather = await currentWeather(lat, lon);
+      json(res, 200, weather);
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/scenarios") {
+      // Signed-in only: the picker is the first screen after auth. The catalog
+      // itself is not secret, but gating it keeps every post-auth screen behind
+      // the same check and avoids an anonymous surface we would only tighten later.
+      if (!userForToken(bearerToken(req))) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      json(res, 200, { scenarios: SCENARIOS });
+      return;
+    }
+
     if (req.method === "GET" && url.pathname === "/api/me") {
       const user = userForToken(bearerToken(req));
       if (!user) {
@@ -211,6 +329,45 @@ export function createApp(dbPath: string): App {
       const token = bearerToken(req);
       if (token) db.prepare(`DELETE FROM sessions WHERE token = ?`).run(token);
       json(res, 200, { ok: true });
+      return;
+    }
+
+    // SmartPack Assistant. Session-gated: the system prompt embeds the
+    // user's questionnaire profile, so anonymous chat has nothing to
+    // personalize with. The client sends the visible conversation each turn;
+    // the prompt itself never leaves the server.
+    if (req.method === "POST" && url.pathname === "/api/chat") {
+      const user = userForToken(bearerToken(req));
+      if (!user) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      if (!aiConfigured()) {
+        json(res, 503, {
+          error:
+            "AI is not configured. Set AI_API_KEY in server/.env (see server/.env.example).",
+        });
+        return;
+      }
+      const { messages } = await readBody(req);
+      const valid =
+        Array.isArray(messages) &&
+        messages.length > 0 &&
+        messages.length <= 40 &&
+        messages.every(
+          (m: ChatMessage) =>
+            (m?.role === "user" || m?.role === "assistant") &&
+            typeof m?.content === "string" &&
+            m.content.length > 0 &&
+            m.content.length <= 4000
+        );
+      if (!valid) {
+        json(res, 400, { error: "Invalid messages." });
+        return;
+      }
+      const systemPrompt = buildSystemPrompt(user);
+      const reply = await chatCompletion(systemPrompt, messages);
+      json(res, 200, { reply });
       return;
     }
 

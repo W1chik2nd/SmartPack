@@ -28,7 +28,16 @@ async function request<T>(
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(path, { ...options, headers });
+  // A dead backend surfaces as a fetch TypeError ("Failed to fetch"), which
+  // reads like a validation bug. Name the real problem instead.
+  let res: Response;
+  try {
+    res = await fetch(path, { ...options, headers });
+  } catch {
+    throw new Error(
+      "Cannot reach the SmartPack server. Is it running? Start everything with: npm run dev"
+    );
+  }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(body.error ?? `Request failed (${res.status})`);
@@ -36,14 +45,35 @@ async function request<T>(
   return body as T;
 }
 
+/** Step-1 credentials, held in memory until the questionnaire completes. */
+export type Credentials = {
+  email: string;
+  password: string;
+};
+
+/** The style questionnaire — registration is only accepted with all of it. */
+export type Profile = {
+  name: string;
+  age: number;
+  heightCm: number;
+  weightKg: number;
+  style: string;
+};
+
+export function checkEmail(email: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>("/api/check-email", {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
 export function register(
-  email: string,
-  name: string,
-  password: string
+  credentials: Credentials,
+  profile: Profile
 ): Promise<AuthResponse> {
   return request<AuthResponse>("/api/register", {
     method: "POST",
-    body: JSON.stringify({ email, name, password }),
+    body: JSON.stringify({ ...credentials, ...profile }),
   });
 }
 
@@ -52,6 +82,16 @@ export function login(email: string, password: string): Promise<AuthResponse> {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
+}
+
+export type Scenario = {
+  id: string;
+  label: string;
+  image: string;
+};
+
+export function scenarios(): Promise<{ scenarios: Scenario[] }> {
+  return request<{ scenarios: Scenario[] }>("/api/scenarios");
 }
 
 export function me(): Promise<{ user: User }> {
@@ -157,4 +197,30 @@ export function endUploadSession(uploadToken: string): Promise<{ ok: boolean }> 
     `/api/upload-session?uploadToken=${encodeURIComponent(uploadToken)}`,
     { method: "DELETE" }
   );
+}
+
+// ---- 天气 / AI 助手 ----
+
+export type Weather = {
+  tempC: number;
+  condition: string;
+};
+
+/** Without coordinates the server answers for its default city. */
+export function weather(lat?: number, lon?: number): Promise<Weather> {
+  const query =
+    lat != null && lon != null ? `?lat=${lat}&lon=${lon}` : "";
+  return request<Weather>(`/api/weather${query}`);
+}
+
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export function chat(messages: ChatMessage[]): Promise<{ reply: string }> {
+  return request<{ reply: string }>("/api/chat", {
+    method: "POST",
+    body: JSON.stringify({ messages }),
+  });
 }

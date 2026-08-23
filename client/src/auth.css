@@ -42,6 +42,20 @@
   margin-bottom: var(--space-3);
 }
 
+/* Sign-up progress marker (step 1 of 2 / step 2 of 2) */
+.auth-step {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--black);
+  background: var(--yellow);
+  border: 2px solid var(--black);
+  padding: 4px 10px;
+  margin-bottom: var(--space-2);
+}
+
 .auth-headline h1 {
   font-size: 36px;
   font-weight: var(--weight-heavy);
@@ -118,6 +132,61 @@
   margin-top: var(--space-1);
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+/* Two numeric fields (height / weight) share one grid row */
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-2);
+}
+
+/* Questionnaire style picker: radio choices as flat selectable blocks */
+.style-options {
+  border: none;
+}
+
+.style-options legend {
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: var(--space-1);
+}
+
+.style-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-1);
+}
+
+.style-options legend {
+  grid-column: 1 / -1;
+}
+
+.style-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 10px 12px;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  border: 2px solid var(--black);
+  background: var(--white);
+  cursor: pointer;
+}
+
+.style-option.selected {
+  background: var(--blue);
+  color: var(--white);
+}
+
+.style-option input {
+  accent-color: var(--blue);
+}
+
+.style-option:has(input:focus-visible) {
+  outline: 3px solid var(--yellow);
 }
 
 .error-banner {
