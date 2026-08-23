@@ -196,6 +196,25 @@ test("me returns the user for a valid token and 401 otherwise", async () => {
   assert.equal(bogus.status, 401);
 });
 
+test("scenarios requires auth and returns the catalog", async () => {
+  const anon = await get("/api/scenarios");
+  assert.equal(anon.status, 401);
+
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const ok = await get("/api/scenarios", login.body.token);
+  assert.equal(ok.status, 200);
+  assert.ok(Array.isArray(ok.body.scenarios));
+  assert.ok(ok.body.scenarios.length > 0);
+  for (const s of ok.body.scenarios) {
+    assert.equal(typeof s.id, "string");
+    assert.equal(typeof s.label, "string");
+    assert.equal(typeof s.image, "string");
+  }
+});
+
 test("logout invalidates the session token", async () => {
   const login = await post("/api/login", {
     email: "anna@example.com",
@@ -251,6 +270,16 @@ test("login works for accounts with no questionnaire profile (pre-migration user
   // The session works end to end too.
   const who = await get("/api/me", login.body.token);
   assert.equal(who.status, 200);
+});
+
+test("weather rejects invalid coordinates at the boundary", async () => {
+  // Only the input validation is tested here — the happy path calls the
+  // real Open-Meteo API, which unit tests must not depend on.
+  const cases = ["lat=abc&lon=0", "lat=91&lon=0", "lat=0&lon=181"];
+  for (const qs of cases) {
+    const { status } = await get(`/api/weather?${qs}`);
+    assert.equal(status, 400);
+  }
 });
 
 test("chat requires a session and a configured provider", async () => {

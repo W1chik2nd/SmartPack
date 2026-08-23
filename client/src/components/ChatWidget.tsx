@@ -1,14 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { chat, type ChatMessage } from "../api";
+import { useLang } from "../i18n/useLang";
 
-// The assistant's opening line is presentation only — real conversation
-// turns go through /api/chat, where the server owns the prompt and the
-// personalization (thin client per AGENTS.md §3).
-const GREETING: ChatMessage = {
-  role: "assistant",
-  content:
-    "Hi! I'm your SmartPack assistant. Ask me what to wear today, or tell me about a trip — destination, dates, occasions — and I'll plan outfits and a packing list.",
-};
+// A sentinel marks the greeting: it is presentation only (rendered from the
+// i18n table in the current language), never sent to /api/chat, where the
+// server owns the prompt and personalization (thin client per AGENTS.md §3).
+const GREETING_ID = "__greeting__";
 
 /**
  * Floating chat launcher (bottom-right) plus the assistant dialog.
@@ -16,8 +13,9 @@ const GREETING: ChatMessage = {
  * assistant should be available.
  */
 export default function ChatWidget() {
+  const { t } = useLang();
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([GREETING]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -39,15 +37,14 @@ export default function ChatWidget() {
 
     setError(null);
     setInput("");
-    // The greeting is local flavor, not part of the model conversation.
-    const history = [...messages.filter((m) => m !== GREETING), { role: "user" as const, content: text }];
-    setMessages([GREETING, ...history]);
+    const history = [...messages, { role: "user" as const, content: text }];
+    setMessages(history);
     setBusy(true);
     try {
       const { reply } = await chat(history);
-      setMessages([GREETING, ...history, { role: "assistant", content: reply }]);
+      setMessages([...history, { role: "assistant", content: reply }]);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "The assistant is unavailable.");
+      setError(err instanceof Error ? err.message : t("chatUnavailable"));
     } finally {
       setBusy(false);
     }
@@ -59,29 +56,34 @@ export default function ChatWidget() {
         <section
           className="chat-panel"
           role="dialog"
-          aria-label="SmartPack assistant"
+          aria-label={t("chatTitle")}
           onKeyDown={(e) => {
             if (e.key === "Escape") setOpen(false);
           }}
         >
           <header className="chat-header">
-            <h2>Assistant</h2>
+            <h2>{t("chatTitle")}</h2>
             <button
               className="chat-close"
               onClick={() => setOpen(false)}
-              aria-label="Close assistant"
+              aria-label={t("chatCloseDialog")}
             >
               ×
             </button>
           </header>
 
           <div className="chat-log" ref={logRef} aria-live="polite">
+            <p key={GREETING_ID} className="chat-msg assistant">
+              {t("chatGreeting")}
+            </p>
             {messages.map((m, i) => (
               <p key={i} className={`chat-msg ${m.role}`}>
                 {m.content}
               </p>
             ))}
-            {busy && <p className="chat-msg assistant chat-thinking">Thinking…</p>}
+            {busy && (
+              <p className="chat-msg assistant chat-thinking">{t("chatThinking")}</p>
+            )}
             {error && (
               <p className="chat-msg chat-error" role="alert">
                 {error}
@@ -94,11 +96,11 @@ export default function ChatWidget() {
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask about outfits or packing…"
-              aria-label="Message the assistant"
+              placeholder={t("chatPlaceholder")}
+              aria-label={t("chatTitle")}
             />
             <button type="submit" disabled={busy || input.trim().length === 0}>
-              Send
+              {t("chatSend")}
             </button>
           </form>
         </section>
@@ -108,7 +110,7 @@ export default function ChatWidget() {
         className="chat-launcher"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        aria-label={open ? "Close SmartPack assistant" : "Open SmartPack assistant"}
+        aria-label={open ? t("chatClose") : t("chatOpen")}
       >
         {/* Bauhaus speech bubble: rectangle + triangle tail, three primary
             dots. Pure geometry, colored via theme tokens in chat.css. */}
