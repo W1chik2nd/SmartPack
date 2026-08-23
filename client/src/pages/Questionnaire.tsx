@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { register, setToken, type Credentials, type User } from "../api";
+import { useLang } from "../i18n/useLang";
 
 type Props = {
   credentials: Credentials;
@@ -9,14 +10,15 @@ type Props = {
 
 // Style options mirror the "Dressing Preference Learning" feature
 // (docs/personas-and-user-stories.md, US 2.x): the answer seeds the
-// recommendation engine's first profile.
-const STYLES = [
-  "Business",
-  "Casual",
-  "Streetwear",
-  "Minimalist",
-  "Outdoor",
-  "Elegant",
+// recommendation engine's first profile. Stored value stays English (it is
+// data, not UI); the label shown follows the current language.
+const STYLES: { value: string; zh: string }[] = [
+  { value: "Business", zh: "商务" },
+  { value: "Casual", zh: "休闲" },
+  { value: "Streetwear", zh: "街头" },
+  { value: "Minimalist", zh: "极简" },
+  { value: "Outdoor", zh: "户外" },
+  { value: "Elegant", zh: "优雅" },
 ];
 
 /**
@@ -26,6 +28,7 @@ const STYLES = [
  * account, by design.
  */
 export default function Questionnaire({ credentials, onAuthed, onBack }: Props) {
+  const { lang, t } = useLang();
   const [name, setName] = useState("");
   const [age, setAge] = useState("");
   const [heightCm, setHeightCm] = useState("");
@@ -70,12 +73,9 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
 
       <div className="auth-panel">
         <div className="auth-headline">
-          <p className="auth-step">Step 2 of 2</p>
-          <h1>Tell us about yourself</h1>
-          <p>
-            SmartPack tailors every outfit to you. Complete this to finish
-            creating your account.
-          </p>
+          <p className="auth-step">{t("step2")}</p>
+          <h1>{t("quizTitle")}</h1>
+          <p>{t("quizSubtitle")}</p>
         </div>
 
         <form
@@ -90,7 +90,7 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
           )}
 
           <div className="field">
-            <label htmlFor="q-name">Name</label>
+            <label htmlFor="q-name">{t("name")}</label>
             <input
               id="q-name"
               type="text"
@@ -102,7 +102,7 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
           </div>
 
           <div className="field">
-            <label htmlFor="q-age">Age</label>
+            <label htmlFor="q-age">{t("age")}</label>
             <input
               id="q-age"
               type="number"
@@ -117,7 +117,7 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
 
           <div className="field-row">
             <div className="field">
-              <label htmlFor="q-height">Height (cm)</label>
+              <label htmlFor="q-height">{t("heightCm")}</label>
               <input
                 id="q-height"
                 type="number"
@@ -131,7 +131,7 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
             </div>
 
             <div className="field">
-              <label htmlFor="q-weight">Weight (kg)</label>
+              <label htmlFor="q-weight">{t("weightKg")}</label>
               <input
                 id="q-weight"
                 type="number"
@@ -146,32 +146,32 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
           </div>
 
           <fieldset className="field style-options">
-            <legend>Preferred style</legend>
+            <legend>{t("preferredStyle")}</legend>
             {STYLES.map((option) => (
               <label
-                key={option}
-                className={`style-option${style === option ? " selected" : ""}`}
+                key={option.value}
+                className={`style-option${style === option.value ? " selected" : ""}`}
               >
                 <input
                   type="radio"
                   name="style"
-                  value={option}
-                  checked={style === option}
-                  onChange={() => setStyle(option)}
+                  value={option.value}
+                  checked={style === option.value}
+                  onChange={() => setStyle(option.value)}
                   required
                 />
-                {option}
+                {lang === "zh" ? option.zh : option.value}
               </label>
             ))}
           </fieldset>
 
           <button className="btn-primary" type="submit" disabled={busy}>
-            {busy ? "Creating Account…" : "Finish & Create Account"}
+            {busy ? t("creating") : t("finishCreate")}
           </button>
 
           <div className="auth-switch">
             <button type="button" onClick={onBack}>
-              Back to account details.
+              {t("backToAccount")}
             </button>
           </div>
         </form>

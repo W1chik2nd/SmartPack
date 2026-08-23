@@ -6,6 +6,7 @@
 @import "./auth.css";
 @import "./chat.css";
 @import "./dashboard.css";
+@import "./scenarios.css";
 
 * {
   margin: 0;
@@ -122,125 +123,38 @@ body {
   color: var(--text);
 }
 
+/* Language toggle: same flat button, slightly tighter */
+.nav-lang {
+  min-width: 52px;
+}
+
+/* On the landing page there is no nav bar; float the toggle top-right */
+.landing-lang {
+  position: fixed;
+  top: var(--space-2);
+  right: var(--space-2);
+  z-index: 110;
+}
+
+.landing-lang .nav-link {
+  background: var(--white);
+}
+
+/* Screen-reader-only helper */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---------- auth pages: see auth.css ---------- */
 
-/* ---------- home page ---------- */
-
-.home {
-  animation: fadeIn 0.3s ease both;
-}
-
-.hero {
-  padding: 128px var(--space-3) var(--space-5);
-  max-width: 980px;
-  margin: 0 auto;
-  text-align: left;
-}
-
-.hero .eyebrow {
-  display: inline-block;
-  font-size: 14px;
-  font-weight: var(--weight-heavy);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--black);
-  background: var(--yellow);
-  padding: 6px 12px;
-  border: 2px solid var(--black);
-}
-
-.hero h1 {
-  margin-top: var(--space-3);
-  font-size: 56px;
-  font-weight: var(--weight-heavy);
-  letter-spacing: -0.015em;
-  line-height: 1.05;
-  text-transform: uppercase;
-  max-width: 720px;
-}
-
-.hero p.sub {
-  margin-top: var(--space-3);
-  max-width: 560px;
-  font-size: 19px;
-  font-weight: var(--weight-regular);
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
-.feature-grid {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: 0 var(--space-3) var(--space-5);
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: var(--space-3);
-}
-
-.feature-card {
-  background: var(--surface);
-  border: var(--border);
-  border-radius: var(--radius);
-  padding: var(--space-3);
-  text-align: left;
-}
-
-/* Geometric markers replace pictorial icons: square / circle / triangle in
-   the three primaries identify the three feature groups. */
-.feature-card .icon {
-  width: 40px;
-  height: 40px;
-}
-
-.feature-card:nth-child(1) .icon {
-  background: var(--red);
-}
-
-.feature-card:nth-child(2) .icon {
-  background: var(--yellow);
-  border-radius: 50%;
-}
-
-.feature-card:nth-child(3) .icon {
-  background: transparent;
-  width: 0;
-  height: 0;
-  border-left: 20px solid transparent;
-  border-right: 20px solid transparent;
-  border-bottom: 40px solid var(--blue);
-}
-
-.feature-card h3 {
-  margin-top: var(--space-2);
-  font-size: 20px;
-  font-weight: var(--weight-heavy);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-}
-
-.feature-card p {
-  margin-top: var(--space-1);
-  font-size: 15px;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
-.footer {
-  max-width: 980px;
-  margin: 0 auto;
-  padding: var(--space-3);
-  text-align: left;
-  font-size: 13px;
-  font-weight: var(--weight-bold);
-  color: var(--text);
-  border-top: var(--border);
-}
-
-@media (max-width: 600px) {
-  .hero h1 {
-    font-size: 36px;
-  }
-}
 
 /* ---------- landing (first screen, unauthenticated) ---------- */
 
@@ -364,7 +278,7 @@ body {
 /* Accessibility: no motion for users who ask for none */
 @media (prefers-reduced-motion: reduce) {
   .auth-page,
-  .home,
+  .scenarios,
   .error-banner,
   .auth-card.shake,
   .landing {
@@ -372,10 +286,17 @@ body {
   }
   .nav-link,
   .btn-primary,
+  .scenario-card,
+  .scenario-card:hover,
+  .scenario-card.is-selected,
   .landing-enter,
   .landing-enter:hover,
   .landing-enter:active {
     transition: none;
     transform: none;
+  }
+  /* Arrow keeps its translateY centering; only its color transition is dropped. */
+  .scenario-arrow {
+    transition: none;
   }
 }

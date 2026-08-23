@@ -196,6 +196,25 @@ test("me returns the user for a valid token and 401 otherwise", async () => {
   assert.equal(bogus.status, 401);
 });
 
+test("scenarios requires auth and returns the catalog", async () => {
+  const anon = await get("/api/scenarios");
+  assert.equal(anon.status, 401);
+
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const ok = await get("/api/scenarios", login.body.token);
+  assert.equal(ok.status, 200);
+  assert.ok(Array.isArray(ok.body.scenarios));
+  assert.ok(ok.body.scenarios.length > 0);
+  for (const s of ok.body.scenarios) {
+    assert.equal(typeof s.id, "string");
+    assert.equal(typeof s.label, "string");
+    assert.equal(typeof s.image, "string");
+  }
+});
+
 test("logout invalidates the session token", async () => {
   const login = await post("/api/login", {
     email: "anna@example.com",
