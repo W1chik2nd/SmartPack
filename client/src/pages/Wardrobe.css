@@ -1,0 +1,305 @@
+/* Wardrobe 衣柜页 — 线框网格 + Bauhaus 规范(背景用全局 --bg token) */
+
+.wardrobe {
+  min-height: 100%;
+  padding: 72px 32px 48px;
+  background: var(--bg);
+  animation: fadeIn 0.5s ease both;
+}
+
+.wardrobe-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1080px;
+  margin: 0 auto 24px;
+}
+
+.wardrobe-title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--blue);
+}
+
+/* 拍照按钮:Bauhaus 方块 + 硬边阴影 */
+.wardrobe-camera {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: var(--red);
+  border: 3px solid var(--text);
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--text);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.wardrobe-camera svg {
+  width: 30px;
+  height: 30px;
+}
+
+.wardrobe-camera:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--text);
+}
+
+.wardrobe-camera:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--text);
+}
+
+.wardrobe-camera:focus-visible {
+  outline: 4px solid var(--yellow);
+  outline-offset: 3px;
+}
+
+/* 线框网格:粗黑描边格子,对应手绘线框图 */
+.wardrobe-grid {
+  max-width: 1080px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  border: 3px solid var(--text);
+  background: #fff;
+}
+
+.wardrobe-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  /* 标题 + 款式/版型两行文字;细节只存库不展示 */
+  aspect-ratio: 1 / 1.05;
+  padding: 16px 12px;
+  border: 1.5px solid var(--text);
+  color: var(--text);
+}
+
+.wardrobe-sketch {
+  width: 70%;
+  height: auto;
+}
+
+.wardrobe-photo {
+  width: 70%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border: 2px solid var(--text);
+  border-radius: 4px;
+}
+
+/* 数量角标:图示的「数量 ×××」 */
+.wardrobe-count {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* 卡片大标题:识别出的“黄色宽松外套”这类概览 */
+.wardrobe-item-title {
+  font-size: 15px;
+  font-weight: var(--weight-heavy);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* 细节摘要(品类·材质·季节);完整细节在库里供 AI 分析 */
+.wardrobe-item-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+/* 删除按钮:左上角,与右上角数量角标错开 */
+.wardrobe-delete {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--white);
+  background: var(--red);
+  border: 2px solid var(--text);
+  border-radius: var(--radius);
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+/* 平时隐藏,悬停或键盘聚焦时出现,避免误删且不干扰浏览 */
+.wardrobe-cell:hover .wardrobe-delete,
+.wardrobe-delete:focus-visible {
+  opacity: 1;
+}
+
+.wardrobe-delete:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+/* 识别中的占位提示 */
+.wardrobe-pending {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--blue);
+  text-align: center;
+  line-height: 1.3;
+}
+
+.wardrobe-error {
+  max-width: 1080px;
+  margin: 0 auto var(--space-2);
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--red);
+  background: var(--white);
+  border-left: 6px solid var(--red);
+}
+
+/* 空衣柜占位 */
+.wardrobe-empty {
+  grid-column: 1 / -1;
+  aspect-ratio: auto;
+  padding: var(--space-4);
+  gap: 6px;
+}
+
+.wardrobe-empty p {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.wardrobe-empty-hint {
+  font-size: 13px !important;
+  font-weight: 400 !important;
+  color: var(--text-secondary);
+}
+
+/* 手机拍照用的隐藏 input */
+.wardrobe-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* 电脑端扫码弹窗 */
+.wardrobe-qr-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  background: rgba(29, 53, 87, 0.45);
+}
+
+.wardrobe-qr-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 28px 32px;
+  background: #fff;
+  border: 3px solid var(--text);
+  border-radius: 8px;
+  box-shadow: 6px 6px 0 var(--text);
+  max-width: 320px;
+  text-align: center;
+}
+
+.wardrobe-qr-card p {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.5;
+}
+
+/* localhost 时不展示二维码(手机扫不到),只给可操作的指引 */
+.wardrobe-qr-warn {
+  font-weight: 700;
+  border-left: 6px solid var(--red);
+  padding-left: 12px;
+  text-align: left;
+}
+
+.wardrobe-qr-url {
+  font-size: 12px;
+  word-break: break-all;
+  padding: 6px 10px;
+  background: var(--bg);
+  border: 2px solid var(--text);
+}
+
+.wardrobe-qr-note {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* 轮询等待提示:告诉用户电脑正在等手机那边的照片 */
+.wardrobe-qr-waiting {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue);
+  background: var(--yellow);
+  padding: 6px 14px;
+  border: 2px solid var(--text);
+}
+
+.wardrobe-qr-close {
+  padding: 10px 28px;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--blue);
+  border: 3px solid var(--text);
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 3px 3px 0 var(--text);
+}
+
+.wardrobe-qr-close:hover {
+  background: var(--red);
+}
+
+.wardrobe-qr-close:focus-visible {
+  outline: 4px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .wardrobe {
+    padding: 64px 16px 32px;
+  }
+  .wardrobe-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wardrobe {
+    animation: fadeIn 0.3s ease both;
+  }
+  .wardrobe-camera,
+  .wardrobe-camera:hover,
+  .wardrobe-camera:active {
+    transition: none;
+    transform: none;
+  }
+}

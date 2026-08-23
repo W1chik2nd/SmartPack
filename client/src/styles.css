@@ -166,6 +166,29 @@ body {
   line-height: 1.5;
 }
 
+/* 临时的“下一步”入口:直达衣柜页 */
+.hero-next {
+  margin-top: var(--space-3);
+  padding: 14px 32px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: var(--weight-bold);
+  color: var(--white);
+  background: var(--blue);
+  border: var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.hero-next:hover {
+  background: var(--red);
+}
+
+.hero-next:focus-visible {
+  outline: 4px solid var(--yellow);
+  outline-offset: 3px;
+}
+
 .feature-grid {
   max-width: 980px;
   margin: 0 auto;
@@ -331,10 +354,6 @@ body {
 .landing-enter:hover {
   background: var(--blue);
   transform: translateX(4px);
-}
-
-.landing-enter:active {
-  transform: translateX(0) scale(0.97);
 }
 
 /* clip-path 会裁掉 outline/box-shadow,所以焦点态用变色来指示。 */
