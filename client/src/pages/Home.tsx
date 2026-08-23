@@ -22,7 +22,9 @@ export default function Home({ user }: Props) {
 
       <section className="feature-grid">
         <div className="feature-card">
-          <div className="icon">👔</div>
+          {/* Geometric markers (square/circle/triangle), not pictograms —
+              shapes are drawn in CSS and carry no text for screen readers */}
+          <div className="icon" aria-hidden="true" />
           <h3>Daily Outfits</h3>
           <p>
             A complete, ready-to-wear outfit every morning, matched to today's
@@ -30,7 +32,7 @@ export default function Home({ user }: Props) {
           </p>
         </div>
         <div className="feature-card">
-          <div className="icon">🧳</div>
+          <div className="icon" aria-hidden="true" />
           <h3>Trip Planning</h3>
           <p>
             Enter a destination and itinerary; get day-by-day outfits for
@@ -38,7 +40,7 @@ export default function Home({ user }: Props) {
           </p>
         </div>
         <div className="feature-card">
-          <div className="icon">🔔</div>
+          <div className="icon" aria-hidden="true" />
           <h3>Smart Reminders</h3>
           <p>
             Forecast changes before departure? SmartPack tells you exactly what
