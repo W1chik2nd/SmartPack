@@ -1,0 +1,334 @@
+/* Home dashboard — wireframe layout in Bauhaus form.
+   Left: the "today" card (dates/location header; weather + checklist column,
+   outfit column, itinerary column). Right: three primary nav tiles.
+   All colors via tokens from theme.css. */
+
+.dashboard {
+  padding: 88px var(--space-3) var(--space-3);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dash-greeting {
+  border: var(--border);
+  background: var(--white);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.dash-greeting h1 {
+  font-size: 28px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.dash-greeting p {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+}
+
+.dash-layout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+/* ---------- today card (left) ---------- */
+
+.today-card {
+  border: var(--border);
+  background: var(--white);
+}
+
+/* Buttons inside the card are flat tiles, not pill buttons */
+.today-card button {
+  position: relative;
+  font-family: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--white);
+  border: none;
+  cursor: pointer;
+}
+
+.today-card button:hover {
+  background: var(--bg);
+}
+
+.today-card button:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: -3px;
+}
+
+.today-card h2 {
+  font-size: 15px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.card-arrow {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  font-size: 18px;
+  font-weight: var(--weight-heavy);
+}
+
+.today-header {
+  display: flex;
+  border-bottom: var(--border);
+}
+
+.today-dates {
+  flex: 1;
+  padding: 12px var(--space-2);
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  border-right: var(--border) !important;
+}
+
+.today-location {
+  width: 120px;
+  display: flex;
+  align-items: center;
+  padding: 0 var(--space-2);
+  font-size: 14px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+}
+
+.today-body {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 120px;
+}
+
+.today-left {
+  display: flex;
+  flex-direction: column;
+  border-right: var(--border);
+}
+
+.today-weather {
+  min-height: 180px;
+  padding: var(--space-2);
+  border-bottom: var(--border) !important;
+}
+
+.weather-reading {
+  margin-top: var(--space-2);
+  font-size: 40px;
+  font-weight: var(--weight-heavy);
+  line-height: 1;
+}
+
+.weather-cond {
+  display: block;
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+}
+
+.weather-pending {
+  font-size: 18px;
+  color: var(--text-secondary);
+}
+
+.today-checklist {
+  flex: 1;
+  min-height: 160px;
+  padding: var(--space-2);
+}
+
+/* Checked box: square with a yellow fill block, pure geometry */
+.check-mark {
+  display: block;
+  margin-top: var(--space-2);
+  width: 28px;
+  height: 28px;
+  border: var(--border);
+  background:
+    linear-gradient(
+        to top right,
+        transparent 42%,
+        var(--black) 44%,
+        var(--black) 56%,
+        transparent 58%
+      )
+      var(--yellow);
+}
+
+.today-outfit {
+  padding: var(--space-2);
+  border-right: var(--border) !important;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Shirt + trousers drawn from rectangles: Bauhaus garment figure */
+.outfit-figure {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) 0;
+}
+
+.outfit-shirt {
+  width: 96px;
+  height: 64px;
+  background: var(--red);
+  border: var(--border);
+  /* body + sleeves in one block: clip the top corners into a tee shape */
+  clip-path: polygon(
+    18% 0, 82% 0, 100% 22%, 88% 38%, 78% 30%, 78% 100%, 22% 100%, 22% 30%, 12% 38%, 0 22%
+  );
+}
+
+.outfit-trousers {
+  width: 72px;
+  height: 88px;
+  background: var(--blue);
+  border: var(--border);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 58% 100%, 50% 30%, 42% 100%, 0 100%);
+}
+
+.today-itinerary {
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Vertical timeline: line with stop dots */
+.itinerary-timeline {
+  flex: 1;
+  margin: var(--space-2) auto 0;
+  width: 4px;
+  min-height: 120px;
+  background: var(--black);
+  position: relative;
+}
+
+.itinerary-timeline::before,
+.itinerary-timeline::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid var(--black);
+  background: var(--yellow);
+}
+
+.itinerary-timeline::before {
+  top: 12%;
+}
+
+.itinerary-timeline::after {
+  top: 45%;
+  background: var(--red);
+}
+
+/* ---------- nav tiles (right) ---------- */
+
+.dash-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dash-nav button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: left;
+  color: var(--text);
+  background: var(--white);
+  border: var(--border);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.dash-nav button:hover {
+  background: var(--yellow);
+}
+
+.dash-nav button:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.nav-tile-mark {
+  width: 28px;
+  height: 28px;
+  border: var(--border);
+  flex-shrink: 0;
+}
+
+.nav-tile-mark.red {
+  background: var(--red);
+}
+
+.nav-tile-mark.yellow {
+  background: var(--yellow);
+  border-radius: 50%;
+}
+
+.nav-tile-mark.blue {
+  background: var(--blue);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 900px) {
+  .dash-layout {
+    grid-template-columns: 1fr;
+  }
+  .today-body {
+    grid-template-columns: 1fr 1fr;
+  }
+  .today-itinerary {
+    grid-column: 1 / -1;
+    border-top: var(--border);
+  }
+  .itinerary-timeline {
+    min-height: 60px;
+  }
+}
+
+@media (max-width: 600px) {
+  .today-body {
+    grid-template-columns: 1fr;
+  }
+  .today-left {
+    border-right: none;
+  }
+  .today-outfit {
+    border-right: none !important;
+    border-top: var(--border);
+  }
+  .dash-greeting h1 {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-nav button {
+    transition: none;
+  }
+}
