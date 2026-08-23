@@ -16,7 +16,7 @@ type LayoutProps = {
   packedCount: number;
 };
 
-/** Vertical slider (sketch: 帮造型 at top · 精简出行 at bottom). */
+/** Vertical slider (sketch: 丰富造型 at top · 精简出行 at bottom). */
 function BalanceSlider({
   balance,
   onBalance,
@@ -26,7 +26,7 @@ function BalanceSlider({
 }) {
   return (
     <aside className="pk-slider">
-      <span className="pk-slider-cap pk-slider-top">帮造型</span>
+      <span className="pk-slider-cap pk-slider-top">丰富造型</span>
       <input
         className="pk-range"
         type="range"
@@ -35,9 +35,9 @@ function BalanceSlider({
         step={1}
         value={balance}
         onChange={(e) => onBalance(Number(e.target.value))}
-        aria-label="打包偏好:精简出行 到 帮造型"
+        aria-label="打包偏好:精简出行 到 丰富造型"
         aria-valuetext={
-          balance >= 67 ? "帮造型" : balance <= 33 ? "精简出行" : "均衡"
+          balance >= 67 ? "丰富造型" : balance <= 33 ? "精简出行" : "均衡"
         }
       />
       <span className="pk-slider-cap pk-slider-bottom">精简出行</span>

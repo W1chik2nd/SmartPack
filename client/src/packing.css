@@ -13,47 +13,98 @@
   animation: fadeIn 0.3s ease both;
 }
 
-/* ---------- vertical slider (帮造型 ↔ 精简出行) ---------- */
+/* ---------- vertical slider (丰富造型 ↔ 精简出行) ---------- */
 
 .pk-slider {
   position: sticky;
   top: 88px;
   align-self: start;
-  height: 420px;
+  height: 460px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-2) 0;
+  padding: var(--space-3) var(--space-2);
   background: var(--surface);
   border: var(--border);
 }
 
+/* Single-column vertical caps as Bauhaus solid-color tags: white text on a
+   primary block with a thick black edge. text-orientation keeps each glyph
+   upright; nowrap stops the label breaking into a second column (which
+   reordered the characters). Reads top-to-bottom: 丰富造型 above, 精简出行 below. */
 .pk-slider-cap {
-  writing-mode: vertical-rl;
-  font-size: 13px;
+  writing-mode: vertical-lr;
+  text-orientation: upright;
+  white-space: nowrap;
+  font-size: 15px;
   font-weight: var(--weight-heavy);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.2em;
+  color: var(--white);
+  border: 2px solid var(--black);
+  padding: 10px 6px;
 }
 
 .pk-slider-top {
-  color: var(--red);
+  background: var(--red);
 }
 
 .pk-slider-bottom {
-  color: var(--blue);
+  background: var(--blue);
 }
 
-/* A vertical range input. Rotating the track keeps native keyboard support
-   (up/down still work) while matching the sketch's tall orientation. */
+/* A vertical range input, fully custom-drawn for a flat Bauhaus look: a thick
+   black-outlined track and a square thumb, no native chrome. Rotating via
+   writing-mode keeps native keyboard support (up/down still work). */
 .pk-range {
   writing-mode: vertical-lr;
   direction: rtl;
-  width: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
   height: 300px;
-  accent-color: var(--red);
+  margin: var(--space-2) 0;
+  background: transparent;
   cursor: pointer;
+}
+
+/* Track: a thin black column the thumb rides along. */
+.pk-range::-webkit-slider-runnable-track {
+  width: 6px;
+  height: 100%;
+  background: var(--black);
+}
+.pk-range::-moz-range-track {
+  width: 6px;
+  height: 100%;
+  background: var(--black);
+}
+
+/* Thumb: a red square with a heavy black outline — a Bauhaus block, not a dot. */
+.pk-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 26px;
+  height: 26px;
+  margin-left: -10px; /* center the 26px block over the 6px track */
+  background: var(--red);
+  border: 3px solid var(--black);
+  border-radius: 0;
+}
+.pk-range::-moz-range-thumb {
+  width: 26px;
+  height: 26px;
+  background: var(--red);
+  border: 3px solid var(--black);
+  border-radius: 0;
+}
+
+/* Visible keyboard focus (accent replaces the native outline we removed). */
+.pk-range:focus-visible::-webkit-slider-thumb {
+  background: var(--yellow);
+}
+.pk-range:focus-visible::-moz-range-thumb {
+  background: var(--yellow);
 }
 
 /* ---------- main column ---------- */
