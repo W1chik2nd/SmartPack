@@ -1,138 +1,138 @@
-# SmartPack —— “不用想，也不会带错”的 AI 场景衣橱
+# SmartPack — An AI Scenario Wardrobe: "No thinking required, nothing packed wrong"
 
-> **把行程交给天气，把穿搭和行李交给 AI。**
+> Leave the itinerary to the weather. Leave the outfits and luggage to AI.
 
-## 📌 项目简介
+## Overview
 
-SmartPack 不只是根据天气推荐"今天穿什么"，而是综合**用户衣橱、穿衣偏好、行程场景、目的地天气与行李限制**，自动生成可直接照着执行的穿搭和物品清单。
+SmartPack goes beyond recommending "what to wear today" based on the weather. It combines the user's wardrobe, dressing preferences, trip scenarios, destination weather, and luggage constraints to automatically generate outfit plans and packing lists that can be followed as-is.
 
-例如出差前输入目的地和行程，App 可一次性给出：
+For example, before a business trip, the user enters the destination and itinerary, and the app produces in one pass:
 
-- 每天的完整穿搭组合，兼顾会议、通勤和晚宴等场景
-- 针对温差、降雨、暴晒等天气的调整方案
-- 尽量复用单品的最小行李方案
-- 雨伞、转换插头、防晒、药品等出行用品清单
-- 出发前根据最新天气自动提醒增减物品
+- Complete daily outfit combinations covering meetings, commuting, dinners, and other scenarios
+- Adjustment plans for temperature swings, rain, and strong sun
+- A minimal luggage plan that reuses items across days wherever possible
+- A travel essentials checklist: umbrella, power adapters, sunscreen, medication, and more
+- Automatic reminders before departure to add or remove items based on the latest forecast
 
-**商业价值**：把"天气提醒、穿搭推荐、行李清单"整合成一个个性化决策服务，未来可通过会员订阅，以及服饰、旅行用品的精准推荐佣金变现。
+**Business value**: SmartPack integrates weather alerts, outfit recommendations, and packing lists into a single personalized decision service. Future monetization includes membership subscriptions and commission from targeted recommendations of clothing and travel products.
 
 ---
 
-## 👥 Personas（用户画像）
+## Personas
 
-| Persona | 简介 | 核心痛点 |
+| Persona | Profile | Key Pain Points |
 |---|---|---|
-| **Anna · 差旅顾问（28 岁）** | 每月出差 2–3 次的咨询顾问，行程紧凑，常在会议、通勤、客户晚宴间切换 | 收拾行李费时费脑，经常带多或带错，落地后发现衣服不适合场合或天气 |
-| **Ben · 通勤上班族（32 岁）** | 每天早上赶地铁上班的程序员，对穿搭没有太多研究 | 早上没时间纠结穿什么，经常忽略降温和下雨，被淋湿或穿太少 |
-| **Chloe · 旅行爱好者（24 岁）** | 喜欢拍照打卡的学生/自由职业者，常去气候差异大的目的地旅行 | 想每天穿得好看又不重样，但行李箱空间有限，也总忘带转换插头、防晒等小物 |
-| **David · 极简主义者（35 岁）** | 只带登机箱出行的频繁飞人，追求"最少的东西覆盖最多的场景" | 讨厌冗余行李，希望单品之间尽量复用搭配，但自己规划复用方案很费劲 |
-| **Emma · 操心的家庭出行规划者（38 岁）** | 带娃出行的妈妈，要同时管好几个人的衣物和用品 | 出行前后天气多变，物品清单又长又杂，最怕漏带药品、雨具等关键物品 |
+| **Anna, Travel Consultant (28)** | A consultant who travels 2–3 times a month with tight schedules, switching between meetings, commutes, and client dinners | Packing takes time and mental effort; she often overpacks or packs the wrong things, and finds her clothes unsuitable for the occasion or weather after landing |
+| **Ben, Commuter (32)** | A software engineer who rushes to catch the subway every morning and does not think much about what to wear | No time to decide what to wear in the morning; frequently caught off guard by rain or temperature drops |
+| **Chloe, Travel Enthusiast (24)** | A student / freelancer who loves taking photos and often travels to destinations with very different climates | Wants to look good in a different outfit every day, but suitcase space is limited, and she always forgets small items like adapters and sunscreen |
+| **David, Minimalist (35)** | A frequent flyer who travels with carry-on only and wants "the fewest items covering the most scenarios" | Dislikes redundant luggage; wants maximum reuse across outfits but finds planning that reuse himself tedious |
+| **Emma, Family Trip Planner (38)** | A mother who travels with her kids and manages clothing and supplies for the whole family | Weather changes around trips, the packing list is long and messy, and her biggest fear is forgetting critical items like medication and rain gear |
 
 ---
 
-## ✨ 功能与 User Stories
+## Features and User Stories
 
-### 1. 数字衣橱管理
+### 1. Digital Wardrobe Management
 
-用户录入/拍照上传自己的衣物，App 建立个人衣橱数据库，作为所有推荐的基础。
+Users add their clothes by entry or photo upload, and the app builds a personal wardrobe database as the foundation for all recommendations.
 
-- **US 1.1**（Persona: Ben）
-  作为一个不爱研究穿搭的上班族，我希望**拍照就能快速录入我的衣服**，这样我不用花很多时间手动整理衣橱。
-- **US 1.2**（Persona: Chloe）
-  作为一个爱美的旅行爱好者，我希望**App 记住每件单品的颜色、季节和风格标签**，这样推荐的搭配才符合我的审美。
-- **US 1.3**（Persona: David）
-  作为一个极简主义者，我希望**看到每件衣服的使用频率**，这样我能知道哪些衣服值得保留、哪些可以断舍离。
+- **US 1.1** (Persona: Ben)
+  As a commuter who doesn't care much about fashion, I want to add clothes quickly by taking photos, so that I don't spend a lot of time cataloguing my wardrobe manually.
+- **US 1.2** (Persona: Chloe)
+  As a style-conscious traveler, I want the app to record each item's color, season, and style tags, so that the recommended outfits match my taste.
+- **US 1.3** (Persona: David)
+  As a minimalist, I want to see how often each item gets used, so that I know which clothes are worth keeping and which I can let go.
 
-### 2. 穿衣偏好学习
+### 2. Dressing Preference Learning
 
-App 学习用户的风格偏好、忌讳（如不穿短裤）、体感差异（怕冷/怕热），让推荐越来越个性化。
+The app learns the user's style preferences, restrictions (e.g., never wears shorts), and personal temperature sensitivity, making recommendations increasingly personalized.
 
-- **US 2.1**（Persona: Anna）
-  作为一个商务人士，我希望**设置"客户会议必须正装"这类规则**，这样 AI 不会在重要场合给我推荐休闲装。
-- **US 2.2**（Persona: Ben）
-  作为一个怕冷的人，我希望**告诉 App 我比一般人怕冷**，这样它推荐的厚度对我来说才是舒服的。
-- **US 2.3**（Persona: Chloe）
-  作为一个有自己风格的用户，我希望**对推荐结果点赞/点踩**，这样 App 能越用越懂我。
+- **US 2.1** (Persona: Anna)
+  As a business professional, I want to set rules like "client meetings require formal wear", so that the AI never suggests casual clothes for important occasions.
+- **US 2.2** (Persona: Ben)
+  As someone who gets cold easily, I want to tell the app that I feel colder than average, so that the recommended layering is actually comfortable for me.
+- **US 2.3** (Persona: Chloe)
+  As a user with my own sense of style, I want to like or dislike each recommendation, so that the app understands me better over time.
 
-### 3. 每日天气穿搭推荐
+### 3. Daily Weather-Based Outfit Recommendations
 
-结合当天天气和用户衣橱，每天早上给出可直接执行的完整穿搭。
+Each morning the app combines the day's weather with the user's wardrobe to deliver a complete, ready-to-wear outfit.
 
-- **US 3.1**（Persona: Ben）
-  作为一个赶时间的通勤族，我希望**每天早上收到一套直接照穿的完整搭配**，这样我出门前不用思考。
-- **US 3.2**（Persona: Ben）
-  作为一个经常被天气坑的人，我希望**降温、下雨时推荐里自动加上外套和雨具提醒**，这样我不会再被淋湿或冻着。
-- **US 3.3**（Persona: Emma）
-  作为一个家庭规划者，我希望**为家人（如孩子）也生成穿搭建议**，这样早上安排全家出门更省心。
+- **US 3.1** (Persona: Ben)
+  As a commuter in a hurry, I want a complete outfit I can put on directly every morning, so that I don't have to think before leaving home.
+- **US 3.2** (Persona: Ben)
+  As someone who is often caught out by the weather, I want the recommendation to automatically include a jacket or rain gear when it turns cold or rainy, so that I don't get soaked or freeze again.
+- **US 3.3** (Persona: Emma)
+  As a family planner, I want outfit suggestions generated for family members such as my kids, so that getting everyone out the door in the morning is easier.
 
-### 4. 行程场景穿搭规划
+### 4. Trip-Based Outfit Planning
 
-出差/旅行前输入目的地和行程，App 按天、按场景（会议、通勤、晚宴、观光等）生成完整穿搭组合。
+Before a business trip or vacation, the user enters the destination and itinerary, and the app generates complete outfits per day and per scenario (meetings, commuting, dinners, sightseeing, etc.).
 
-- **US 4.1**（Persona: Anna）
-  作为一个差旅顾问，我希望**输入行程后得到每天分场景的穿搭方案**（白天会议 + 晚上晚宴），这样我不用自己费脑规划。
-- **US 4.2**（Persona: Chloe）
-  作为一个爱拍照的旅行者，我希望**多日行程里的穿搭不重样**，这样每天的照片都有新鲜感。
-- **US 4.3**（Persona: Anna）
-  作为一个行程常变的商务人士，我希望**行程临时变动后一键重新生成方案**，这样计划改变也不会乱。
+- **US 4.1** (Persona: Anna)
+  As a travel consultant, I want day-by-day, scenario-based outfit plans after entering my itinerary (daytime meetings plus evening dinners), so that I don't have to plan it all myself.
+- **US 4.2** (Persona: Chloe)
+  As a traveler who loves photos, I want no repeated outfits across a multi-day trip, so that every day's photos look fresh.
+- **US 4.3** (Persona: Anna)
+  As a business traveler whose schedule changes often, I want to regenerate the whole plan with one tap when my itinerary changes, so that last-minute changes don't throw everything off.
 
-### 5. 目的地天气调整方案
+### 5. Destination Weather Adjustments
 
-针对目的地的温差、降雨、暴晒等天气特点，为穿搭提供动态调整建议。
+The app provides dynamic outfit adjustments for the destination's specific conditions: temperature swings, rain, and strong sun.
 
-- **US 5.1**（Persona: Chloe）
-  作为一个去高原/沙漠旅行的人，我希望**App 针对早晚大温差给出叠穿方案**，这样一天内冷热都能应付。
-- **US 5.2**（Persona: Anna）
-  作为一个飞往雨季城市出差的人，我希望**提前知道哪几天要带雨具、穿防水的鞋**，这样不会在客户面前狼狈。
-- **US 5.3**（Persona: Emma）
-  作为一个带娃出行的家长，我希望**暴晒天气时收到防晒衣物和用品建议**，这样孩子不会被晒伤。
+- **US 5.1** (Persona: Chloe)
+  As someone traveling to high-altitude or desert regions, I want layering plans for large day–night temperature differences, so that I'm comfortable throughout the day.
+- **US 5.2** (Persona: Anna)
+  As someone flying to a city in its rainy season, I want to know in advance which days require rain gear and waterproof shoes, so that I never look unprepared in front of clients.
+- **US 5.3** (Persona: Emma)
+  As a parent traveling with kids, I want sun-protection clothing and product suggestions on days with strong sun, so that my children don't get sunburned.
 
-### 6. 最小行李方案（单品复用）
+### 6. Minimal Luggage Plan (Item Reuse)
 
-在满足所有场景的前提下，尽量复用单品，生成最少件数的打包方案。
+While covering every scenario, the app maximizes item reuse to generate a packing plan with the fewest possible pieces.
 
-- **US 6.1**（Persona: David）
-  作为一个只带登机箱的极简主义者，我希望**App 告诉我"最少带几件就能覆盖全部行程"**，这样我可以轻装出行。
-- **US 6.2**（Persona: David）
-  作为一个追求效率的人，我希望**看到每件单品在哪些天、哪些场景被复用**，这样我能确信这个方案是可行的。
-- **US 6.3**（Persona: Chloe）
-  作为一个行李箱空间有限的旅行者，我希望**在"穿搭丰富度"和"行李最小化"之间调节偏好**，这样方案符合我的取舍。
+- **US 6.1** (Persona: David)
+  As a carry-on-only minimalist, I want the app to tell me the minimum number of items that covers the entire trip, so that I can travel light.
+- **US 6.2** (Persona: David)
+  As someone who values efficiency, I want to see on which days and in which scenarios each item is reused, so that I can trust the plan actually works.
+- **US 6.3** (Persona: Chloe)
+  As a traveler with limited suitcase space, I want to adjust the balance between outfit variety and luggage minimization, so that the plan reflects my own trade-offs.
 
-### 7. 出行用品清单
+### 7. Travel Essentials Checklist
 
-自动生成雨伞、转换插头、防晒、药品等非衣物类出行物品清单。
+The app automatically generates a checklist of non-clothing travel items such as umbrellas, power adapters, sunscreen, and medication.
 
-- **US 7.1**（Persona: Emma）
-  作为一个怕漏带东西的家庭规划者，我希望**得到一份可勾选的完整物品清单**，这样打包时能逐项核对不遗漏。
-- **US 7.2**（Persona: Chloe）
-  作为一个出境旅行者，我希望**App 根据目的地国家自动提醒转换插头、签证复印件等物品**，这样不会落地才发现充不了电。
-- **US 7.3**（Persona: Anna）
-  作为一个常备药随行的出差族，我希望**维护一份"每次必带"的个人固定清单**并自动并入每次行程，这样常用药永远不会漏。
+- **US 7.1** (Persona: Emma)
+  As a family planner worried about forgetting things, I want a complete checklist I can tick off item by item, so that nothing gets left behind while packing.
+- **US 7.2** (Persona: Chloe)
+  As an international traveler, I want the app to automatically remind me of destination-specific items like power adapters and visa copies, so that I don't discover I can't charge my phone after landing.
+- **US 7.3** (Persona: Anna)
+  As a business traveler who always carries certain medication, I want to maintain a personal "always bring" list that is automatically merged into every trip, so that my essentials are never missed.
 
-### 8. 出发前智能提醒
+### 8. Pre-Departure Smart Reminders
 
-出发前根据最新天气预报变化，自动提醒增减衣物和物品。
+Before departure, the app monitors forecast changes and automatically reminds the user to add or remove clothing and items.
 
-- **US 8.1**（Persona: Anna）
-  作为一个提前几天打包的人，我希望**出发前天气突变时收到"增/减某件物品"的推送**，这样我的行李始终匹配最新天气。
-- **US 8.2**（Persona: Ben）
-  作为一个粗心的人，我希望**出门前一小时收到当天关键提醒（如"今天带伞"）**，这样最后一刻也不会忘。
-- **US 8.3**（Persona: Emma）
-  作为一个带娃出行的家长，我希望**关键物品（药品、雨具）的提醒有更高优先级**，这样重要的东西绝对不会漏。
+- **US 8.1** (Persona: Anna)
+  As someone who packs days in advance, I want a push notification to add or remove specific items when the forecast changes before departure, so that my luggage always matches the latest weather.
+- **US 8.2** (Persona: Ben)
+  As a forgetful person, I want a key reminder (such as "bring an umbrella today") an hour before leaving, so that I don't forget at the last moment.
+- **US 8.3** (Persona: Emma)
+  As a parent traveling with kids, I want reminders for critical items (medication, rain gear) to have higher priority, so that the truly important things are never missed.
 
-### 9. 会员订阅与精准推荐（商业化）
+### 9. Subscription and Targeted Recommendations (Monetization)
 
-基础功能免费，高级功能（多行程、家庭成员、深度个性化）走订阅；结合衣橱缺口做服饰、旅行用品的精准推荐并赚取佣金。
+Core features are free; advanced features (multiple trips, family members, deeper personalization) require a subscription. The app identifies wardrobe gaps and earns commission through targeted recommendations of clothing and travel products.
 
-- **US 9.1**（Persona: Anna）
-  作为一个重度差旅用户，我愿意**订阅会员解锁多行程管理和无限次方案生成**，因为它实实在在为我省下大量时间。
-- **US 9.2**（Persona: Chloe）
-  作为一个愿意买新衣服的用户，我希望**当我的衣橱缺某类单品时（比如缺一件防晒外套），App 推荐几款可直接购买的商品**，这样补齐衣橱不用自己去逛。
-- **US 9.3**（Persona: David）
-  作为一个反感广告的用户，我希望**推荐只出现在"衣橱确实缺"的场景，并且清晰标注**，这样我不会觉得被打扰。
+- **US 9.1** (Persona: Anna)
+  As a heavy business traveler, I am willing to subscribe to unlock multi-trip management and unlimited plan generation, because the time it saves me is well worth the price.
+- **US 9.2** (Persona: Chloe)
+  As a user open to buying new clothes, I want the app to recommend a few purchasable products when my wardrobe lacks a certain item (for example, a sun-protection jacket), so that filling the gap doesn't require browsing on my own.
+- **US 9.3** (Persona: David)
+  As a user who dislikes ads, I want recommendations to appear only when my wardrobe genuinely lacks something, and to be clearly labeled, so that I never feel spammed.
 
 ---
 
-## 🚀 一句话总结
+## Summary
 
-**SmartPack：不用想，也不会带错 —— 你的 AI 场景衣橱。**
+SmartPack: no thinking required, nothing packed wrong — your AI scenario wardrobe.
