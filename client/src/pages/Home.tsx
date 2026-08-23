@@ -50,15 +50,30 @@ export default function Home({ user }: Props) {
   }, [items]);
 
   // 列表渲染后测量一份的滚动周期,并把起点定位到中间那一份。
+  // 卡片宽度含 24vw,会随窗口变化,所以 resize 时重新测量,否则循环会错位。
   useLayoutEffect(() => {
-    const track = trackRef.current;
-    if (!track || !items || items.length === 0) return;
-    const first = track.children[0] as HTMLElement | undefined;
-    const nextCopy = track.children[items.length] as HTMLElement | undefined;
-    if (!first || !nextCopy) return;
-    // 同一场景在相邻两份中的左边距之差 = 精确的单份周期(含 flex gap)。
-    periodRef.current = nextCopy.offsetLeft - first.offsetLeft;
-    track.scrollLeft = periodRef.current;
+    if (!items || items.length === 0) return;
+
+    function measure() {
+      const track = trackRef.current;
+      if (!track) return;
+      const first = track.children[0] as HTMLElement | undefined;
+      const nextCopy = track.children[items!.length] as HTMLElement | undefined;
+      if (!first || !nextCopy) return;
+      // 同一场景在相邻两份中的左边距之差 = 精确的单份周期(含 flex gap)。
+      const prev = periodRef.current;
+      periodRef.current = nextCopy.offsetLeft - first.offsetLeft;
+      // 首次测量把起点定位到中间份;之后 resize 只按比例保持当前份内的相对位置。
+      if (prev === 0) {
+        track.scrollLeft = periodRef.current;
+      } else {
+        recenter();
+      }
+    }
+
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
   }, [items]);
 
   // 把当前位置用取模映射回中间份的等价位置。三份内容一致,所以这一步在视觉上
