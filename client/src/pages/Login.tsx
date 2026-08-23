@@ -32,58 +32,66 @@ export default function Login({ onAuthed, onSwitch }: Props) {
 
   return (
     <div className="auth-page">
-      <div className="auth-headline">
-        <h1>Sign in to SmartPack</h1>
-        <p>Your wardrobe, your trips, one plan.</p>
+      {/* Left visual panel; hidden on mobile (auth.css). Decorative only,
+          so the image carries no alt text for screen readers. */}
+      <div className="auth-visual" aria-hidden="true">
+        <img src="/auth-visual.jpeg" alt="" />
       </div>
 
-      <form
-        className={`auth-card${shake ? " shake" : ""}`}
-        onSubmit={handleSubmit}
-        aria-busy={busy}
-      >
-        {/* role="alert" makes screen readers announce failures immediately */}
-        {error && (
-          <div className="error-banner" role="alert">
-            {error}
+      <div className="auth-panel">
+        <div className="auth-headline">
+          <h1>Sign in to SmartPack</h1>
+          <p>Your wardrobe, your trips, one plan.</p>
+        </div>
+
+        <form
+          className={`auth-card${shake ? " shake" : ""}`}
+          onSubmit={handleSubmit}
+          aria-busy={busy}
+        >
+          {/* role="alert" makes screen readers announce failures immediately */}
+          {error && (
+            <div className="error-banner" role="alert">
+              {error}
+            </div>
+          )}
+
+          <div className="field">
+            <label htmlFor="login-email">Email</label>
+            <input
+              id="login-email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
           </div>
-        )}
 
-        <div className="field">
-          <label htmlFor="login-email">Email</label>
-          <input
-            id="login-email"
-            type="email"
-            autoComplete="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
+          <div className="field">
+            <label htmlFor="login-password">Password</label>
+            <input
+              id="login-password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-        <div className="field">
-          <label htmlFor="login-password">Password</label>
-          <input
-            id="login-password"
-            type="password"
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-
-        <button className="btn-primary" type="submit" disabled={busy}>
-          {busy ? "Signing In…" : "Sign In"}
-        </button>
-
-        <div className="auth-switch">
-          Don&apos;t have an account?{" "}
-          <button type="button" onClick={onSwitch}>
-            Create yours now.
+          <button className="btn-primary" type="submit" disabled={busy}>
+            {busy ? "Signing In…" : "Sign In"}
           </button>
-        </div>
-      </form>
+
+          <div className="auth-switch">
+            Don&apos;t have an account?{" "}
+            <button type="button" onClick={onSwitch}>
+              Create yours now.
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

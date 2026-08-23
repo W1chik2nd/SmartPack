@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { me, setToken, logout, type User } from "./api";
+import Landing from "./pages/Landing";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
 
-type Route = "login" | "register" | "home";
+type Route = "landing" | "login" | "register" | "home";
 
 export default function App() {
-  const [route, setRoute] = useState<Route>("login");
+  const [route, setRoute] = useState<Route>("landing");
   const [user, setUser] = useState<User | null>(null);
   const [booting, setBooting] = useState(true);
 
@@ -34,15 +35,20 @@ export default function App() {
     }
     setToken(null);
     setUser(null);
-    setRoute("login");
+    setRoute("landing");
   }
 
   if (booting) return null;
 
+  // 落地页是满屏铺版,不显示顶部导航。
+  if (route === "landing") {
+    return <Landing onEnter={() => setRoute("login")} />;
+  }
+
   return (
     <>
       <nav className="nav">
-        <button className="nav-brand" onClick={() => setRoute(user ? "home" : "login")}>
+        <button className="nav-brand" onClick={() => setRoute(user ? "home" : "landing")}>
           SmartPack
         </button>
         <div className="nav-actions">
