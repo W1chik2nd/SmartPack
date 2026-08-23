@@ -33,6 +33,20 @@ function publicUser(u: UserRow) {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// Scenario catalog (AGENTS.md §3): the set of packing scenarios lives on the
+// server, not the client. Both web and the future iOS client render whatever
+// this returns, so the list — and later the packing rules keyed off each id —
+// stay in one place. `image` points at a client-served asset; a missing file
+// degrades to the card's placeholder, so new scenarios need no code change.
+const SCENARIOS = [
+  { id: "commute", label: "通勤", image: "/scenarios/commute.jpg" },
+  { id: "travel", label: "旅行", image: "/scenarios/travel.jpg" },
+  { id: "business", label: "出差", image: "/scenarios/business.jpg" },
+  { id: "date", label: "约会", image: "/scenarios/date.jpg" },
+  { id: "sport", label: "运动", image: "/scenarios/sport.jpg" },
+  { id: "formal", label: "正式场合", image: "/scenarios/formal.jpg" },
+] as const;
+
 export type App = {
   handle: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
   close: () => void;
@@ -174,6 +188,18 @@ export function createApp(dbPath: string): App {
         return;
       }
       json(res, 200, { token: createSession(user.id), user: publicUser(user) });
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/scenarios") {
+      // Signed-in only: the picker is the first screen after auth. The catalog
+      // itself is not secret, but gating it keeps every post-auth screen behind
+      // the same check and avoids an anonymous surface we would only tighten later.
+      if (!userForToken(bearerToken(req))) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      json(res, 200, { scenarios: SCENARIOS });
       return;
     }
 

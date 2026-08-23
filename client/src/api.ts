@@ -54,6 +54,16 @@ export function login(email: string, password: string): Promise<AuthResponse> {
   });
 }
 
+export type Scenario = {
+  id: string;
+  label: string;
+  image: string;
+};
+
+export function scenarios(): Promise<{ scenarios: Scenario[] }> {
+  return request<{ scenarios: Scenario[] }>("/api/scenarios");
+}
+
 export function me(): Promise<{ user: User }> {
   return request<{ user: User }>("/api/me");
 }
