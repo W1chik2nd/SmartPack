@@ -103,3 +103,27 @@ export function chat(messages: ChatMessage[]): Promise<{ reply: string }> {
     body: JSON.stringify({ messages }),
   });
 }
+
+// Packing plan — shapes mirror server/packing.ts. The server owns all the
+// packing logic (AGENTS.md §3); the client only renders these and sends the
+// slider value back.
+export type PackingItem = { id: string; label: string; reuse: number };
+export type PackingCategory = { id: string; title: string; items: PackingItem[] };
+export type EssentialItem = { id: string; label: string };
+export type CorePiece = { id: string; label: string; reuse: number };
+
+export type PackingPlan = {
+  balance: number;
+  tripDays: number;
+  summary: string;
+  categories: PackingCategory[];
+  essentials: EssentialItem[];
+  corePieces: CorePiece[];
+};
+
+/** balance: 0 = pack lightest, 100 = most outfit variety (US 6.3). */
+export function getPackingPlan(balance: number): Promise<{ plan: PackingPlan }> {
+  return request<{ plan: PackingPlan }>(
+    `/api/packing?balance=${encodeURIComponent(balance)}`
+  );
+}

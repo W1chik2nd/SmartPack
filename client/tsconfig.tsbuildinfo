@@ -1,1 +1,1 @@
-{"root":["./src/App.tsx","./src/api.ts","./src/main.tsx","./src/components/ChatWidget.tsx","./src/pages/Home.tsx","./src/pages/Landing.tsx","./src/pages/Login.tsx","./src/pages/Questionnaire.tsx","./src/pages/Register.tsx"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/api.ts","./src/main.tsx","./src/components/chatwidget.tsx","./src/pages/home.tsx","./src/pages/landing.tsx","./src/pages/login.tsx","./src/pages/packinglist.tsx","./src/pages/packinglistview.tsx","./src/pages/questionnaire.tsx","./src/pages/register.tsx"],"version":"5.9.3"}

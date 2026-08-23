@@ -5,6 +5,7 @@
 @import "./theme.css";
 @import "./auth.css";
 @import "./chat.css";
+@import "./packing.css";
 
 * {
   margin: 0;
