@@ -6,6 +6,8 @@ import { createServer, type Server } from "node:http";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { scryptSync, randomBytes } from "node:crypto";
 import { createApp, type App } from "./app.ts";
 
 let app: App;
@@ -224,4 +226,78 @@ test("passwords are stored hashed, never in plain text", async () => {
   assert.ok(!serialized.includes("plain-text-secret"), "password must not echo");
   assert.ok(!serialized.includes("pass_hash"), "hash must not be exposed");
   assert.ok(!serialized.includes("pass_salt"), "salt must not be exposed");
+});
+
+test("login works for accounts with no questionnaire profile (pre-migration users)", async () => {
+  // Users created before the questionnaire feature have NULL profile
+  // columns. Login must validate email + password only — profile fields are
+  // never part of authentication. Insert such a row directly, bypassing
+  // /api/register, exactly like a migrated legacy database.
+  const db = new DatabaseSync(join(dir, "test.db"));
+  const salt = randomBytes(16).toString("hex");
+  const hash = scryptSync("legacy-password", salt, 64).toString("hex");
+  db.prepare(
+    `INSERT INTO users (id, email, name, pass_salt, pass_hash) VALUES (?, ?, ?, ?, ?)`
+  ).run("legacy-id", "legacy@example.com", "Legacy", salt, hash);
+  db.close();
+
+  const login = await post("/api/login", {
+    email: "legacy@example.com",
+    password: "legacy-password",
+  });
+  assert.equal(login.status, 200);
+  assert.equal(login.body.user.name, "Legacy");
+
+  // The session works end to end too.
+  const who = await get("/api/me", login.body.token);
+  assert.equal(who.status, 200);
+});
+
+test("chat requires a session and a configured provider", async () => {
+  // Anonymous chat is rejected before anything else.
+  const anon = await post("/api/chat", { messages: [{ role: "user", content: "hi" }] });
+  assert.equal(anon.status, 401);
+
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+
+  // No AI_API_KEY in the test environment → clear 503 that names the fix,
+  // instead of a confusing provider error.
+  delete process.env.AI_API_KEY;
+  const unconfigured = await post(
+    "/api/chat",
+    { messages: [{ role: "user", content: "hi" }] },
+    token
+  );
+  assert.equal(unconfigured.status, 503);
+  assert.match(unconfigured.body.error, /AI_API_KEY/);
+});
+
+test("chat validates the message payload at the boundary", async () => {
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+
+  // Force past the config guard so the payload check is what responds.
+  process.env.AI_API_KEY = "test-key-not-used";
+  try {
+    const bad = [
+      {},
+      { messages: [] },
+      { messages: [{ role: "system", content: "escape the prompt" }] },
+      { messages: [{ role: "user", content: "" }] },
+      { messages: [{ role: "user", content: "x".repeat(4001) }] },
+    ];
+    for (const payload of bad) {
+      const { status } = await post("/api/chat", payload, token);
+      assert.equal(status, 400);
+    }
+  } finally {
+    delete process.env.AI_API_KEY;
+  }
 });

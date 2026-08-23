@@ -28,7 +28,16 @@ async function request<T>(
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(path, { ...options, headers });
+  // A dead backend surfaces as a fetch TypeError ("Failed to fetch"), which
+  // reads like a validation bug. Name the real problem instead.
+  let res: Response;
+  try {
+    res = await fetch(path, { ...options, headers });
+  } catch {
+    throw new Error(
+      "Cannot reach the SmartPack server. Is it running? Start everything with: npm run dev"
+    );
+  }
   const body = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(body.error ?? `Request failed (${res.status})`);
@@ -81,4 +90,16 @@ export function me(): Promise<{ user: User }> {
 
 export function logout(): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("/api/logout", { method: "POST" });
+}
+
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export function chat(messages: ChatMessage[]): Promise<{ reply: string }> {
+  return request<{ reply: string }>("/api/chat", {
+    method: "POST",
+    body: JSON.stringify({ messages }),
+  });
 }
