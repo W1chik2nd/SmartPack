@@ -1,0 +1,188 @@
+/* SmartPack assistant widget — launcher button and dialog.
+   Bauhaus rules apply: flat blocks, thick borders, tokens from theme.css. */
+
+.chat-launcher {
+  position: fixed;
+  right: var(--space-3);
+  bottom: var(--space-3);
+  z-index: 200;
+  width: 56px;
+  height: 56px;
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: var(--weight-heavy);
+  color: var(--white);
+  background: var(--red);
+  border: var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.chat-launcher:hover {
+  background: var(--blue);
+}
+
+.chat-launcher:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 0;
+}
+
+.chat-panel {
+  position: fixed;
+  right: var(--space-3);
+  bottom: 96px; /* clears the launcher */
+  z-index: 200;
+  width: 360px;
+  max-width: calc(100vw - 2 * var(--space-3));
+  height: 480px;
+  max-height: calc(100vh - 140px);
+  display: flex;
+  flex-direction: column;
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  animation: fadeIn 0.2s ease both;
+}
+
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-1) var(--space-2);
+  background: var(--blue);
+  border-bottom: var(--border);
+}
+
+.chat-header h2 {
+  font-size: 15px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--white);
+}
+
+.chat-close {
+  width: 32px;
+  height: 32px;
+  font-size: 20px;
+  font-weight: var(--weight-bold);
+  line-height: 1;
+  color: var(--black);
+  background: var(--yellow);
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+
+.chat-close:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.chat-log {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  background: var(--bg);
+}
+
+.chat-msg {
+  max-width: 85%;
+  padding: 10px 12px;
+  font-size: 14px;
+  line-height: 1.45;
+  border: 2px solid var(--black);
+  white-space: pre-wrap;
+}
+
+.chat-msg.assistant {
+  align-self: flex-start;
+  background: var(--white);
+  color: var(--text);
+}
+
+.chat-msg.user {
+  align-self: flex-end;
+  background: var(--blue);
+  color: var(--white);
+}
+
+.chat-thinking {
+  color: var(--text-secondary);
+  font-weight: var(--weight-bold);
+}
+
+.chat-error {
+  align-self: stretch;
+  max-width: none;
+  background: var(--red);
+  color: var(--white);
+  font-weight: var(--weight-bold);
+}
+
+.chat-form {
+  display: flex;
+  border-top: var(--border);
+}
+
+.chat-form input {
+  flex: 1;
+  height: 48px;
+  padding: 0 var(--space-2);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--white);
+  border: none;
+  outline: none;
+}
+
+.chat-form input:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: -3px;
+}
+
+.chat-form button {
+  width: 80px;
+  font-size: 14px;
+  font-weight: var(--weight-heavy);
+  font-family: inherit;
+  text-transform: uppercase;
+  color: var(--white);
+  background: var(--red);
+  border: none;
+  border-left: var(--border);
+  cursor: pointer;
+}
+
+.chat-form button:hover:not(:disabled) {
+  background: var(--blue);
+}
+
+.chat-form button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+@media (max-width: 600px) {
+  .chat-panel {
+    right: var(--space-2);
+    bottom: 88px;
+  }
+  .chat-launcher {
+    right: var(--space-2);
+    bottom: var(--space-2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-panel {
+    animation: none;
+  }
+  .chat-launcher {
+    transition: none;
+  }
+}
