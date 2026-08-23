@@ -225,3 +225,52 @@ test("passwords are stored hashed, never in plain text", async () => {
   assert.ok(!serialized.includes("pass_hash"), "hash must not be exposed");
   assert.ok(!serialized.includes("pass_salt"), "salt must not be exposed");
 });
+
+test("chat requires a session and a configured provider", async () => {
+  // Anonymous chat is rejected before anything else.
+  const anon = await post("/api/chat", { messages: [{ role: "user", content: "hi" }] });
+  assert.equal(anon.status, 401);
+
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+
+  // No AI_API_KEY in the test environment → clear 503 that names the fix,
+  // instead of a confusing provider error.
+  delete process.env.AI_API_KEY;
+  const unconfigured = await post(
+    "/api/chat",
+    { messages: [{ role: "user", content: "hi" }] },
+    token
+  );
+  assert.equal(unconfigured.status, 503);
+  assert.match(unconfigured.body.error, /AI_API_KEY/);
+});
+
+test("chat validates the message payload at the boundary", async () => {
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+
+  // Force past the config guard so the payload check is what responds.
+  process.env.AI_API_KEY = "test-key-not-used";
+  try {
+    const bad = [
+      {},
+      { messages: [] },
+      { messages: [{ role: "system", content: "escape the prompt" }] },
+      { messages: [{ role: "user", content: "" }] },
+      { messages: [{ role: "user", content: "x".repeat(4001) }] },
+    ];
+    for (const payload of bad) {
+      const { status } = await post("/api/chat", payload, token);
+      assert.equal(status, 400);
+    }
+  } finally {
+    delete process.env.AI_API_KEY;
+  }
+});

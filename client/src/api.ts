@@ -82,3 +82,15 @@ export function me(): Promise<{ user: User }> {
 export function logout(): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("/api/logout", { method: "POST" });
 }
+
+export type ChatMessage = {
+  role: "user" | "assistant";
+  content: string;
+};
+
+export function chat(messages: ChatMessage[]): Promise<{ reply: string }> {
+  return request<{ reply: string }>("/api/chat", {
+    method: "POST",
+    body: JSON.stringify({ messages }),
+  });
+}

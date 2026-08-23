@@ -9,6 +9,8 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { DatabaseSync } from "node:sqlite";
 import { scryptSync, randomBytes, timingSafeEqual, randomUUID } from "node:crypto";
+import { aiConfigured, chatCompletion, type ChatMessage } from "./ai.ts";
+import { buildSystemPrompt } from "./prompts.ts";
 
 // Password hashing (AGENTS.md §5): passwords require a password-specific KDF,
 // not a general-purpose hash like SHA256. We use scrypt because it is a
@@ -25,6 +27,10 @@ type UserRow = {
   name: string;
   pass_salt: string;
   pass_hash: string;
+  age: number | null;
+  height_cm: number | null;
+  weight_kg: number | null;
+  style: string | null;
 };
 
 function publicUser(u: UserRow) {
@@ -262,6 +268,45 @@ export function createApp(dbPath: string): App {
       const token = bearerToken(req);
       if (token) db.prepare(`DELETE FROM sessions WHERE token = ?`).run(token);
       json(res, 200, { ok: true });
+      return;
+    }
+
+    // SmartPack Assistant. Session-gated: the system prompt embeds the
+    // user's questionnaire profile, so anonymous chat has nothing to
+    // personalize with. The client sends the visible conversation each turn;
+    // the prompt itself never leaves the server.
+    if (req.method === "POST" && url.pathname === "/api/chat") {
+      const user = userForToken(bearerToken(req));
+      if (!user) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      if (!aiConfigured()) {
+        json(res, 503, {
+          error:
+            "AI is not configured. Set AI_API_KEY in server/.env (see server/.env.example).",
+        });
+        return;
+      }
+      const { messages } = await readBody(req);
+      const valid =
+        Array.isArray(messages) &&
+        messages.length > 0 &&
+        messages.length <= 40 &&
+        messages.every(
+          (m: ChatMessage) =>
+            (m?.role === "user" || m?.role === "assistant") &&
+            typeof m?.content === "string" &&
+            m.content.length > 0 &&
+            m.content.length <= 4000
+        );
+      if (!valid) {
+        json(res, 400, { error: "Invalid messages." });
+        return;
+      }
+      const systemPrompt = buildSystemPrompt(user);
+      const reply = await chatCompletion(systemPrompt, messages);
+      json(res, 200, { reply });
       return;
     }
 
