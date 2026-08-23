@@ -6,6 +6,8 @@ import { createServer, type Server } from "node:http";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
+import { scryptSync, randomBytes } from "node:crypto";
 import { createApp, type App } from "./app.ts";
 
 let app: App;
@@ -48,11 +50,20 @@ async function get(path: string, token?: string) {
   return { status: res.status, body: await res.json() };
 }
 
+// A complete sign-up payload: account fields plus the style questionnaire.
+const annaProfile = {
+  name: "Anna",
+  age: 28,
+  heightCm: 168,
+  weightKg: 55,
+  style: "Business",
+};
+
 test("register creates an account and returns a session", async () => {
   const { status, body } = await post("/api/register", {
     email: "anna@example.com",
-    name: "Anna",
     password: "correct-horse",
+    ...annaProfile,
   });
   assert.equal(status, 201);
   assert.equal(body.user.email, "anna@example.com");
@@ -63,9 +74,9 @@ test("register creates an account and returns a session", async () => {
 
 test("register rejects invalid email, short password, missing name", async () => {
   const bad = [
-    { email: "not-an-email", name: "A", password: "long-enough" },
-    { email: "ok@example.com", name: "A", password: "short" },
-    { email: "ok@example.com", name: "", password: "long-enough" },
+    { ...annaProfile, email: "not-an-email", password: "long-enough" },
+    { ...annaProfile, email: "ok@example.com", password: "short" },
+    { ...annaProfile, email: "ok@example.com", password: "long-enough", name: "" },
   ];
   for (const payload of bad) {
     const { status } = await post("/api/register", payload);
@@ -73,11 +84,74 @@ test("register rejects invalid email, short password, missing name", async () =>
   }
 });
 
+test("register without the questionnaire stores nothing", async () => {
+  // Product rule: sign-up only counts once the questionnaire is complete.
+  // Account-only payloads and partial/invalid questionnaires must all fail…
+  const attempts = [
+    { email: "ben@example.com", password: "long-enough-pass" },
+    { email: "ben@example.com", password: "long-enough-pass", name: "Ben" },
+    {
+      email: "ben@example.com",
+      password: "long-enough-pass",
+      ...annaProfile,
+      age: 0,
+    },
+    {
+      email: "ben@example.com",
+      password: "long-enough-pass",
+      ...annaProfile,
+      heightCm: "tall",
+    },
+    {
+      email: "ben@example.com",
+      password: "long-enough-pass",
+      ...annaProfile,
+      weightKg: -5,
+    },
+    {
+      email: "ben@example.com",
+      password: "long-enough-pass",
+      ...annaProfile,
+      style: "",
+    },
+  ];
+  for (const payload of attempts) {
+    const { status } = await post("/api/register", payload);
+    assert.equal(status, 400);
+  }
+
+  // …and leave no account behind: the same credentials cannot sign in.
+  const login = await post("/api/login", {
+    email: "ben@example.com",
+    password: "long-enough-pass",
+  });
+  assert.equal(login.status, 401);
+});
+
+test("check-email flags duplicates without creating anything", async () => {
+  const taken = await post("/api/check-email", { email: "anna@example.com" });
+  assert.equal(taken.status, 409);
+
+  const free = await post("/api/check-email", { email: "free@example.com" });
+  assert.equal(free.status, 200);
+
+  const invalid = await post("/api/check-email", { email: "nope" });
+  assert.equal(invalid.status, 400);
+
+  // The availability check must not reserve or create the account.
+  const login = await post("/api/login", {
+    email: "free@example.com",
+    password: "whatever-pass",
+  });
+  assert.equal(login.status, 401);
+});
+
 test("register rejects duplicate email (case-insensitive)", async () => {
   const { status } = await post("/api/register", {
     email: "ANNA@example.com",
-    name: "Anna 2",
     password: "another-pass",
+    ...annaProfile,
+    name: "Anna 2",
   });
   assert.equal(status, 409);
 });
@@ -122,6 +196,25 @@ test("me returns the user for a valid token and 401 otherwise", async () => {
   assert.equal(bogus.status, 401);
 });
 
+test("scenarios requires auth and returns the catalog", async () => {
+  const anon = await get("/api/scenarios");
+  assert.equal(anon.status, 401);
+
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const ok = await get("/api/scenarios", login.body.token);
+  assert.equal(ok.status, 200);
+  assert.ok(Array.isArray(ok.body.scenarios));
+  assert.ok(ok.body.scenarios.length > 0);
+  for (const s of ok.body.scenarios) {
+    assert.equal(typeof s.id, "string");
+    assert.equal(typeof s.label, "string");
+    assert.equal(typeof s.image, "string");
+  }
+});
+
 test("logout invalidates the session token", async () => {
   const login = await post("/api/login", {
     email: "anna@example.com",
@@ -141,13 +234,99 @@ test("passwords are stored hashed, never in plain text", async () => {
   // stored credential is a salted scrypt hash: the same password must verify,
   // and the API must never return hash or salt fields anywhere.
   const reg = await post("/api/register", {
-    email: "ben@example.com",
-    name: "Ben",
+    email: "chloe@example.com",
     password: "plain-text-secret",
+    ...annaProfile,
+    name: "Chloe",
+    style: "Streetwear",
   });
   assert.equal(reg.status, 201);
   const serialized = JSON.stringify(reg.body);
   assert.ok(!serialized.includes("plain-text-secret"), "password must not echo");
   assert.ok(!serialized.includes("pass_hash"), "hash must not be exposed");
   assert.ok(!serialized.includes("pass_salt"), "salt must not be exposed");
+});
+
+test("login works for accounts with no questionnaire profile (pre-migration users)", async () => {
+  // Users created before the questionnaire feature have NULL profile
+  // columns. Login must validate email + password only — profile fields are
+  // never part of authentication. Insert such a row directly, bypassing
+  // /api/register, exactly like a migrated legacy database.
+  const db = new DatabaseSync(join(dir, "test.db"));
+  const salt = randomBytes(16).toString("hex");
+  const hash = scryptSync("legacy-password", salt, 64).toString("hex");
+  db.prepare(
+    `INSERT INTO users (id, email, name, pass_salt, pass_hash) VALUES (?, ?, ?, ?, ?)`
+  ).run("legacy-id", "legacy@example.com", "Legacy", salt, hash);
+  db.close();
+
+  const login = await post("/api/login", {
+    email: "legacy@example.com",
+    password: "legacy-password",
+  });
+  assert.equal(login.status, 200);
+  assert.equal(login.body.user.name, "Legacy");
+
+  // The session works end to end too.
+  const who = await get("/api/me", login.body.token);
+  assert.equal(who.status, 200);
+});
+
+test("weather rejects invalid coordinates at the boundary", async () => {
+  // Only the input validation is tested here — the happy path calls the
+  // real Open-Meteo API, which unit tests must not depend on.
+  const cases = ["lat=abc&lon=0", "lat=91&lon=0", "lat=0&lon=181"];
+  for (const qs of cases) {
+    const { status } = await get(`/api/weather?${qs}`);
+    assert.equal(status, 400);
+  }
+});
+
+test("chat requires a session and a configured provider", async () => {
+  // Anonymous chat is rejected before anything else.
+  const anon = await post("/api/chat", { messages: [{ role: "user", content: "hi" }] });
+  assert.equal(anon.status, 401);
+
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+
+  // No AI_API_KEY in the test environment → clear 503 that names the fix,
+  // instead of a confusing provider error.
+  delete process.env.AI_API_KEY;
+  const unconfigured = await post(
+    "/api/chat",
+    { messages: [{ role: "user", content: "hi" }] },
+    token
+  );
+  assert.equal(unconfigured.status, 503);
+  assert.match(unconfigured.body.error, /AI_API_KEY/);
+});
+
+test("chat validates the message payload at the boundary", async () => {
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+
+  // Force past the config guard so the payload check is what responds.
+  process.env.AI_API_KEY = "test-key-not-used";
+  try {
+    const bad = [
+      {},
+      { messages: [] },
+      { messages: [{ role: "system", content: "escape the prompt" }] },
+      { messages: [{ role: "user", content: "" }] },
+      { messages: [{ role: "user", content: "x".repeat(4001) }] },
+    ];
+    for (const payload of bad) {
+      const { status } = await post("/api/chat", payload, token);
+      assert.equal(status, 400);
+    }
+  } finally {
+    delete process.env.AI_API_KEY;
+  }
 });

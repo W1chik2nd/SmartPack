@@ -1,0 +1,364 @@
+/* Home dashboard — wireframe layout in Bauhaus form.
+   Left: the "today" card (dates/location header; weather + checklist column,
+   outfit column, itinerary column). Right: three primary nav tiles.
+   All colors via tokens from theme.css. */
+
+.dashboard {
+  padding: 88px var(--space-3) var(--space-3);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.dash-greeting {
+  border: var(--border);
+  background: var(--white);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.dash-greeting h1 {
+  font-size: 28px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.dash-greeting p {
+  margin-top: 4px;
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+}
+
+.dash-layout {
+  display: grid;
+  /* Right rail mirrors the card: both columns stretch to the same height,
+     so the three tiles always add up to exactly the today-card height. */
+  grid-template-columns: 1fr 380px;
+  gap: var(--space-3);
+  align-items: stretch;
+}
+
+/* ---------- today card (left) ---------- */
+
+.today-card {
+  border: var(--border);
+  background: var(--white);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Buttons inside the card are flat tiles, not pill buttons */
+.today-card button {
+  position: relative;
+  font-family: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--white);
+  border: none;
+  cursor: pointer;
+}
+
+.today-card button:hover {
+  background: var(--bg);
+}
+
+.today-card button:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: -3px;
+}
+
+.today-card h2 {
+  font-size: 15px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.card-arrow {
+  position: absolute;
+  right: 10px;
+  bottom: 6px;
+  font-size: 18px;
+  font-weight: var(--weight-heavy);
+}
+
+.today-header {
+  display: flex;
+  border-bottom: var(--border);
+}
+
+.today-dates {
+  flex: 1;
+  padding: 12px var(--space-2);
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  border-right: var(--border) !important;
+}
+
+.today-location {
+  width: 140px;
+  display: flex;
+  align-items: center;
+}
+
+/* City picker: flat select, no native chrome beyond the arrow */
+.today-location select {
+  width: 100%;
+  height: 100%;
+  padding: 0 var(--space-2);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  color: var(--text);
+  background: var(--white);
+  border: none;
+  cursor: pointer;
+}
+
+.today-location select:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: -3px;
+}
+
+.today-body {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1.4fr 150px;
+  /* Equalize the two stacked left cells so weather and checklist match */
+  grid-template-rows: 1fr;
+}
+
+.today-left {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  border-right: var(--border);
+}
+
+.today-weather {
+  padding: var(--space-2);
+  border-bottom: var(--border) !important;
+}
+
+.weather-reading {
+  margin-top: var(--space-2);
+  font-size: 40px;
+  font-weight: var(--weight-heavy);
+  line-height: 1;
+}
+
+.weather-cond {
+  display: block;
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+}
+
+.weather-pending {
+  font-size: 18px;
+  color: var(--text-secondary);
+}
+
+.today-checklist {
+  padding: var(--space-2);
+}
+
+/* Checked box: square with a yellow fill block, pure geometry */
+.check-mark {
+  display: block;
+  margin-top: var(--space-2);
+  width: 28px;
+  height: 28px;
+  border: var(--border);
+  background:
+    linear-gradient(
+        to top right,
+        transparent 42%,
+        var(--black) 44%,
+        var(--black) 56%,
+        transparent 58%
+      )
+      var(--yellow);
+}
+
+.today-outfit {
+  padding: var(--space-2);
+  border-right: var(--border) !important;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Shirt + trousers drawn from rectangles: Bauhaus garment figure.
+   Same visual width and a shared vertical axis so the figure reads as one
+   outfit, not two floating shapes. */
+.outfit-figure {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: var(--space-2) 0;
+  min-height: 220px;
+}
+
+.outfit-shirt {
+  width: 132px;
+  height: 96px;
+  background: var(--red);
+  /* body + sleeves in one block: clip the top corners into a tee shape */
+  clip-path: polygon(
+    30% 0, 70% 0, 100% 18%, 92% 42%, 78% 34%, 78% 100%, 22% 100%, 22% 34%, 8% 42%, 0 18%
+  );
+}
+
+.outfit-trousers {
+  /* trouser waist == shirt body width (22%..78% of 132px ≈ 74px) */
+  width: 74px;
+  height: 110px;
+  background: var(--blue);
+  clip-path: polygon(0 0, 100% 0, 96% 100%, 58% 100%, 50% 26%, 42% 100%, 4% 100%);
+}
+
+.today-itinerary {
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Vertical timeline: line with stop dots */
+.itinerary-timeline {
+  flex: 1;
+  margin: var(--space-2) auto 0;
+  width: 4px;
+  min-height: 120px;
+  background: var(--black);
+  position: relative;
+}
+
+.itinerary-timeline::before,
+.itinerary-timeline::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid var(--black);
+  background: var(--yellow);
+}
+
+.itinerary-timeline::before {
+  top: 12%;
+}
+
+.itinerary-timeline::after {
+  top: 45%;
+  background: var(--red);
+}
+
+/* ---------- nav tiles (right) ---------- */
+
+/* Three equal tiles filling exactly the today-card height (stretch grid) */
+.dash-nav {
+  display: grid;
+  grid-template-rows: repeat(3, 1fr);
+  gap: var(--space-3);
+}
+
+.dash-nav button {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  font-family: inherit;
+  font-size: 22px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: left;
+  color: var(--text);
+  background: var(--white);
+  border: var(--border);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.dash-nav button:hover {
+  background: var(--yellow);
+}
+
+.dash-nav button:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.nav-tile-mark {
+  width: 40px;
+  height: 40px;
+  border: var(--border);
+  flex-shrink: 0;
+}
+
+.nav-tile-mark.red {
+  background: var(--red);
+}
+
+.nav-tile-mark.yellow {
+  background: var(--yellow);
+  border-radius: 50%;
+}
+
+.nav-tile-mark.blue {
+  background: var(--blue);
+}
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 900px) {
+  .dash-layout {
+    grid-template-columns: 1fr;
+  }
+  .today-body {
+    grid-template-columns: 1fr 1fr;
+  }
+  .today-itinerary {
+    grid-column: 1 / -1;
+    border-top: var(--border);
+  }
+  .itinerary-timeline {
+    min-height: 60px;
+  }
+  /* Stacked below the card, tiles size themselves again */
+  .dash-nav {
+    grid-template-rows: none;
+  }
+  .dash-nav button {
+    padding: var(--space-3);
+  }
+}
+
+@media (max-width: 600px) {
+  .today-body {
+    grid-template-columns: 1fr;
+  }
+  .today-left {
+    border-right: none;
+  }
+  .today-outfit {
+    border-right: none !important;
+    border-top: var(--border);
+  }
+  .dash-greeting h1 {
+    font-size: 22px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dash-nav button {
+    transition: none;
+  }
+}
