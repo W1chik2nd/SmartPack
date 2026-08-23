@@ -50,6 +50,43 @@ SmartPack integrates weather alerts, outfit recommendations, and packing lists i
 
 - [Personas and User Stories](docs/personas-and-user-stories.md)
 
+## Getting Started (Development)
+
+The repository contains a working prototype of the authentication flow: sign-in and sign-up pages backed by a SQLite database, plus a placeholder home page.
+
+### Structure
+
+```
+server/   Zero-dependency auth API — Node + TypeScript + SQLite (node:sqlite)
+client/   React + TypeScript + Vite front end (Apple-inspired design)
+```
+
+### Requirements
+
+- Node.js 22.5+ (uses the built-in `node:sqlite` module)
+- pnpm (client dependencies only; the server has none)
+
+### Run
+
+1. Start the API server (creates `server/data/smartpack.db` automatically):
+
+   ```sh
+   cd server
+   node --experimental-strip-types index.ts
+   # listening on http://localhost:4177
+   ```
+
+2. Start the front end in a second terminal:
+
+   ```sh
+   cd client
+   pnpm install
+   pnpm dev
+   # open http://localhost:5177
+   ```
+
+Registered accounts are stored in SQLite (passwords hashed with scrypt), and sign-in validates against the database. The Vite dev server proxies `/api/*` to the API server.
+
 ## Status
 
-This project is in the early design stage. This repository currently contains product design documents; implementation has not started yet.
+This project is in the early design stage. The current implementation covers account registration and sign-in with a placeholder home page; the wardrobe, trip planning, and packing features are under design.
