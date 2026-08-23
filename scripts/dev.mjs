@@ -65,7 +65,7 @@ run(
   "server",
   "36", // cyan
   process.execPath,
-  ["--experimental-strip-types", "--env-file-if-exists=.env", "index.ts"],
+  ["--experimental-strip-types", "index.ts"],
   join(root, "server")
 );
 
