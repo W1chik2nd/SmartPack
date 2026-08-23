@@ -6,3 +6,5 @@ server/data/
 .pnpm-store/
 .vite/
 .env
+# tsc 增量构建产物:每次 build 都变,跟踪它只会制造无意义的合并冲突
+*.tsbuildinfo
