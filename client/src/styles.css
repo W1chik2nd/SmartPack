@@ -155,6 +155,11 @@ body {
 
 /* ---------- auth pages: see auth.css ---------- */
 
+/* ---------- home page (dashboard: see dashboard.css) ---------- */
+
+.home {
+  animation: fadeIn 0.3s ease both;
+}
 
 /* ---------- landing (first screen, unauthenticated) ---------- */
 
@@ -247,10 +252,6 @@ body {
 .landing-enter:hover {
   background: var(--blue);
   transform: translateX(4px);
-}
-
-.landing-enter:active {
-  transform: translateX(0) scale(0.97);
 }
 
 /* clip-path 会裁掉 outline/box-shadow,所以焦点态用变色来指示。 */
