@@ -1,7 +1,8 @@
 /* SmartPack — Apple-inspired design system */
 
 :root {
-  --bg: #f5f5f7;
+  /* 全站统一背景色(见 AGENTS.md 第 8 节),所有页面复用这个 token。 */
+  --bg: #caf5f7;
   --surface: rgba(255, 255, 255, 0.72);
   --text: #1d1d1f;
   --text-secondary: #6e6e73;
@@ -13,6 +14,11 @@
   --radius-md: 12px;
   --font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
     "Helvetica Neue", "Segoe UI", Arial, sans-serif;
+
+  /* Bauhaus 强调色 */
+  --bauhaus-red: #e63946;
+  --bauhaus-yellow: #ffd100;
+  --bauhaus-blue: #1d3557;
 }
 
 * {
@@ -401,6 +407,124 @@ body {
   }
 }
 
+/* ---------- landing (first screen, unauthenticated) ---------- */
+
+.landing {
+  position: relative;
+  min-height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  animation: fadeIn 0.5s ease both;
+}
+
+/* 世界地图剪影铺满,作背景。整体偏左,让右下角留给行李箱。 */
+.landing-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+  opacity: 0.55;
+  pointer-events: none;
+  user-select: none;
+}
+
+.landing-hero {
+  position: relative;
+  z-index: 1;
+  padding: 64px 56px 0;
+}
+
+.landing-title {
+  font-size: 56px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--bauhaus-blue);
+  line-height: 1;
+}
+
+.landing-tagline {
+  margin-top: 14px;
+  max-width: 460px;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--text);
+  line-height: 1.4;
+}
+
+/* 右下角行李箱容器。整体略微上移,不要下探太多。 */
+.landing-luggage {
+  position: absolute;
+  right: 6vw;
+  bottom: 4vh;
+  z-index: 1;
+}
+
+.landing-suitcase {
+  width: clamp(220px, 26vw, 380px);
+  height: auto;
+  display: block;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.12));
+}
+
+/* 进入按钮 = 青色箭头本体,箭身上写「继续旅程」。
+   用 clip-path 裁出右向箭头;描边会被 clip-path 裁掉,
+   所以改用硬边阴影(Bauhaus 平面阴影)来给轮廓。 */
+.landing-enter {
+  position: absolute;
+  left: 6%;
+  top: 42%;
+  width: 54%;
+  height: 26%;
+  display: flex;
+  align-items: center;
+  padding: 0 32% 0 9%;
+  font-family: inherit;
+  font-size: clamp(13px, 1.15vw, 17px);
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  color: #fff;
+  background: #fc7979;
+  border: none;
+  cursor: pointer;
+  clip-path: polygon(0 25%, 62% 25%, 62% 0, 100% 50%, 62% 100%, 62% 75%, 0 75%);
+  filter: drop-shadow(4px 4px 0 var(--text));
+  transition: transform 0.15s ease, background 0.2s ease;
+}
+
+.landing-enter:hover {
+  background: #e35d5d;
+  transform: translateX(4px);
+}
+
+.landing-enter:active {
+  transform: translateX(0) scale(0.97);
+}
+
+/* clip-path 会裁掉 outline/box-shadow,所以焦点态用变色来指示。 */
+.landing-enter:focus-visible {
+  background: #e35d5d;
+}
+
+@media (max-width: 600px) {
+  .landing-hero {
+    padding: 40px 28px 0;
+  }
+  .landing-title {
+    font-size: 40px;
+  }
+  .landing-tagline {
+    font-size: 17px;
+  }
+  .landing-luggage {
+    right: 50%;
+    transform: translateX(50%);
+    bottom: 4vh;
+  }
+}
+
 /* Accessibility: honor the user's motion preference — replace movement-based
    animation with a plain fade and stop the drifting hero gradient. */
 @media (prefers-reduced-motion: reduce) {
@@ -424,6 +548,16 @@ body {
     transform: none;
   }
   .btn-primary:active:not(:disabled) {
+    transform: none;
+  }
+  /* 落地页的动效同样降级(合并 main 的无障碍规则时补上)。 */
+  .landing {
+    animation: fadeIn 0.3s ease both;
+  }
+  .landing-enter,
+  .landing-enter:hover,
+  .landing-enter:active {
+    transition: none;
     transform: none;
   }
 }

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1310 660" fill="#C3D0DC" role="img" aria-label="World map">
+  <!-- Simplified continent silhouettes. Fallback art; swap in the real map by replacing this file. -->
+  <!-- North America -->
+  <path d="M60 120 L250 90 L300 150 L270 210 L300 250 L250 300 L200 320 L180 260 L120 240 L90 190 Z"/>
+  <!-- Central + South America -->
+  <path d="M250 320 L300 330 L320 380 L360 430 L340 520 L300 600 L270 560 L280 470 L250 410 Z"/>
+  <!-- Europe -->
+  <path d="M600 120 L700 110 L720 150 L690 190 L640 200 L610 170 Z"/>
+  <!-- Africa -->
+  <path d="M620 220 L720 210 L760 280 L740 380 L690 470 L650 430 L620 340 L600 270 Z"/>
+  <!-- Asia -->
+  <path d="M720 100 L980 90 L1080 130 L1120 190 L1040 230 L960 210 L860 230 L780 200 L730 160 Z"/>
+  <!-- Southeast Asia / Indonesia -->
+  <path d="M1000 300 L1120 300 L1180 340 L1120 370 L1040 350 Z"/>
+  <!-- Australia -->
+  <path d="M1080 430 L1220 420 L1250 490 L1180 540 L1090 510 Z"/>
+</svg>
