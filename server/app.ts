@@ -9,6 +9,8 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { DatabaseSync } from "node:sqlite";
 import { scryptSync, randomBytes, timingSafeEqual, randomUUID } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { extname, join, normalize } from "node:path";
 
 // Password hashing (AGENTS.md §5): passwords require a password-specific KDF,
 // not a general-purpose hash like SHA256. We use scrypt because it is a
@@ -38,7 +40,18 @@ export type App = {
   close: () => void;
 };
 
-export function createApp(dbPath: string): App {
+// Static file types the client build actually produces.
+const CONTENT_TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".css": "text/css; charset=utf-8",
+  ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".ico": "image/x-icon",
+  ".map": "application/json",
+};
+
+export function createApp(dbPath: string, staticDir?: string): App {
   const db = new DatabaseSync(dbPath);
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -194,7 +207,54 @@ export function createApp(dbPath: string): App {
       return;
     }
 
+    // Unknown API routes are a hard 404; anything else is a page request.
+    if (url.pathname.startsWith("/api/")) {
+      json(res, 404, { error: "Not found." });
+      return;
+    }
+
+    if (req.method === "GET") {
+      serveClient(res, url.pathname);
+      return;
+    }
+
     json(res, 404, { error: "Not found." });
+  }
+
+  // Serve the built client (client/dist) when it exists, so opening the API
+  // port in a browser shows the app instead of a JSON 404. During development
+  // there is no build — point the visitor at the Vite dev server instead.
+  function serveClient(res: ServerResponse, pathname: string): void {
+    if (staticDir) {
+      // The URL path is external input: normalize and confine it to staticDir.
+      const requested = normalize(join(staticDir, pathname));
+      const candidate =
+        requested.startsWith(staticDir) && extname(requested) !== ""
+          ? requested
+          : join(staticDir, "index.html"); // SPA fallback
+      try {
+        const body = readFileSync(candidate);
+        res.writeHead(200, {
+          "Content-Type":
+            CONTENT_TYPES[extname(candidate)] ?? "application/octet-stream",
+        });
+        res.end(body);
+        return;
+      } catch {
+        // fall through to the dev hint when the build is missing
+      }
+    }
+    res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
+    res.end(
+      `<!doctype html><meta charset="utf-8"><title>SmartPack API</title>
+       <body style="font-family:-apple-system,sans-serif;padding:48px;color:#1d1d1f">
+       <h1>SmartPack API is running</h1>
+       <p>This port only serves the <code>/api/*</code> endpoints.</p>
+       <p>For the app, run <code>npm run dev</code> and open the
+       <strong>Vite dev server</strong> (port 5177), or build the client with
+       <code>npm run build</code> and restart this server to serve it here.</p>
+       </body>`
+    );
   }
 
   return {

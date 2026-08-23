@@ -151,3 +151,15 @@ test("passwords are stored hashed, never in plain text", async () => {
   assert.ok(!serialized.includes("pass_hash"), "hash must not be exposed");
   assert.ok(!serialized.includes("pass_salt"), "salt must not be exposed");
 });
+
+test("unknown /api routes stay 404, page requests get a helpful response", async () => {
+  const api = await get("/api/nope");
+  assert.equal(api.status, 404);
+
+  // No staticDir in tests, so the root serves the dev hint page instead of
+  // the JSON 404 users previously hit when opening the API port directly.
+  const page = await fetch(base + "/");
+  assert.equal(page.status, 200);
+  assert.match(page.headers.get("content-type") ?? "", /text\/html/);
+  assert.match(await page.text(), /SmartPack API is running/);
+});

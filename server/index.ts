@@ -11,7 +11,11 @@ const DATA_DIR = join(__dirname, "data");
 mkdirSync(DATA_DIR, { recursive: true });
 
 const PORT = Number(process.env.PORT ?? 4177);
-const app = createApp(join(DATA_DIR, "smartpack.db"));
+// Serve the client build when present, so a single port works in production.
+const app = createApp(
+  join(DATA_DIR, "smartpack.db"),
+  join(__dirname, "..", "client", "dist")
+);
 
 createServer(app.handle).listen(PORT, () => {
   console.log(`SmartPack auth server listening on http://localhost:${PORT}`);
