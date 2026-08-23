@@ -84,12 +84,34 @@ export function login(email: string, password: string): Promise<AuthResponse> {
   });
 }
 
+export type Scenario = {
+  id: string;
+  label: string;
+  image: string;
+};
+
+export function scenarios(): Promise<{ scenarios: Scenario[] }> {
+  return request<{ scenarios: Scenario[] }>("/api/scenarios");
+}
+
 export function me(): Promise<{ user: User }> {
   return request<{ user: User }>("/api/me");
 }
 
 export function logout(): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("/api/logout", { method: "POST" });
+}
+
+export type Weather = {
+  tempC: number;
+  condition: string;
+};
+
+/** Without coordinates the server answers for its default city. */
+export function weather(lat?: number, lon?: number): Promise<Weather> {
+  const query =
+    lat != null && lon != null ? `?lat=${lat}&lon=${lon}` : "";
+  return request<Weather>(`/api/weather${query}`);
 }
 
 export type ChatMessage = {
