@@ -2,9 +2,10 @@ import type { User } from "../api";
 
 type Props = {
   user: User;
+  onNext: () => void;
 };
 
-export default function Home({ user }: Props) {
+export default function Home({ user, onNext }: Props) {
   return (
     <div className="home">
       <section className="hero">
@@ -18,6 +19,10 @@ export default function Home({ user }: Props) {
           Leave the itinerary to the weather. Leave the outfits and luggage to
           AI. Your scenario wardrobe is getting ready.
         </p>
+        {/* 临时入口:先直达衣柜页,后续换成正式导航 */}
+        <button className="hero-next" onClick={onNext}>
+          下一步:我的衣柜 →
+        </button>
       </section>
 
       <section className="feature-grid">
