@@ -11,6 +11,7 @@ export type City = {
 };
 
 export const CITIES: City[] = [
+  { id: "chengdu", en: "Chengdu", zh: "成都", lat: 30.5728, lon: 104.0668 },
   { id: "leeds", en: "Leeds", zh: "利兹", lat: 53.8008, lon: -1.5491 },
   { id: "london", en: "London", zh: "伦敦", lat: 51.5074, lon: -0.1278 },
   { id: "beijing", en: "Beijing", zh: "北京", lat: 39.9042, lon: 116.4074 },

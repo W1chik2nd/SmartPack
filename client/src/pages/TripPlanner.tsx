@@ -81,9 +81,22 @@ export default function TripPlanner({ user, onBack }: Props) {
 
   // 滚动进行中不动它——只在停下 120ms 后归位,避免与惯性/吸附打架产生虚影。
   // 同时打上 is-scrolling 类,滚动期间关掉卡片 hover 的逐帧重绘(见 styles.css)。
+  // 例外:快接近物理边缘时(长距离猛滑,空闲归位来不及),立即平移一个周期。
+  // 三份内容完全一致,±period 的跳变在视觉上不可见,却避免了撞墙急停。
   function handleScroll() {
     const track = trackRef.current;
-    if (track) track.classList.add("is-scrolling");
+    if (track) {
+      track.classList.add("is-scrolling");
+      const period = periodRef.current;
+      if (period > 0) {
+        const max = track.scrollWidth - track.clientWidth;
+        if (track.scrollLeft < period * 0.25) {
+          track.scrollLeft += period;
+        } else if (track.scrollLeft > max - period * 0.25) {
+          track.scrollLeft -= period;
+        }
+      }
+    }
     if (idleTimer.current !== undefined) clearTimeout(idleTimer.current);
     idleTimer.current = window.setTimeout(() => {
       recenter();
