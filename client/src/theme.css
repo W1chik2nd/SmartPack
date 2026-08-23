@@ -1,0 +1,40 @@
+/* SmartPack design tokens — the single source of styling truth (AGENTS.md §8).
+   Every page pulls colors, type, spacing, and borders from here. Do not
+   hardcode colors in page styles or add per-page variants. */
+
+:root {
+  /* Mandatory unified background */
+  --bg: #caf5f7;
+
+  /* Bauhaus primaries — accents only, on a black/white base */
+  --red: #e63946;
+  --yellow: #ffd100;
+  --blue: #1d3557;
+
+  --black: #111111;
+  --white: #ffffff;
+
+  /* Roles */
+  --text: var(--black);
+  --text-secondary: #3d3d3d;
+  --surface: var(--white);
+  --danger: var(--red);
+
+  /* Geometry: thick borders, right angles. No gradients, no soft shadows. */
+  --border-w: 3px;
+  --border: var(--border-w) solid var(--black);
+  --radius: 0;
+
+  /* Type: sans-serif, strong weight contrast, left-aligned */
+  --font: "Helvetica Neue", Helvetica, Arial, -apple-system, sans-serif;
+  --weight-heavy: 800;
+  --weight-bold: 700;
+  --weight-regular: 400;
+
+  /* Spacing grid */
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 40px;
+  --space-5: 64px;
+}

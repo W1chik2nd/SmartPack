@@ -1,0 +1,201 @@
+/* Auth pages (sign-in / sign-up) — Bauhaus split layout.
+   Desktop: image panel left, form panel right. Mobile: form only.
+   Tokens come from theme.css via the styles.css import chain. */
+
+.auth-page {
+  min-height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding-top: 56px; /* fixed nav height */
+  animation: fadeIn 0.3s ease both;
+}
+
+/* Left: photo block. The image is content-free for screen readers
+   (aria-hidden) — pure visual identity, framed like a poster. */
+.auth-visual {
+  border-right: var(--border);
+  background: var(--blue);
+  display: flex;
+  align-items: stretch;
+}
+
+.auth-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Right: the working panel */
+.auth-panel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4) var(--space-3);
+}
+
+.auth-headline {
+  width: 100%;
+  max-width: 440px;
+  text-align: left;
+  margin-bottom: var(--space-3);
+}
+
+.auth-headline h1 {
+  font-size: 36px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.01em;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+/* Functional underline: yellow bar anchors the headline to the form below */
+.auth-headline h1::after {
+  content: "";
+  display: block;
+  width: 72px;
+  height: 10px;
+  margin-top: var(--space-2);
+  background: var(--yellow);
+}
+
+.auth-headline p {
+  margin-top: var(--space-2);
+  font-size: 17px;
+  font-weight: var(--weight-regular);
+  color: var(--text-secondary);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 440px;
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-4) var(--space-3);
+}
+
+.auth-card.shake {
+  animation: shake 0.3s ease;
+}
+
+.field {
+  margin-bottom: var(--space-2);
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  margin-bottom: var(--space-1);
+}
+
+.field input {
+  width: 100%;
+  height: 48px;
+  padding: 0 var(--space-2);
+  font-size: 16px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--white);
+  border: 2px solid var(--black);
+  border-radius: var(--radius);
+  outline: none;
+}
+
+.field input:focus {
+  /* flat focus ring, not a glow */
+  outline: 3px solid var(--yellow);
+  outline-offset: 0;
+  border-color: var(--blue);
+}
+
+.field-hint {
+  margin-top: var(--space-1);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.error-banner {
+  margin-bottom: var(--space-2);
+  padding: 12px var(--space-2);
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--white);
+  background: var(--danger);
+  border: var(--border);
+  border-radius: var(--radius);
+  animation: fadeIn 0.2s ease both;
+}
+
+.btn-primary {
+  width: 100%;
+  height: 52px;
+  margin-top: var(--space-1);
+  font-size: 16px;
+  font-weight: var(--weight-heavy);
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  background: var(--blue);
+  border: var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--yellow);
+  color: var(--black);
+}
+
+.btn-primary:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.auth-switch {
+  margin-top: var(--space-3);
+  text-align: left;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.auth-switch button {
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  font-family: inherit;
+  color: var(--blue);
+  background: none;
+  border: none;
+  border-bottom: 2px solid var(--blue);
+  cursor: pointer;
+  padding: 0;
+}
+
+.auth-switch button:hover {
+  color: var(--red);
+  border-bottom-color: var(--red);
+}
+
+/* Mobile: drop the image, keep the original single-column form layout */
+@media (max-width: 900px) {
+  .auth-page {
+    grid-template-columns: 1fr;
+    padding: 104px var(--space-3) var(--space-4);
+  }
+  .auth-visual {
+    display: none;
+  }
+  .auth-panel {
+    padding: 0;
+  }
+  .auth-headline h1 {
+    font-size: 28px;
+  }
+}
