@@ -11,6 +11,7 @@ import { DatabaseSync } from "node:sqlite";
 import { scryptSync, randomBytes, timingSafeEqual, randomUUID } from "node:crypto";
 import { aiConfigured, chatCompletion, type ChatMessage } from "./ai.ts";
 import { buildSystemPrompt } from "./prompts.ts";
+import { currentWeather, DEFAULT_COORDS } from "./weather.ts";
 
 // Password hashing (AGENTS.md §5): passwords require a password-specific KDF,
 // not a general-purpose hash like SHA256. We use scrypt because it is a
@@ -251,6 +252,21 @@ export function createApp(dbPath: string): App {
         return;
       }
       json(res, 200, { token: createSession(user.id), user: publicUser(user) });
+      return;
+    }
+
+    // Live weather for the dashboard. Coordinates are optional query params
+    // (the client passes browser geolocation when granted); without them we
+    // fall back to the default city rather than failing the whole card.
+    if (req.method === "GET" && url.pathname === "/api/weather") {
+      const lat = Number(url.searchParams.get("lat") ?? DEFAULT_COORDS.lat);
+      const lon = Number(url.searchParams.get("lon") ?? DEFAULT_COORDS.lon);
+      if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+        json(res, 400, { error: "Invalid coordinates." });
+        return;
+      }
+      const weather = await currentWeather(lat, lon);
+      json(res, 200, weather);
       return;
     }
 

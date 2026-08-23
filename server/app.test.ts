@@ -253,6 +253,16 @@ test("login works for accounts with no questionnaire profile (pre-migration user
   assert.equal(who.status, 200);
 });
 
+test("weather rejects invalid coordinates at the boundary", async () => {
+  // Only the input validation is tested here — the happy path calls the
+  // real Open-Meteo API, which unit tests must not depend on.
+  const cases = ["lat=abc&lon=0", "lat=91&lon=0", "lat=0&lon=181"];
+  for (const qs of cases) {
+    const { status } = await get(`/api/weather?${qs}`);
+    assert.equal(status, 400);
+  }
+});
+
 test("chat requires a session and a configured provider", async () => {
   // Anonymous chat is rejected before anything else.
   const anon = await post("/api/chat", { messages: [{ role: "user", content: "hi" }] });

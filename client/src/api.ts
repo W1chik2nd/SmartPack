@@ -92,6 +92,18 @@ export function logout(): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("/api/logout", { method: "POST" });
 }
 
+export type Weather = {
+  tempC: number;
+  condition: string;
+};
+
+/** Without coordinates the server answers for its default city. */
+export function weather(lat?: number, lon?: number): Promise<Weather> {
+  const query =
+    lat != null && lon != null ? `?lat=${lat}&lon=${lon}` : "";
+  return request<Weather>(`/api/weather${query}`);
+}
+
 export type ChatMessage = {
   role: "user" | "assistant";
   content: string;
