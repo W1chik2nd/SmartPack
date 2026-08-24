@@ -1,3 +1,5 @@
+import { useLang } from "../i18n/useLang";
+
 type Props = {
   onEnter: () => void;
 };
@@ -9,6 +11,7 @@ type Props = {
  * 图片从 /public 加载:换成真实素材只需替换同名文件。
  */
 export default function Landing({ onEnter }: Props) {
+  const { t } = useLang();
   return (
     <main className="landing">
       {/* 世界地图作背景铺满 */}
@@ -17,20 +20,14 @@ export default function Landing({ onEnter }: Props) {
       {/* 品牌标题 */}
       <div className="landing-hero">
         <h1 className="landing-title">SmartPack</h1>
-        <p className="landing-tagline">
-          出门穿什么、行李带什么,都交给 AI。
-        </p>
+        <p className="landing-tagline">{t("landingTagline")}</p>
       </div>
 
       {/* 右下角行李箱,箭头按钮叠在箱子左侧。 */}
       <div className="landing-luggage">
-        <img
-          className="landing-suitcase"
-          src="/suitcase.svg"
-          alt="打包好的行李箱"
-        />
+        <img className="landing-suitcase" src="/suitcase.svg" alt="" />
         <button className="landing-enter" onClick={onEnter}>
-          继续旅程
+          {t("landingEnter")}
         </button>
       </div>
     </main>

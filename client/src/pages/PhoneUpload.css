@@ -1,0 +1,70 @@
+/* 手机扫码上传页 — 单列大按钮,适配手机竖屏 */
+
+.phone-upload {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-3);
+  background: var(--bg);
+  text-align: center;
+}
+
+.phone-upload-title {
+  font-size: 26px;
+  font-weight: var(--weight-heavy);
+  color: var(--blue);
+}
+
+.phone-upload-text {
+  font-size: 16px;
+  font-weight: var(--weight-regular);
+  color: var(--text);
+  line-height: 1.5;
+  max-width: 320px;
+}
+
+.phone-upload-ok {
+  font-size: 22px;
+  font-weight: var(--weight-heavy);
+  color: var(--blue);
+}
+
+.phone-upload-err {
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+  color: var(--red);
+  border-left: 6px solid var(--red);
+  padding-left: 12px;
+  text-align: left;
+  max-width: 320px;
+}
+
+/* 手指友好的大按钮 */
+.phone-upload-btn {
+  min-width: 220px;
+  padding: 20px 32px;
+  font-family: inherit;
+  font-size: 20px;
+  font-weight: var(--weight-bold);
+  color: var(--white);
+  background: var(--red);
+  border: var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.phone-upload-btn:focus-visible {
+  outline: 4px solid var(--yellow);
+  outline-offset: 3px;
+}
+
+.phone-upload-file {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}

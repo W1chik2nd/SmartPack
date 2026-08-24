@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { login, setToken, type User } from "../api";
+import { useLang } from "../i18n/useLang";
 
 type Props = {
   onAuthed: (user: User) => void;
@@ -7,6 +8,7 @@ type Props = {
 };
 
 export default function Login({ onAuthed, onSwitch }: Props) {
+  const { t } = useLang();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -40,8 +42,8 @@ export default function Login({ onAuthed, onSwitch }: Props) {
 
       <div className="auth-panel">
         <div className="auth-headline">
-          <h1>Sign in to SmartPack</h1>
-          <p>Your wardrobe, your trips, one plan.</p>
+          <h1>{t("loginTitle")}</h1>
+          <p>{t("loginSubtitle")}</p>
         </div>
 
         <form
@@ -57,7 +59,7 @@ export default function Login({ onAuthed, onSwitch }: Props) {
           )}
 
           <div className="field">
-            <label htmlFor="login-email">Email</label>
+            <label htmlFor="login-email">{t("email")}</label>
             <input
               id="login-email"
               type="email"
@@ -69,7 +71,7 @@ export default function Login({ onAuthed, onSwitch }: Props) {
           </div>
 
           <div className="field">
-            <label htmlFor="login-password">Password</label>
+            <label htmlFor="login-password">{t("password")}</label>
             <input
               id="login-password"
               type="password"
@@ -81,13 +83,13 @@ export default function Login({ onAuthed, onSwitch }: Props) {
           </div>
 
           <button className="btn-primary" type="submit" disabled={busy}>
-            {busy ? "Signing In…" : "Sign In"}
+            {busy ? t("signingIn") : t("signIn")}
           </button>
 
           <div className="auth-switch">
-            Don&apos;t have an account?{" "}
+            {t("noAccount")}{" "}
             <button type="button" onClick={onSwitch}>
-              Create yours now.
+              {t("createYours")}
             </button>
           </div>
         </form>
