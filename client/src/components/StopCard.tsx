@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 import { stopPhoto, type StopPhoto, type TripStop } from "../api";
 import { useLang } from "../i18n/useLang";
 import type { StringKey } from "../i18n/strings";
+import { useTranslatedText } from "../hooks/useTranslatedText";
 
 const KIND_LABEL: Record<TripStop["kind"], StringKey> = {
   spot: "stopSpot",
@@ -57,8 +58,18 @@ export default function StopCard({ stop, side, row }: Props) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- fetch once per stop
   }, [stop.id]);
 
-  const name = lang === "zh" ? stop.name : stop.nameEn || stop.name;
-  const note = lang === "zh" ? stop.note : stop.noteEn || stop.note;
+  const storedName = lang === "zh" ? stop.name : stop.nameEn;
+  const storedNote = lang === "zh" ? stop.note : stop.noteEn;
+  const missing = [
+    ...(!storedName ? [lang === "zh" ? stop.nameEn : stop.name] : []),
+    ...(!storedNote && (lang === "zh" ? stop.noteEn : stop.note)
+      ? [lang === "zh" ? stop.noteEn : stop.note]
+      : []),
+  ];
+  const translated = useTranslatedText(missing, lang);
+  let translatedIndex = 0;
+  const name = storedName || translated[translatedIndex++] || stop.name || stop.nameEn;
+  const note = storedNote || translated[translatedIndex] || stop.note || stop.noteEn;
   const timing = [stop.startTime, stop.duration].filter(Boolean).join(" · ");
 
   return (
