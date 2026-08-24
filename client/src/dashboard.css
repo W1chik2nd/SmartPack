@@ -190,6 +190,78 @@
   transform-origin: center center;
 }
 
+.layered-outfit {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: min(100%, 190px);
+  height: 100%;
+  min-height: 210px;
+  gap: 0;
+}
+
+.layered-torso {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-height: 78px;
+}
+
+.layered-torso > .dress-piece-top {
+  grid-area: 1 / 1;
+}
+
+.layered-outer-open {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+.layered-outer-open > .dress-piece-top {
+  transform: scaleX(1.04);
+  clip-path: polygon(
+    0 32%, 12% 32%, 12% 22%, 22% 22%, 22% 14%,
+    34% 14%, 34% 0, 42% 0, 42% 100%, 28% 100%,
+    28% 62%, 20% 62%, 20% 70%, 8% 70%, 8% 58%, 0 58%,
+    58% 58%, 58% 70%, 70% 70%, 70% 62%, 62% 62%,
+    62% 100%, 100% 100%, 100% 0, 58% 0, 58% 14%,
+    66% 14%, 66% 22%, 78% 22%, 78% 32%, 100% 32%, 100% 58%,
+    92% 58%, 92% 70%, 80% 70%, 80% 62%, 72% 62%, 72% 100%,
+    28% 100%, 28% 62%, 20% 62%, 20% 70%, 8% 70%, 8% 58%, 0 58%
+  );
+}
+
+.layered-zip-gap {
+  position: absolute;
+  z-index: 3;
+  width: 4px;
+  height: 78%;
+  background: var(--black);
+  opacity: 0.8;
+}
+
+.layered-outfit > .dress-piece-bottom {
+  z-index: 1;
+  margin-top: -8px;
+}
+
+.layered-outfit > .dress-piece-shoes {
+  z-index: 1;
+  margin-top: -2px;
+}
+
+.layered-outfit > .dress-piece-accessory {
+  position: absolute;
+  z-index: 4;
+  right: 0;
+  top: 22%;
+}
+
 .outfit-figure .dress-piece-top.is-compact {
   width: clamp(92px, 13vw, 142px);
   height: auto;
@@ -212,6 +284,20 @@
 .outfit-figure .dress-piece-accessory.is-compact {
   position: absolute;
   transform: translateX(clamp(52px, 6vw, 82px)) translateY(clamp(-18px, -2vw, -8px));
+}
+
+.outfit-description {
+  display: block;
+  max-width: 100%;
+  margin-top: 4px;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  line-height: 1.25;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 
