@@ -106,6 +106,7 @@ export function renderHome() {
         onOpenItinerary={() => {}}
         onOpenPacking={() => {}}
         onOpenProfile={() => {}}
+        onOpenOutfit={() => {}}
       />
     </LangProvider>
   );
