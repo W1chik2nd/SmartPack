@@ -8,20 +8,25 @@ type Props = {
   user: User;
   onOpenTrips: () => void;
   onOpenWardrobe: () => void;
+  onOpenPacking: () => void;
 };
 
 // Placeholder navigation targets. Wire real routes here as the pages land.
 // TODO: replace with real navigation once the profile/detail pages exist.
 const TODO_LINKS = {
   weather: () => {},
-  checklist: () => {},
   dates: () => {},
   outfit: () => {},
   itinerary: () => {},
   profile: () => {},
 };
 
-export default function Home({ user, onOpenTrips, onOpenWardrobe }: Props) {
+export default function Home({
+  user,
+  onOpenTrips,
+  onOpenWardrobe,
+  onOpenPacking,
+}: Props) {
   const { lang, t } = useLang();
   const [now, setNow] = useState(new Date());
   const [city, setCity] = useState<City>(storedCity);
@@ -121,7 +126,7 @@ export default function Home({ user, onOpenTrips, onOpenWardrobe }: Props) {
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
 
-              <button className="today-checklist" onClick={TODO_LINKS.checklist}>
+              <button className="today-checklist" onClick={onOpenPacking}>
                 <h2>{t("checklist")}</h2>
                 <span className="check-mark" aria-hidden="true" />
                 <span className="card-arrow" aria-hidden="true">›</span>
