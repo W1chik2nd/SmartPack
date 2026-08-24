@@ -51,6 +51,8 @@ export default function Itinerary({ scenario, tripId, onBack }: Props) {
 
   const activeDay = trip?.days.find((d) => d.id === activeDayId) ?? null;
   const title = trip ? (lang === "zh" ? trip.title : trip.titleEn) : "";
+  const dayWord = lang === "zh" ? "天" : "Day";
+  const photoSourceLabel = provider ? `${t("photoSource")}: ${provider}` : "";
 
   return (
     <div className="itinerary-page">
@@ -62,13 +64,13 @@ export default function Itinerary({ scenario, tripId, onBack }: Props) {
           <h1 className="itin-title">{title || t("itineraryTitle")}</h1>
           {trip && (
             <p className="itin-subtitle">
-              {trip.departLabel} {t("departs")} · {trip.days.length} × Day
+              {trip.departLabel} {t("departs")} · {trip.days.length} × {dayWord}
             </p>
           )}
         </div>
         {provider && (
           <span className="itin-photo-source">
-            {t("photoSource")}: {provider}
+            {photoSourceLabel}
           </span>
         )}
       </header>

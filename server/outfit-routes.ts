@@ -42,6 +42,7 @@ export async function handleOutfitRoutes(ctx: Ctx): Promise<boolean> {
           .slice(0, 10)
       : day.dateLabel,
     place: day.city,
+    placeEn: day.cityEn,
     scene: linkedItinerary.scenario,
     outfit: day.outfit,
   }));
