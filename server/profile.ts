@@ -93,6 +93,16 @@ const WEAR_FEEL: Option[] = [
 ];
 
 // 出行与打包习惯 — feeds the minimal luggage plan (README core feature 6).
+// Required, because cut, sizing and fit conventions differ by it — but
+// "prefer not to say" is a real answer, not a gap: nobody is forced to
+// disclose, and recommendations fall back to neutral fits for that case.
+const GENDERS: Option[] = [
+  { id: "female", en: "Female", zh: "女" },
+  { id: "male", en: "Male", zh: "男" },
+  { id: "non-binary", en: "Non-binary", zh: "非二元" },
+  { id: "undisclosed", en: "Prefer not to say", zh: "不愿透露" },
+];
+
 const TRAVEL_HABITS: Option[] = [
   { id: "carry-on-only", en: "Carry-on only", zh: "只带登机箱" },
   { id: "packs-light", en: "Packs light", zh: "习惯少带" },
@@ -110,6 +120,14 @@ const TRAVEL_HABITS: Option[] = [
  */
 export const PROFILE_FIELDS: FieldSpec[] = [
   { key: "name", column: "name", kind: "text", required: true, label: "name", max: 60 },
+  {
+    key: "gender",
+    column: "gender",
+    kind: "single",
+    required: true,
+    label: "gender",
+    options: GENDERS,
+  },
   { key: "age", column: "age", kind: "int", required: true, label: "age", min: 1, max: 120 },
   {
     key: "heightCm",

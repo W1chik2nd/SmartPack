@@ -53,6 +53,7 @@ export const STRINGS = {
     zh: "SmartPack 会为你量身定制每套穿搭。完成问卷即注册成功。",
   },
   name: { en: "Name", zh: "姓名" },
+  gender: { en: "Gender", zh: "性别" },
   age: { en: "Age", zh: "年龄" },
   heightCm: { en: "Height (cm)", zh: "身高 (cm)" },
   weightKg: { en: "Weight (kg)", zh: "体重 (kg)" },
@@ -70,6 +71,10 @@ export const STRINGS = {
   pickMultiple: { en: "Pick any that apply", zh: "可多选" },
   otherPlaceholder: { en: "Tell us in your own words", zh: "请自己填写" },
   optionsLoadError: { en: "Could not load the questionnaire options.", zh: "无法加载问卷选项。" },
+  requiredMissing: {
+    en: "Please answer every required question.",
+    zh: "请填写所有必填项。",
+  },
   incompleteWarning: {
     en: "Some answers are missing — recommendations may be less personalized. Tap again to continue anyway.",
     zh: "信息不完善,推荐可能不够个性化。再点一次可继续提交。",

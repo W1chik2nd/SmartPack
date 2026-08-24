@@ -50,6 +50,7 @@ type UserRow = {
   name: string;
   pass_salt: string;
   pass_hash: string;
+  gender: string | null;
   age: number | null;
   height_cm: number | null;
   weight_kg: number | null;
