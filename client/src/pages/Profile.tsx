@@ -23,24 +23,12 @@ function avatarForGender(gender: string | null): Avatar | null {
 }
 
 function AvatarArt({ variant }: { variant: Avatar }) {
-  if (variant === "man") {
-    return (
-      <svg viewBox="0 0 220 250" aria-hidden="true">
-        <path className="avatar-fill" d="M44 220c8-48 34-73 66-78 34 5 63 30 68 78z" />
-        <path className="avatar-line" d="M62 81c0-38 23-61 53-61 29 0 48 22 48 58v26c0 34-22 62-52 62-29 0-49-25-49-59z" />
-        <path className="avatar-hair" d="M61 87c-4-34 14-70 53-70 34 0 55 24 51 58-14-10-24-27-28-42-17 27-43 37-76 35z" />
-        <path className="avatar-line" d="M92 99v8m39-8v8m-27 22c8 5 16 5 24-1m-16 38v24m-51 14 30-20 21 17 21-17 31 20" />
-      </svg>
-    );
-  }
   return (
-    <svg viewBox="0 0 220 250" aria-hidden="true">
-      <path className="avatar-hair" d="M48 222c-9-34-9-89 0-143 8-45 33-63 67-63 39 0 61 25 66 73 5 48-2 99-8 133z" />
-      <path className="avatar-fill" d="M53 221c9-43 29-66 59-72 31 6 54 28 60 72z" />
-      <path className="avatar-face" d="M76 76c3-30 18-46 40-46 28 0 43 23 43 61v18c0 32-18 56-46 56-27 0-44-22-44-54 0-17 2-27 7-35z" />
-      <path className="avatar-line" d="M91 99v8m39-8v8m-28 23c8 5 17 5 25 0m-14 35v24m-49 15 28-21 21 17 21-17 28 21" />
-      <path className="avatar-line" d="M75 72c18 3 35-8 48-30 7 16 18 27 35 34" />
-    </svg>
+    <img
+      className="profile-avatar-image"
+      src={variant === "man" ? "/profile-male.svg" : "/profile-female.svg"}
+      alt=""
+    />
   );
 }
 
@@ -147,7 +135,12 @@ export default function Profile({ user, onBack, onSaved }: Props) {
             <legend>{t("profileAvatar")}</legend>
             <div className="avatar-stage">
               {avatar ? (
-                <AvatarArt variant={avatar} />
+                <>
+                  <AvatarArt variant={avatar} />
+                  <span className="avatar-caption">
+                    {avatar === "man" ? t("profileMaleAvatar") : t("profileFemaleAvatar")}
+                  </span>
+                </>
               ) : (
                 <span className="avatar-empty">{t("profileChoose")}</span>
               )}
@@ -187,53 +180,46 @@ export default function Profile({ user, onBack, onSaved }: Props) {
 
           <div className="measurement-grid">
             {measurements.map((field) => (
-              draft[field.key] && (
-                <label key={field.key} className="measurement-field">
-                  <span>{field.label}</span>
-                  <span className="measurement-input">
-                    <input type="number" inputMode="decimal" min="1" step="0.1" value={draft[field.key]} onChange={(event) => update(field.key, event.target.value)} />
-                    <b>{field.unit}</b>
-                  </span>
-                </label>
-              )
-            ))}
-            {draft.bodyType && (
-              <label className="measurement-field body-type-field">
-                <span>{t("profileBodyType")}</span>
-                <select value={draft.bodyType} onChange={(event) => update("bodyType", event.target.value)}>
-                  <option value="straight">{t("profileStraight")}</option>
-                  <option value="triangle">{t("profileTriangle")}</option>
-                  <option value="inverted">{t("profileInverted")}</option>
-                  <option value="hourglass">{t("profileHourglass")}</option>
-                </select>
+              <label key={field.key} className="measurement-field">
+                <span>{field.label}</span>
+                <span className="measurement-input">
+                  <input type="number" inputMode="decimal" min="1" step="0.1" value={draft[field.key]} onChange={(event) => update(field.key, event.target.value)} />
+                  <b>{field.unit}</b>
+                </span>
               </label>
-            )}
+            ))}
+            <label className="measurement-field body-type-field">
+              <span>{t("profileBodyType")}</span>
+              <select value={draft.bodyType} onChange={(event) => update("bodyType", event.target.value)}>
+                <option value="">{t("profileChoose")}</option>
+                <option value="straight">{t("profileStraight")}</option>
+                <option value="triangle">{t("profileTriangle")}</option>
+                <option value="inverted">{t("profileInverted")}</option>
+                <option value="hourglass">{t("profileHourglass")}</option>
+              </select>
+            </label>
           </div>
 
-          {draft.season && (
-            <fieldset className="season-picker">
-              <legend>{t("profileSeasonType")}</legend>
-              <div>
-                {seasons.map(([value, zh, en]) => (
-                  <button key={value} type="button" aria-pressed={draft.season === value} className={draft.season === value ? "is-active" : ""} onClick={() => update("season", value)}>
-                    {lang === "zh" ? zh : en}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-          )}
+          <fieldset className="season-picker">
+            <legend>{t("profileSeasonType")}</legend>
+            <div>
+              {seasons.map(([value, zh, en]) => (
+                <button key={value} type="button" aria-pressed={draft.season === value} className={draft.season === value ? "is-active" : ""} onClick={() => update("season", value)}>
+                  {lang === "zh" ? zh : en}
+                </button>
+              ))}
+            </div>
+          </fieldset>
 
           <div className="preference-stack">
-            {styles.length > 0 && (
-              <details open>
-                <summary><span>{t("profileStylePreferences")}</span><b>02</b></summary>
-                <div className="preference-options">
-                  {styleOptions.map(([value, zh, en]) => (
-                    <button key={value} type="button" aria-pressed={styles.includes(value)} onClick={() => toggle(styles, value, setStyles)}>{lang === "zh" ? zh : en}</button>
-                  ))}
-                </div>
-              </details>
-            )}
+            <details open>
+              <summary><span>{t("profileStylePreferences")}</span><b>02</b></summary>
+              <div className="preference-options">
+                {styleOptions.map(([value, zh, en]) => (
+                  <button key={value} type="button" aria-pressed={styles.includes(value)} onClick={() => toggle(styles, value, setStyles)}>{lang === "zh" ? zh : en}</button>
+                ))}
+              </div>
+            </details>
             {temperature && (
               <details open>
                 <summary><span>{t("profileTemperature")}</span><b>03</b></summary>
