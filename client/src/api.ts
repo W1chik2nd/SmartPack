@@ -272,11 +272,44 @@ export type Weather = {
   condition: string;
 };
 
+export type ForecastDay = {
+  date: string;
+  condition: string;
+  minTempC: number;
+  maxTempC: number;
+  precipitationProbability: number;
+  uvIndex: number;
+  maxWindKph: number;
+};
+
+export type TripWeather = {
+  trip: {
+    id: string;
+    destination: string;
+    destinationDetail: string;
+    startDate: string;
+    endDate: string;
+    dayCount: number;
+  };
+  forecast: {
+    source: "Open-Meteo";
+    available: boolean;
+    note: string;
+    days: ForecastDay[];
+  };
+};
+
 /** Without coordinates the server answers for its default city. */
 export function weather(lat?: number, lon?: number): Promise<Weather> {
   const query =
     lat != null && lon != null ? `?lat=${lat}&lon=${lon}` : "";
   return request<Weather>(`/api/weather${query}`);
+}
+
+export function getTripWeather(id: string): Promise<TripWeather> {
+  return request<TripWeather>(
+    `/api/trip-plans/${encodeURIComponent(id)}/weather`
+  );
 }
 
 export type ChatMessage = {
