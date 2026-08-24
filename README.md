@@ -1,3 +1,8 @@
+<p align="right">
+  <b>English</b> ·
+  <a href="README.zh-CN.md">简体中文</a>
+</p>
+
 # WearRoute（行装）— An AI Scenario Wardrobe
 
 > Leave the itinerary to the weather. Leave the outfits and luggage to AI.
@@ -46,20 +51,53 @@ WearRoute integrates weather alerts, outfit recommendations, and packing lists i
 - **Subscription**: core features are free; advanced features (multi-trip management, family members, deeper personalization, unlimited plan generation) require a membership
 - **Targeted recommendations**: when the app identifies a genuine gap in the user's wardrobe or travel kit, it recommends purchasable products and earns commission — recommendations appear only when relevant and are clearly labeled
 
+## Tech Stack
+
+The architecture rule is **thin client, thick server**: recommendation logic, weather integration, luggage optimization, and business rules all live in the API, so the web and iOS clients only render. See [AGENTS.md](AGENTS.md) for the full engineering conventions.
+
+| Layer | Choice | Notes |
+|---|---|---|
+| Front end | React 18 + TypeScript 5.9 + Vite 5 | Single-page app, hand-written CSS, Bauhaus theme tokens (shared background `#CAF5F7`) |
+| Bilingual UI | In-house i18n in `client/src/i18n` | English/Chinese strings plus a `LangProvider`; the choice persists in `localStorage` and mirrors onto `<html lang>` |
+| Back end | Node 22.x with TypeScript | Native type stripping (`--experimental-strip-types`), plain `node:http`; one process serves both the built client and `/api/*` |
+| Database | SQLite locally through the built-in `node:sqlite`, PostgreSQL (Neon) in production through `pg` | `server/data/wearroute.db` is created for local development; `migrate:sqlite` imports it into Postgres |
+| Auth | `node:crypto` scrypt with per-user salt, opaque session tokens | Passwords are never stored in plain text |
+| Shared types | `shared/*.ts` | Outfit, packing, wardrobe, weather, and trip-constraint types imported across the stack |
+| Native iOS | SwiftUI, iOS 17+ | Mirrors the web pages against the same API and carries no business logic — see [ios/README.md](ios/README.md) |
+| Tests | Built-in `node:test` runner, plus custom render and layout probes | No test framework dependency |
+
+### External services
+
+| Service | Used for | Key required |
+|---|---|---|
+| [Open-Meteo](https://open-meteo.com) | Destination forecasts | No |
+| [Nominatim / OpenStreetMap](https://nominatim.org) | Place search and geocoding | No |
+| OpenAI-compatible LLM | Chat assistant and the trip-planning agent (Responses API, web search, structured outputs) | `AI_API_KEY` |
+| Vision model (DashScope `qwen-vl-plus` by default, OpenAI-compatible) | Recognizing garments from photos | `VISION_API_KEY` |
+| Unsplash / Pexels / Openverse | Scenery photos on itinerary cards (Openverse needs no key) | Optional |
+| JD / Taobao affiliate APIs | "Shop similar" product recommendations | Optional |
+
+Every key lives in `server/.env` (gitignored) locally, and in the Render dashboard in production — never in client code.
+
 ## Documentation
 
 - [Personas and User Stories](docs/personas-and-user-stories.md)
+- [AGENTS.md](AGENTS.md) — engineering conventions and architecture rules
+- [ios/README.md](ios/README.md) — native client structure and device setup
 
 ## Getting Started (Development)
 
-The repository contains the WearRoute web app, its Node API, and local SQLite / production PostgreSQL persistence.
+The repository contains the WearRoute web app, its Node API, the native iOS client, and local SQLite / production PostgreSQL persistence.
 
 ### Structure
 
 ```
+client/   React + TypeScript + Vite front end (pages, components, i18n, theme)
 server/   Node + TypeScript API — SQLite locally, PostgreSQL on Neon
-client/   React + TypeScript + Vite front end
 ios/      Native SwiftUI client — iOS 17+, backed by the same API
+shared/   TypeScript types shared across the stack
+scripts/  Dev runner plus render and layout verification probes
+docs/     Product documentation (personas, user stories)
 ```
 
 ### Requirements
@@ -74,10 +112,17 @@ One command from the repository root starts both the API server (port 4177) and 
 
 ```sh
 npm install   # first time only
-npm run dev   # server + client together; open http://localhost:5177
+npm run dev   # server + client together; open https://localhost:5177
 ```
 
-The API server creates `server/data/wearroute.db` automatically for local development.
+The API server creates `server/data/wearroute.db` automatically for local development. The Vite dev server runs over HTTPS with a self-signed certificate and listens on the local network, because taking wardrobe photos from a phone requires a secure context — accept the browser warning on first visit.
+
+### Verify
+
+```sh
+npm test   # server tests + client tests + render check + layout probe
+npm run build
+```
 
 ### Native iOS app
 
@@ -168,4 +213,4 @@ The migration is idempotent and defaults to `server/data/wearroute.db`. Set `SQL
 
 ## Status
 
-This project is in active development. The web and native iOS apps currently cover accounts, profiles, wardrobes, trip generation, itinerary views, outfit rendering, and packing lists.
+This project is in active development. The web and native iOS apps currently cover accounts, profiles, wardrobes, trip generation, itinerary views, outfit rendering, and packing lists. Both clients ship in English and Chinese with an in-app language switch.
