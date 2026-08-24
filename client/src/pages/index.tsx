@@ -1,7 +1,14 @@
 import { useEffect, useState } from "react";
-import { weather, type User, type Weather } from "../api";
+import {
+  weather,
+  listTripPlans,
+  type User,
+  type Weather,
+  type TripPlan,
+} from "../api";
 import ChatWidget from "../components/ChatWidget";
 import { useLang } from "../i18n/useLang";
+import { SCENARIO_LABELS } from "../i18n/strings";
 import { CITIES, storedCity, storeCity, type City } from "../i18n/cities";
 
 type Props = {
@@ -34,11 +41,20 @@ export default function Home({
   const [city, setCity] = useState<City>(storedCity);
   const [wx, setWx] = useState<Weather | null>(null);
   const [wxError, setWxError] = useState(false);
+  // 已保存的行程,最新在前;进主页时拉一次,保存后跳回来会重新挂载再拉。
+  const [trips, setTrips] = useState<TripPlan[] | null>(null);
 
   // Live clock: half-minute ticks keep date, time, and greeting current.
   useEffect(() => {
     const timer = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(timer);
+  }, []);
+
+  // 拉取行程列表。失败(如未登录)就当作空,主页不因此报错。
+  useEffect(() => {
+    listTripPlans()
+      .then(({ plans }) => setTrips(plans))
+      .catch(() => setTrips([]));
   }, []);
 
   // Weather follows the picked city; the choice persists across sessions.
@@ -68,6 +84,27 @@ export default function Home({
     hour: "2-digit",
     minute: "2-digit",
   });
+
+  // 最新一条行程(列表已按新→旧排序),用于"行程"卡片。
+  const latestTrip = trips && trips.length > 0 ? trips[0] : null;
+
+  // 一条行程的日期区间显示。按本地年月日解析,不走 UTC,免得跨时区错一天。
+  function tripDates(trip: TripPlan): string {
+    const fmt = (iso: string) => {
+      const [y, m, d] = iso.split("-").map(Number);
+      return new Date(y, m - 1, d).toLocaleDateString(locale, {
+        month: "short",
+        day: "numeric",
+      });
+    };
+    const nights = Math.round(
+      (new Date(`${trip.endDate}T00:00:00Z`).getTime() -
+        new Date(`${trip.startDate}T00:00:00Z`).getTime()) /
+        86_400_000
+    );
+    if (nights <= 0) return `${fmt(trip.startDate)} · ${t("tripSameDay")}`;
+    return `${fmt(trip.startDate)} – ${fmt(trip.endDate)} · ${nights} ${t("tripNights")}`;
+  }
 
   return (
     <div className="home dashboard">
@@ -152,7 +189,22 @@ export default function Home({
 
             <button className="today-itinerary" onClick={onOpenItinerary}>
               <h2>{t("itinerary")}</h2>
-              <span className="itinerary-timeline" aria-hidden="true" />
+              {latestTrip ? (
+                <span className="trip-summary">
+                  <span className="trip-place">
+                    {latestTrip.placeName}
+                    <span className="trip-scenario">
+                      {SCENARIO_LABELS[latestTrip.scenario]?.[lang] ??
+                        latestTrip.scenario}
+                    </span>
+                  </span>
+                  <span className="trip-dates">{tripDates(latestTrip)}</span>
+                </span>
+              ) : (
+                <span className="trip-empty">
+                  {trips === null ? "" : t("noTripYet")}
+                </span>
+              )}
               <span className="card-arrow" aria-hidden="true">›</span>
             </button>
           </div>

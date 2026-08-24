@@ -12,10 +12,12 @@ import { scryptSync, randomBytes, timingSafeEqual, randomUUID } from "node:crypt
 import { handleUploadRoutes } from "./upload-routes.ts";
 import { createWardrobeStore } from "./wardrobe.ts";
 import { handleWardrobeRoutes } from "./wardrobe-routes.ts";
+import { createTripPlanStore } from "./trip-plan.ts";
+import { handleTripPlanRoutes } from "./trip-plan-routes.ts";
 import { createItineraryStore } from "./itinerary.ts";
 import { handleItineraryRoutes } from "./itinerary-routes.ts";
 import { handleAssistantRoutes } from "./assistant-routes.ts";
-import { handleCatalogRoutes } from "./catalog-routes.ts";
+import { handleCatalogRoutes, SCENARIO_IDS } from "./catalog-routes.ts";
 import { dirname, join } from "node:path";
 import {
   PROFILE_COLUMNS,
@@ -127,6 +129,10 @@ export function createApp(dbPath: string): App {
 
   // 照片存数据库同级的 photos/ 目录:测试用临时库时会自动隔离到临时目录。
   const wardrobe = createWardrobeStore(db, join(dirname(dbPath), "photos"));
+  // 行程计划(目的地 + 日期区间)自带建表,见 trip-plan.ts。
+  const tripPlans = createTripPlanStore(db);
+  // 合法场景 id 来自 catalog-routes,保存行程时据此校验(场景目录只有一处)。
+  const scenarioIds = SCENARIO_IDS;
   // 行程规划:trips / trip_days / trip_stops 三张表,建表在 store 里。
   const itinerary = createItineraryStore(db);
 
@@ -417,6 +423,22 @@ export function createApp(dbPath: string): App {
         userFromHeader: () => userForToken(bearerToken(req)),
         userFromQuery: () =>
           userForToken(url.searchParams.get("token") ?? undefined),
+      })
+    ) {
+      return;
+    }
+
+    // 行程计划路由(地点搜索/保存/列表)拆到独立模块,见 trip-plan-routes.ts。
+    if (
+      await handleTripPlanRoutes({
+        req,
+        res,
+        url,
+        tripPlans,
+        scenarioIds,
+        json,
+        readBody,
+        userFromHeader: () => userForToken(bearerToken(req)),
       })
     ) {
       return;

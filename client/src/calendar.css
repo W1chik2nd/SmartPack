@@ -1,0 +1,112 @@
+/* DateRangePicker —— 线框图右侧的 calendar 方块。token 来自 theme.css。 */
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: var(--space-2);
+}
+
+.calendar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-1);
+  margin-bottom: var(--space-2);
+}
+
+.calendar-month {
+  font-size: clamp(16px, 2vw, 20px);
+  font-weight: var(--weight-heavy);
+}
+
+.calendar-nav {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: var(--weight-heavy);
+  line-height: 1;
+  color: var(--white);
+  background: var(--blue);
+  border: var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.calendar-weekdays,
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.calendar-weekdays {
+  margin-bottom: 4px;
+}
+
+.calendar-weekdays span {
+  padding: 4px 0;
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.calendar-grid {
+  flex: 1;
+  align-content: start;
+}
+
+.calendar-blank {
+  /* 占位,让 1 号落在正确的星期列上。 */
+}
+
+.calendar-day {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font);
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  background: var(--white);
+  border: 2px solid var(--black);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.calendar-day:hover,
+.calendar-day:focus-visible {
+  background: var(--yellow);
+}
+
+/* 过去的日子:灰掉、不可点。放在 hover 之后并带 :disabled,压过黄色 hover。 */
+.calendar-day.is-past,
+.calendar-day.is-past:hover,
+.calendar-day:disabled {
+  color: var(--text-secondary);
+  background: #e6e6e6;
+  border-color: #c4c4c4;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* 区间内的日子填黄色大色块,起止两端用蓝色强调。 */
+.calendar-day.is-in-range {
+  background: var(--yellow);
+}
+
+.calendar-day.is-edge {
+  color: var(--white);
+  background: var(--blue);
+}
+
+/* 今天:底部粗线标记,不抢区间的配色。 */
+.calendar-day.is-today {
+  border-bottom-width: 6px;
+  border-bottom-color: var(--red);
+}
