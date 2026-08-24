@@ -11,7 +11,7 @@ const garmentCss = readFileSync(new URL("../src/outfit-garments.css", import.met
 const accessoryCss = readFileSync(new URL("../src/outfit-accessories.css", import.meta.url), "utf8");
 
 test("today outfit tile opens the outfit overview route", () => {
-  assert.match(home, /className="today-outfit"/);
+  assert.match(home, /type="button"\s+className="today-outfit"/);
   assert.match(home, /onClick=\{\(\) => onOpenOutfit\(selectedTrip\.id\)\}/);
   assert.match(home, /getOutfitPlan\(selectedTrip\.id\)/);
   assert.match(app, /onOpenOutfit=\{\(tripPlanId\) =>/);

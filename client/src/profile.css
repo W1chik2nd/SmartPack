@@ -105,6 +105,12 @@
 .avatar-stage svg,
 .profile-avatar-image { width: 90%; height: 95%; object-fit: contain; }
 
+.profile-avatar-image[src="/profile-neutral.png"] {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .avatar-line,
 .avatar-face {
   fill: none;
