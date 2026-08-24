@@ -147,7 +147,13 @@ console.log("=== 首页物品清单(真实渲染) ===");
   if (html.includes('class="check-mark"')) {
     fail("dashboard: old checklist placeholder is still rendered");
   }
-  console.log("  checklist bag image rendered");
+  if (!html.includes('class="trip-switcher"')) {
+    fail("dashboard: destination trip switcher was not rendered");
+  }
+  if (!html.includes("Destination Weather Today")) {
+    fail("dashboard: weather heading is not destination-specific");
+  }
+  console.log("  checklist bag, destination switcher, and destination weather rendered");
 }
 
 console.log("\n=== 个人档案页(真实渲染) ===");

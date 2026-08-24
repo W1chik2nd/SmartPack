@@ -345,16 +345,23 @@ export function saveTripPlan(plan: NewTripPlan): Promise<{ plan: TripPlan }> {
   });
 }
 
-/** Run the analytical agent, then persist itinerary + outfits + packing list. */
+/** Queue the analytical agent; generation continues on the server. */
 export function generateTripPlan(
   plan: NewTripPlan
-): Promise<{ plan: TripPlan; itinerary: Trip; packing: PackingPlan }> {
-  return request<{ plan: TripPlan; itinerary: Trip; packing: PackingPlan }>(
-    "/api/trip-plans/generate",
-    { method: "POST", body: JSON.stringify(plan) }
-  );
+): Promise<{ plan: TripPlan }> {
+  return request<{ plan: TripPlan }>("/api/trip-plans/generate", {
+    method: "POST",
+    body: JSON.stringify(plan),
+  });
 }
 
 export function listTripPlans(): Promise<{ plans: TripPlan[] }> {
   return request<{ plans: TripPlan[] }>("/api/trip-plans");
+}
+
+export function deleteTripPlan(id: string): Promise<{ ok: true }> {
+  return request<{ ok: true }>(
+    `/api/trip-plans/${encodeURIComponent(id)}`,
+    { method: "DELETE" }
+  );
 }

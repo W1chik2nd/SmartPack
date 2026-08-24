@@ -106,7 +106,16 @@ export type TripPlan = {
   endDate: string;
   notes: string;
   itineraryId: string | null;
+  generationStatus: "pending" | "processing" | "completed" | "failed";
+  generationError: string | null;
   createdAt: string;
 };
 
-export type NewTripPlan = Omit<TripPlan, "id" | "createdAt" | "itineraryId">;
+export type NewTripPlan = Omit<
+  TripPlan,
+  | "id"
+  | "createdAt"
+  | "itineraryId"
+  | "generationStatus"
+  | "generationError"
+>;

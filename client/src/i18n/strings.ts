@@ -89,7 +89,11 @@ export const STRINGS = {
   goodEvening: { en: "Good evening", zh: "晚上好" },
   goodNight: { en: "Good night", zh: "夜深了" },
   upcoming: { en: "Upcoming", zh: "最近日程" },
-  todaysWeather: { en: "Today's Weather", zh: "今日天气" },
+  destination: { en: "Destination", zh: "目的地" },
+  noDestination: { en: "No destination", zh: "暂无目的地" },
+  previousTrip: { en: "Previous trip", zh: "上一个行程" },
+  nextTrip: { en: "Next trip", zh: "下一个行程" },
+  destinationWeatherToday: { en: "Destination Weather Today", zh: "目的地今日天气" },
   weatherLoading: { en: "Loading…", zh: "加载中…" },
   weatherUnavailable: { en: "Unavailable", zh: "暂不可用" },
   checklist: { en: "Checklist", zh: "物品清单" },
@@ -98,6 +102,14 @@ export const STRINGS = {
   noTripYet: { en: "No trips planned yet", zh: "还没有行程" },
   tripNights: { en: "nights", zh: "晚" },
   tripSameDay: { en: "Day trip", zh: "当天往返" },
+  tripGeneratingHome: { en: "AI planning in background", zh: "AI 正在后台规划" },
+  tripGenerationFailedHome: { en: "Planning failed — try again", zh: "规划失败，请重新创建" },
+  deleteTrip: { en: "Delete trip", zh: "删除行程" },
+  deleteTripWarning: { en: "Itinerary, outfits, equipment, and packing will all be removed.", zh: "行程、穿搭、装备和打包清单都会被删除。" },
+  cancelDelete: { en: "Cancel", zh: "取消" },
+  confirmDeleteTrip: { en: "Delete", zh: "确认删除" },
+  deletingTrip: { en: "Deleting…", zh: "正在删除…" },
+  deleteTripFailed: { en: "Could not delete this trip.", zh: "无法删除这条行程。" },
   digitalWardrobe: { en: "Digital Wardrobe", zh: "电子衣橱" },
   tripPlanner: { en: "Trip Planner", zh: "行程计划" },
   myProfile: { en: "My Profile", zh: "个人档案" },
@@ -190,6 +202,12 @@ export const STRINGS = {
     en: "Checking destination weather and building a day-by-day plan. This can take a little while.",
     zh: "正在核对目的地天气并生成逐日方案,可能需要一点时间。",
   },
+  tripQueuedTitle: { en: "Trip accepted", zh: "行程已进入后台规划" },
+  tripQueuedButton: { en: "Planning in background", zh: "正在后台规划" },
+  tripAgentBackground: {
+    en: "You can keep using SmartPack. The home page will update automatically.",
+    zh: "你可以继续使用 SmartPack，主页会自动更新生成状态。",
+  },
   nights: { en: "nights", zh: "晚" },
   sameDay: { en: "Day trip", zh: "当天往返" },
 
@@ -206,9 +224,6 @@ export const STRINGS = {
   chatOpen: { en: "Open SmartPack assistant", zh: "打开 SmartPack 助手" },
   chatClose: { en: "Close SmartPack assistant", zh: "关闭 SmartPack 助手" },
   chatCloseDialog: { en: "Close assistant", zh: "关闭助手" },
-
-  // city picker
-  cityLabel: { en: "City", zh: "城市" },
 
   // wardrobe
   wardrobeTitle: { en: "Wardrobe Categories", zh: "服装品类列表" },
@@ -349,6 +364,12 @@ export function confirmDeleteMessage(lang: Lang, title: string): string {
   return lang === "zh"
     ? `确定删除「${title}」?`
     : `Delete "${title}"?`;
+}
+
+export function tripRedirectMessage(lang: Lang, seconds: number): string {
+  return lang === "zh"
+    ? `Agent 将继续生成，${seconds} 秒后自动返回主页。`
+    : `The Agent will keep working. Returning home in ${seconds} seconds.`;
 }
 
 export function unreachableHostMessage(lang: Lang, hostname: string): string {

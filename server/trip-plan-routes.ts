@@ -27,6 +27,21 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
   const method = req.method;
   const path = url.pathname;
 
+  const deleteMatch = path.match(/^\/api\/trip-plans\/([^/]+)$/);
+  if (method === "DELETE" && deleteMatch) {
+    const user = ctx.userFromHeader();
+    if (!user) {
+      json(res, 401, { error: "Not signed in." });
+      return true;
+    }
+    if (!tripPlans.remove(user.id, deleteMatch[1])) {
+      json(res, 404, { error: "Trip not found." });
+      return true;
+    }
+    json(res, 200, { ok: true });
+    return true;
+  }
+
   // 地点搜索(线框图里地图下方那个搜索框)。
   // 要登录态:这个接口会代我们向 Nominatim 发请求,开放给匿名用户等于把它变成
   // 公开代理,既会拖累第三方额度,也让我们的 User-Agent 承担滥用后果。
