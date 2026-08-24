@@ -48,6 +48,8 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
     setPlan(null);
     setError(false);
     setWx(null);
+    setWxError(false);
+    setActiveIndex(0);
     getOutfitPlan(tripPlanId)
       .then(({ plan: next }) => {
         setPlan(next);
@@ -66,6 +68,30 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
     });
   };
 
+  // These localization hooks must run on both the loading render and the
+  // loaded render. Calling them only after `plan` exists changes the hook
+  // order when the request resolves and crashes the route with a blank page.
+  const activeDay = plan?.days[activeIndex];
+  const activeAccessory = activeDay?.pieces.find(
+    (piece) => piece.kind === "accessory"
+  );
+  const activeGarments =
+    activeDay?.pieces.filter((piece) => piece.kind !== "accessory") ?? [];
+  const garmentLabels = useLocalizedValues(
+    activeGarments.map((piece) => ({ zh: piece.label, en: piece.labelEn })),
+    lang
+  );
+  const accessoryLabels = useLocalizedValues(
+    activeAccessory
+      ? [{ zh: activeAccessory.label, en: activeAccessory.labelEn }]
+      : [],
+    lang
+  );
+  const places = useTranslatedText(
+    plan?.days.map((day) => (lang === "zh" ? day.place : day.placeEn)) ?? [],
+    lang
+  );
+
   if (error) {
     return (
       <main className="dress-page dress-state">
@@ -79,23 +105,18 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
     return <main className="dress-page dress-state">{t("outfitLoading")}</main>;
   }
 
-  const activeDay = plan.days[activeIndex];
-  const activeAccessory = activeDay.pieces.find((piece) => piece.kind === "accessory");
-  const activeGarments = activeDay.pieces.filter((piece) => piece.kind !== "accessory");
+  if (!activeDay) {
+    return (
+      <main className="dress-page dress-state">
+        <button type="button" className="dress-back" onClick={onBack}>‹ {t("backToHome")}</button>
+        <p role="alert">{t("outfitLoadFailed")}</p>
+      </main>
+    );
+  }
+
   const scenario = SCENARIO_LABELS[plan.scenario]?.[lang] ?? plan.scenario;
   const dayLabel = lang === "zh" ? `第${activeDay.dayNumber}天` : `Day ${activeDay.dayNumber}`;
   const incompleteWardrobe = activeDay.pieces.some((piece) => !piece.wardrobeItemId);
-  const garmentLabels = useLocalizedValues(
-    activeGarments.map((piece) => ({ zh: piece.label, en: piece.labelEn })),
-    lang
-  );
-  const accessoryLabels = activeAccessory
-    ? useLocalizedValues([{ zh: activeAccessory.label, en: activeAccessory.labelEn }], lang)
-    : [];
-  const places = useTranslatedText(
-    plan.days.map((day) => lang === "zh" ? day.place : day.placeEn),
-    lang
-  );
   const move = (step: number) => {
     setActiveIndex((index) => (index + step + plan.days.length) % plan.days.length);
   };
