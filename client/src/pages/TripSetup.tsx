@@ -7,7 +7,6 @@ import {
 } from "../api";
 import MapView from "../components/MapView";
 import DateRangePicker, { type DateRange } from "../components/DateRangePicker";
-import ChatWidget from "../components/ChatWidget";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/strings";
 
@@ -22,6 +21,7 @@ type Props = {
   /** 从哪张场景卡片进来的(commute / travel / business / …)。 */
   scenario: string;
   onBack: () => void;
+  /** 保存成功后回主页;主页会显示这条新行程。 */
   onSaved: () => void;
 };
 
@@ -54,6 +54,7 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   const [range, setRange] = useState<DateRange | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   // 没选地点时地图停在一个能看出是世界地图的位置,而不是空白海面。
   const center = place
@@ -73,6 +74,7 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
       // 不用再点一下列表。列表仍然留着,同名地点(如多个"北京")可以换选。
       if (places.length > 0) {
         setPlace(places[0]);
+        setSaved(false);
       }
     } catch (err: any) {
       // 透出后端的真实原因(未登录 / 上游 502 / 校验),而不是一律"搜索失败",
@@ -88,6 +90,7 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   function choosePlace(p: Place) {
     setPlace(p);
     setResults(null);
+    setSaved(false);
   }
 
   async function handleSave() {
@@ -107,8 +110,10 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
         startDate: range.start,
         endDate: range.end,
       });
-      // API 返回成功时数据已经写入 SQLite,此时再回首页。
+      setSaved(true);
+      // 落库成功后回主页,主页会拉取并显示这条新行程。
       onSaved();
+      return;
     } catch (err: any) {
       setError(err?.message ?? t("saveTripFailed"));
     } finally {
@@ -121,8 +126,6 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
 
   return (
     <div className="tripsetup">
-      <ChatWidget />
-
       <header className="tripsetup-head">
         <button type="button" className="tripsetup-back" onClick={onBack}>
           ‹ {t("backToScenarios")}
@@ -138,6 +141,12 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
           {error}
         </div>
       )}
+      {saved && (
+        <div className="success-banner" role="status">
+          {t("tripSaved")}
+        </div>
+      )}
+
       <div className="tripsetup-grid">
         {/* 左列:地图 + 搜索框 */}
         <section className="tripsetup-col">
@@ -191,7 +200,10 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
           <div className="tripsetup-panel">
             <DateRangePicker
               value={range}
-              onChange={setRange}
+              onChange={(r) => {
+                setRange(r);
+                setSaved(false);
+              }}
             />
           </div>
 

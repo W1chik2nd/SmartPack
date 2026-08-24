@@ -65,7 +65,9 @@ run(
   "server",
   "36", // cyan
   process.execPath,
-  ["--experimental-strip-types", "--env-file-if-exists=.env", "index.ts"],
+  // .env is loaded inside index.ts (process.loadEnvFile) so the server also
+  // starts on Node 22.6–22.8, where --env-file-if-exists does not exist.
+  ["--experimental-strip-types", "index.ts"],
   join(root, "server")
 );
 

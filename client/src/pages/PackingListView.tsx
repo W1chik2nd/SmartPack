@@ -1,4 +1,5 @@
 import type { PackingPlan } from "../api";
+import { useLang } from "../i18n/useLang";
 
 // Presentational layer for the packing-list screen. Pure props in, markup out —
 // no data fetching or business logic (that stays in PackingList.tsx and, for
@@ -14,9 +15,10 @@ type LayoutProps = {
   onToggle: (id: string) => void;
   totalItems: number;
   packedCount: number;
+  onBack: () => void;
 };
 
-/** Vertical slider (sketch: 丰富造型 at top · 精简出行 at bottom). */
+/** Vertical slider (sketch: variety at top · pack light at bottom). */
 function BalanceSlider({
   balance,
   onBalance,
@@ -24,9 +26,10 @@ function BalanceSlider({
   balance: number;
   onBalance: (n: number) => void;
 }) {
+  const { t } = useLang();
   return (
     <aside className="pk-slider">
-      <span className="pk-slider-cap pk-slider-top">丰富造型</span>
+      <span className="pk-slider-cap pk-slider-top">{t("pkVariety")}</span>
       <input
         className="pk-range"
         type="range"
@@ -35,17 +38,21 @@ function BalanceSlider({
         step={1}
         value={balance}
         onChange={(e) => onBalance(Number(e.target.value))}
-        aria-label="打包偏好:精简出行 到 丰富造型"
+        aria-label={t("pkSliderLabel")}
         aria-valuetext={
-          balance >= 67 ? "丰富造型" : balance <= 33 ? "精简出行" : "均衡"
+          balance >= 67
+            ? t("pkVariety")
+            : balance <= 33
+              ? t("pkLight")
+              : t("pkBalanced")
         }
       />
-      <span className="pk-slider-cap pk-slider-bottom">精简出行</span>
+      <span className="pk-slider-cap pk-slider-bottom">{t("pkLight")}</span>
     </aside>
   );
 }
 
-/** The checklist (sketch: 打包清单, grouped by 类目 with tickable rows). */
+/** The checklist (sketch: packing list grouped by category, tickable rows). */
 function Checklist({
   plan,
   checked,
@@ -55,12 +62,15 @@ function Checklist({
   checked: Record<string, boolean>;
   onToggle: (id: string) => void;
 }) {
+  const { lang, t } = useLang();
   return (
-    <section className="pk-list" aria-label="打包清单">
-      <h1 className="pk-list-title">打包清单</h1>
+    <section className="pk-list" aria-label={t("pkListTitle")}>
+      <h1 className="pk-list-title">{t("pkListTitle")}</h1>
       {plan.categories.map((cat) => (
         <div className="pk-cat" key={cat.id}>
-          <h2 className="pk-cat-title">{cat.title}</h2>
+          <h2 className="pk-cat-title">
+            {lang === "zh" ? cat.title : cat.titleEn}
+          </h2>
           <ul className="pk-cat-items">
             {cat.items.map((item) => (
               <li key={item.id}>
@@ -70,8 +80,10 @@ function Checklist({
                     checked={!!checked[item.id]}
                     onChange={() => onToggle(item.id)}
                   />
-                  <span className="pk-row-label">{item.label}</span>
-                  <span className="pk-row-reuse" title="复用次数">
+                  <span className="pk-row-label">
+                    {lang === "zh" ? item.label : item.labelEn}
+                  </span>
+                  <span className="pk-row-reuse" title={t("pkReuse")}>
                     ×{item.reuse}
                   </span>
                 </label>
@@ -84,7 +96,7 @@ function Checklist({
   );
 }
 
-/** 重要物品提醒 box: non-clothing must-brings, ID / passport first (US 7.x). */
+/** Don't-forget box: non-clothing must-brings, ID / passport first (US 7.x). */
 function Essentials({
   plan,
   checked,
@@ -94,9 +106,10 @@ function Essentials({
   checked: Record<string, boolean>;
   onToggle: (id: string) => void;
 }) {
+  const { lang, t } = useLang();
   return (
-    <section className="pk-essentials" aria-label="重要物品提醒">
-      <h2 className="pk-essentials-title">重要物品提醒</h2>
+    <section className="pk-essentials" aria-label={t("pkEssentials")}>
+      <h2 className="pk-essentials-title">{t("pkEssentials")}</h2>
       <ul className="pk-essentials-items">
         {plan.essentials.map((e) => (
           <li key={e.id}>
@@ -106,7 +119,9 @@ function Essentials({
                 checked={!!checked[e.id]}
                 onChange={() => onToggle(e.id)}
               />
-              <span className="pk-row-label">{e.label}</span>
+              <span className="pk-row-label">
+                {lang === "zh" ? e.label : e.labelEn}
+              </span>
             </label>
           </li>
         ))}
@@ -115,21 +130,24 @@ function Essentials({
   );
 }
 
-/** 核心单品 cards: the most-reused hero pieces the whole plan leans on
-    (sketch: T-shirt cards with 复用次数:n / 核心单品). US 6.2, 1.3. */
+/** Core-piece cards: the most-reused hero pieces the whole plan leans on
+    (sketch: T-shirt cards with reuse count / core piece). US 6.2, 1.3. */
 function CorePieces({ plan }: { plan: PackingPlan }) {
+  const { lang, t } = useLang();
   return (
-    <section className="pk-core" aria-label="核心单品">
+    <section className="pk-core" aria-label={t("pkCore")}>
       <div className="pk-core-grid">
         {plan.corePieces.map((piece) => (
           <article className="pk-core-card" key={piece.id}>
             {/* Geometric garment mark, drawn in CSS — decorative (§8) */}
             <div className="pk-core-icon" aria-hidden="true" />
             <p className="pk-core-reuse">
-              复用次数:<strong>{piece.reuse}</strong>
+              {t("pkReuse")}:<strong>{piece.reuse}</strong>
             </p>
-            <p className="pk-core-name">{piece.label}</p>
-            <p className="pk-core-tag">核心单品</p>
+            <p className="pk-core-name">
+              {lang === "zh" ? piece.label : piece.labelEn}
+            </p>
+            <p className="pk-core-tag">{t("pkCoreTag")}</p>
           </article>
         ))}
       </div>
@@ -147,18 +165,30 @@ export default function PackingLayout({
   onToggle,
   totalItems,
   packedCount,
+  onBack,
 }: LayoutProps) {
+  const { lang, t } = useLang();
   return (
     <div className="pk-page">
       <BalanceSlider balance={balance} onBalance={onBalance} />
 
       <div className="pk-main">
+        <div className="pk-backbar">
+          <button type="button" className="pk-back" onClick={onBack}>
+            ‹ {t("backToHome")}
+          </button>
+        </div>
+
         <header className="pk-header">
-          <p className="pk-eyebrow">Minimal Luggage Plan</p>
-          {plan && <p className="pk-summary">{plan.summary}</p>}
+          <p className="pk-eyebrow">{t("pkEyebrow")}</p>
+          {plan && (
+            <p className="pk-summary">
+              {lang === "zh" ? plan.summary : plan.summaryEn}
+            </p>
+          )}
           <p className="pk-progress" aria-live="polite">
-            已打包 {packedCount} / {totalItems}
-            {loading && <span className="pk-loading"> · 更新中…</span>}
+            {t("pkPacked")} {packedCount} / {totalItems}
+            {loading && <span className="pk-loading"> · {t("pkUpdating")}</span>}
           </p>
         </header>
 

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getPackingPlan, type PackingPlan } from "../api";
+import { useLang } from "../i18n/useLang";
 import PackingLayout from "./PackingListView";
 
 // The packing-list screen (sketch: 打包清单 + 造型/精简 slider + 重要物品提醒
@@ -17,10 +18,17 @@ function useDebounced<T>(value: T, ms: number): T {
   return debounced;
 }
 
-export default function PackingList() {
-  // 0 = 精简出行 (pack lightest) · 100 = 丰富造型 (most variety). The sketch draws
-  // the slider vertically with 丰富造型 on top, so the visual top is 100.
-  const [balance, setBalance] = useState(50);
+type Props = {
+  onBack: () => void;
+};
+
+export default function PackingList({ onBack }: Props) {
+  const { t } = useLang();
+  // 0 = pack lightest · 100 = most variety. The sketch draws the slider
+  // vertically with "more variety" on top, so the visual top is 100.
+  const [balance, setBalance] = useState(() =>
+    Number(sessionStorage.getItem("smartpack_packing_balance") ?? 50)
+  );
   const debouncedBalance = useDebounced(balance, 250);
 
   const [plan, setPlan] = useState<PackingPlan | null>(null);
@@ -29,7 +37,20 @@ export default function PackingList() {
 
   // Ticked-off items, keyed by item/essential id. Purely local UI state — the
   // checklist is a "don't forget" aid, not persisted server data (US 7.1).
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [checked, setChecked] = useState<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("smartpack_packing_checked") ?? "{}");
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem("smartpack_packing_checked", JSON.stringify(checked));
+  }, [checked]);
+  useEffect(() => {
+    sessionStorage.setItem("smartpack_packing_balance", String(balance));
+  }, [balance]);
 
   // Guards against out-of-order responses when the slider moves quickly.
   const reqId = useRef(0);
@@ -45,7 +66,7 @@ export default function PackingList() {
       })
       .catch((err) => {
         if (id !== reqId.current) return;
-        setError(err instanceof Error ? err.message : "Failed to load plan.");
+        setError(err instanceof Error ? err.message : t("pkLoadFailed"));
       })
       .finally(() => {
         if (id === reqId.current) setLoading(false);
@@ -78,6 +99,7 @@ export default function PackingList() {
       onToggle={toggle}
       totalItems={totalItems}
       packedCount={packedCount}
+      onBack={onBack}
     />
   );
 }

@@ -180,22 +180,14 @@
   padding: var(--space-2);
 }
 
-/* Checked box: square with a yellow fill block, pure geometry */
-.check-mark {
+/* User-provided bag illustration replaces the checklist placeholder mark. */
+.checklist-bag {
   display: block;
   margin-top: var(--space-2);
-  width: 28px;
-  height: 28px;
-  border: var(--border);
-  background:
-    linear-gradient(
-        to top right,
-        transparent 42%,
-        var(--black) 44%,
-        var(--black) 56%,
-        transparent 58%
-      )
-      var(--yellow);
+  width: clamp(72px, 7vw, 104px);
+  max-width: 72%;
+  height: auto;
+  object-fit: contain;
 }
 
 .today-outfit {
@@ -237,6 +229,66 @@
   height: auto;
   background: var(--blue);
   clip-path: polygon(0 0, 100% 0, 96% 100%, 58% 100%, 50% 26%, 42% 100%, 4% 100%);
+}
+
+.today-itinerary {
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+}
+
+/* 已保存行程:目的地 + 场景标签 + 日期区间。几何色块,粗字,左对齐。 */
+.trip-summary {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.trip-place {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  font-size: 20px;
+  font-weight: var(--weight-heavy);
+  line-height: 1.1;
+}
+
+.trip-scenario {
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--yellow);
+  border: 2px solid var(--black);
+}
+
+.trip-detail {
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.trip-dates {
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+}
+
+.trip-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: var(--space-2);
+  font-size: clamp(58px, 8vw, 96px);
+  line-height: 1;
+  font-weight: var(--weight-regular);
+  color: var(--black);
 }
 
 /* ---------- nav tiles (right) ---------- */
@@ -304,6 +356,10 @@
   }
   .today-body {
     grid-template-columns: 1fr 1fr;
+  }
+  .today-itinerary {
+    grid-column: 1 / -1;
+    border-top: var(--border);
   }
   /* Stacked below the card, tiles size themselves again */
   .dash-nav {
