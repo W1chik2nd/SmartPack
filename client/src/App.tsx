@@ -110,12 +110,8 @@ function Shell() {
           {langToggle}
           {user ? (
             <>
-              <button
-                className="nav-link"
-                onClick={() => setRoute(route === "packing" ? "home" : "packing")}
-              >
-                {route === "packing" ? "Home" : "Packing List"}
-              </button>
+              {/* No section jump links in the nav: sections are reached from
+                  the dashboard tiles, each page has its own back button. */}
               <span className="nav-user">{user.name}</span>
               <button className="nav-link" onClick={handleSignOut}>
                 {t("navSignOut")}
@@ -182,7 +178,9 @@ function Shell() {
       {route === "wardrobe" && user && (
         <Wardrobe onBack={() => setRoute("home")} />
       )}
-      {route === "packing" && user && <PackingList />}
+      {route === "packing" && user && (
+        <PackingList onBack={() => setRoute("home")} />
+      )}
     </>
   );
 }

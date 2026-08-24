@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { uploadSessionPhoto } from "../api";
 import { toDataUrl } from "../lib/image";
+import { useLang } from "../i18n/useLang";
+import { photosSentMessage } from "../i18n/strings";
 import "./PhoneUpload.css";
 
 type Status = "ready" | "uploading" | "done" | "error";
@@ -13,6 +15,7 @@ type Status = "ready" | "uploading" | "done" | "error";
  * 同一个 token 可以连续传多张,直到电脑关闭二维码弹窗。
  */
 export default function PhoneUpload({ uploadToken }: { uploadToken: string }) {
+  const { lang, t } = useLang();
   const [status, setStatus] = useState<Status>("ready");
   const [error, setError] = useState<string | null>(null);
   const [sentCount, setSentCount] = useState(0);
@@ -33,27 +36,27 @@ export default function PhoneUpload({ uploadToken }: { uploadToken: string }) {
       setSentCount((n) => n + 1);
       setStatus("done");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "上传失败");
+      setError(err instanceof Error ? err.message : t("phoneUploadFailed"));
       setStatus("error");
     }
   }
 
   return (
     <main className="phone-upload">
-      <h1 className="phone-upload-title">SmartPack 拍照上传</h1>
+      <h1 className="phone-upload-title">{t("phoneTitle")}</h1>
 
       {status === "ready" && (
-        <p className="phone-upload-text">正在调起相机…若没反应,点下面的按钮。</p>
+        <p className="phone-upload-text">{t("phoneOpening")}</p>
       )}
       {status === "uploading" && (
-        <p className="phone-upload-text">上传中…</p>
+        <p className="phone-upload-text">{t("phoneUploading")}</p>
       )}
       {status === "done" && (
         <>
-          <p className="phone-upload-ok">✓ 已传 {sentCount} 张到电脑</p>
-          <p className="phone-upload-text">
-            可以接着拍下一件,电脑上会逐张识别。拍完在电脑上关掉二维码即可。
+          <p className="phone-upload-ok">
+            {photosSentMessage(lang, sentCount)}
           </p>
+          <p className="phone-upload-text">{t("phoneKeepGoing")}</p>
         </>
       )}
       {status === "error" && <p className="phone-upload-err">{error}</p>}
@@ -62,7 +65,7 @@ export default function PhoneUpload({ uploadToken }: { uploadToken: string }) {
         className="phone-upload-btn"
         onClick={() => fileInputRef.current?.click()}
       >
-        {status === "done" ? "再拍一张" : "拍照"}
+        {status === "done" ? t("phoneAnother") : t("phoneTake")}
       </button>
 
       <input
