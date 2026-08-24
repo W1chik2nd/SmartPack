@@ -183,6 +183,9 @@ test("超过 30 天的行程被拒", async () => {
     endDate: "2026-05-01",
   });
   assert.equal(res.status, 400);
+  assert.deepEqual(await res.json(), {
+    error: "Trip must not exceed 30 days.",
+  });
 });
 
 test("/api/places 的 q 参数校验", async () => {

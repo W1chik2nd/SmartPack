@@ -41,6 +41,7 @@ export default function Home({
   const [wxError, setWxError] = useState(false);
   // 已保存的行程,最新在前;进主页时拉一次,保存后跳回来会重新挂载再拉。
   const [trips, setTrips] = useState<TripPlan[] | null>(null);
+  const [tripError, setTripError] = useState(false);
 
   // Live clock: half-minute ticks keep date, time, and greeting current.
   useEffect(() => {
@@ -54,12 +55,14 @@ export default function Home({
     listTripPlans()
       .then(({ plans }) => {
         setTrips(plans);
+        setTripError(false);
         const latest = plans[0];
         setCity(latest ? { name: latest.placeName, lat: latest.lat, lon: latest.lon } : null);
       })
       .catch(() => {
         setTrips([]);
         setCity(null);
+        setTripError(true);
       });
   }, []);
 
@@ -199,6 +202,9 @@ export default function Home({
                         latestTrip.scenario}
                     </span>
                   </span>
+                  {latestTrip.placeDetail && (
+                    <span className="trip-detail">{latestTrip.placeDetail}</span>
+                  )}
                   <span className="trip-dates">{tripDates(latestTrip)}</span>
                 </span>
                 <span className="card-arrow" aria-hidden="true">›</span>
@@ -210,6 +216,13 @@ export default function Home({
                 aria-label={t("tripPlanner")}
               >
                 <span className="trip-empty" aria-hidden="true">+</span>
+                <span className="visually-hidden">
+                  {trips === null
+                    ? t("tripLoading")
+                    : tripError
+                      ? t("savedTripLoadFailed")
+                      : t("noSavedTrips")}
+                </span>
               </button>
             )}
           </div>
