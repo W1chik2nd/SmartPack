@@ -45,6 +45,9 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    setPlan(null);
+    setError(false);
+    setWx(null);
     getOutfitPlan(tripPlanId)
       .then(({ plan: next }) => {
         setPlan(next);

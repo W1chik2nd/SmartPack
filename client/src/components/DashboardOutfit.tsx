@@ -1,7 +1,7 @@
 import type { OutfitDay, OutfitPiece } from "../api";
-import OutfitPieceVisual from "./OutfitPieceVisual";
 import { useLang } from "../i18n/useLang";
 import { useLocalizedValues } from "../hooks/useLocalizedValues";
+import OutfitPieceVisual from "./OutfitPieceVisual";
 
 type Props = {
   day: OutfitDay | null;
@@ -19,14 +19,20 @@ function layers(pieces: OutfitPiece[]) {
   };
 }
 
-function description(piece: OutfitPiece, lang: "en" | "zh"): string {
-  const label = lang === "zh" ? piece.label : piece.labelEn || piece.label;
-  return piece.detail && lang === "zh" ? `${label}（${piece.detail}）` : label;
-}
-
 /** Compact dashboard illustration; never changes the dashboard grid dimensions. */
 export default function DashboardOutfit({ day, placeName }: Props) {
-  if (!day) {
+  const { lang } = useLang();
+  const outfit = day ? layers(day.pieces) : null;
+  const pieces = outfit
+    ? [outfit.inner, outfit.outer, outfit.bottom, outfit.shoes, outfit.accessory]
+        .filter((piece): piece is OutfitPiece => Boolean(piece))
+    : [];
+  const labels = useLocalizedValues(
+    pieces.map((piece) => ({ zh: piece.label, en: piece.labelEn })),
+    lang
+  );
+
+  if (!outfit) {
     return (
       <span className="outfit-figure" aria-label={placeName}>
         <span className="outfit-shirt pixel-garment" />
@@ -34,15 +40,6 @@ export default function DashboardOutfit({ day, placeName }: Props) {
       </span>
     );
   }
-
-  const { lang } = useLang();
-  const outfit = layers(day.pieces);
-  const pieces = [outfit.inner, outfit.outer, outfit.bottom, outfit.shoes, outfit.accessory]
-    .filter((piece): piece is OutfitPiece => Boolean(piece));
-  const labels = useLocalizedValues(
-    pieces.map((piece) => ({ zh: piece.label, en: piece.labelEn })),
-    lang
-  );
 
   return (
     <span className="outfit-figure" aria-label={labels.join("，")}>
