@@ -198,173 +198,161 @@ export default function Home({
       <div className="dash-layout">
         {/* Left: today card, laid out after the wireframe */}
         <div className="today-card-shell">
-          <TripSwitcher
-            trips={travelTrips}
-            selectedId={selectedTrip?.id ?? null}
-            onSelect={selectTrip}
-          />
-          <section
-            key={selectedTrip?.id ?? "empty-trip"}
-            className={`today-card trip-card-enter-${switchDirection === 1 ? "right" : "left"}`}
-            aria-label="Today"
-          >
-          <div className="today-header">
-            <button className="today-dates" onClick={TODO_LINKS.dates}>
-              {t("upcoming")} · {dateLong} <span aria-hidden="true">›</span>
-            </button>
-            <div className="trip-switch-copy" aria-live="polite">
-              <span>{t("destination")}</span>
-              <strong title={selectedTrip?.placeName}>
-                {selectedTrip?.placeName ?? t("noDestination")}
-              </strong>
-              {travelTrips.length > 0 && (
-                <small>
-                  {selectedTripIndex + 1}/{travelTrips.length}
-                </small>
-              )}
-            </div>
-          </div>
-
           {selectedTrip ? (
-          <div className="today-body">
-            <div className="today-left">
-              <button className="today-weather" onClick={TODO_LINKS.weather}>
-                <h2>{t("destinationWeatherToday")}</h2>
-                {selectedTrip && wx ? (
-                  <p className="weather-reading">
-                    {Math.round(wx.tempC)}°C
-                    <span className="weather-cond">{wx.condition}</span>
-                  </p>
-                ) : (
-                  <p className="weather-reading weather-pending">
-                    {!selectedTrip
-                      ? t("noDestination")
-                      : wxError
-                        ? t("weatherUnavailable")
-                        : t("weatherLoading")}
-                  </p>
-                )}
-                <span className="card-arrow" aria-hidden="true">›</span>
-              </button>
-
-              <button
-                className="today-checklist"
-                onClick={() => selectedTrip && onOpenPacking(selectedTrip.id)}
-                disabled={!selectedTrip?.itineraryId}
+            <>
+              <TripSwitcher
+                trips={travelTrips}
+                selectedId={selectedTrip.id}
+                onSelect={selectTrip}
+              />
+              <section
+                key={selectedTrip.id}
+                className={`today-card trip-card-enter-${switchDirection === 1 ? "right" : "left"}`}
+                aria-label="Today"
               >
-                <h2>{t("checklist")}</h2>
-                <img
-                  className="checklist-bag"
-                  src="/checklist-bag.png"
-                  alt=""
-                  aria-hidden="true"
-                />
-                <span className="card-arrow" aria-hidden="true">›</span>
-              </button>
-            </div>
-
-            <button className="today-outfit" onClick={onOpenOutfit}>
-              <h2>{t("todaysOutfit")}</h2>
-              {/* Geometric garment drawing (shirt + trousers), CSS only */}
-              <span className="outfit-figure" aria-hidden="true">
-                <span className="outfit-shirt pixel-garment" />
-                <span className="outfit-trousers pixel-garment" />
-              </span>
-              <span className="card-arrow" aria-hidden="true">›</span>
-            </button>
-
-            <div className="today-itinerary">
-              <button
-                type="button"
-                className="trip-open"
-                onClick={() =>
-                  selectedTrip?.itineraryId
-                    ? onOpenItinerary(selectedTrip.itineraryId)
-                    : onOpenTrips()
-                }
-              >
-                <h2>{t("itinerary")}</h2>
-                {selectedTrip ? (
-                  <span className="trip-summary">
-                    <span className="trip-place">
-                      {selectedTrip.placeName}
-                      <span className="trip-scenario">
-                        {SCENARIO_LABELS[selectedTrip.scenario]?.[lang] ??
-                          selectedTrip.scenario}
-                      </span>
-                    </span>
-                    <span className="trip-dates">{tripDates(selectedTrip)}</span>
-                    {selectedTrip.generationStatus === "processing" && (
-                      <span className="trip-generation-status is-processing">
-                        {t("tripGeneratingHome")}
-                      </span>
+                <div className="today-header">
+                  <button className="today-dates" onClick={TODO_LINKS.dates}>
+                    {t("upcoming")} · {dateLong} <span aria-hidden="true">›</span>
+                  </button>
+                  <div className="trip-switch-copy" aria-live="polite">
+                    <span>{t("destination")}</span>
+                    <strong title={selectedTrip.placeName}>{selectedTrip.placeName}</strong>
+                    {travelTrips.length > 0 && (
+                      <small>
+                        {selectedTripIndex + 1}/{travelTrips.length}
+                      </small>
                     )}
-                    {selectedTrip.generationStatus === "failed" && (
-                      <span className="trip-generation-status is-failed">
-                        {t("tripGenerationFailedHome")}
-                      </span>
-                    )}
-                  </span>
-                ) : (
-                  <span className="trip-empty">
-                    {trips === null ? "" : t("noTripYet")}
-                  </span>
-                )}
-                <span className="card-arrow" aria-hidden="true">›</span>
-              </button>
-
-              {selectedTrip &&
-                deletingTripId === null &&
-                deleteConfirmId !== selectedTrip.id && (
-                <button
-                  type="button"
-                  className="trip-delete-trigger"
-                  onClick={() => setDeleteConfirmId(selectedTrip.id)}
-                >
-                  {t("deleteTrip")}
-                </button>
-              )}
-
-              {selectedTrip && deleteConfirmId === selectedTrip.id && (
-                <div
-                  className="trip-delete-confirm"
-                  role="group"
-                  aria-label={t("deleteTrip")}
-                >
-                  <strong>{selectedTrip.placeName}</strong>
-                  <p>{t("deleteTripWarning")}</p>
-                  {deleteError && (
-                    <p className="trip-delete-error" role="alert">
-                      {t("deleteTripFailed")}
-                    </p>
-                  )}
-                  <div>
-                    <button
-                      type="button"
-                      onClick={() => setDeleteConfirmId(null)}
-                      disabled={deletingTripId === selectedTrip.id}
-                    >
-                      {t("cancelDelete")}
-                    </button>
-                    <button
-                      type="button"
-                      className="trip-delete-danger"
-                      onClick={removeSelectedTrip}
-                      disabled={deletingTripId === selectedTrip.id}
-                    >
-                      {deletingTripId === selectedTrip.id
-                        ? t("deletingTrip")
-                        : t("confirmDeleteTrip")}
-                    </button>
                   </div>
                 </div>
-              )}
-            </div>
-          </div>
+
+                <div className="today-body">
+                  <div className="today-left">
+                    <button className="today-weather" onClick={TODO_LINKS.weather}>
+                      <h2>{t("destinationWeatherToday")}</h2>
+                      {wx ? (
+                        <p className="weather-reading">
+                          {Math.round(wx.tempC)}°C
+                          <span className="weather-cond">{wx.condition}</span>
+                        </p>
+                      ) : (
+                        <p className="weather-reading weather-pending">
+                          {wxError ? t("weatherUnavailable") : t("weatherLoading")}
+                        </p>
+                      )}
+                      <span className="card-arrow" aria-hidden="true">›</span>
+                    </button>
+
+                    <button
+                      className="today-checklist"
+                      onClick={() => onOpenPacking(selectedTrip.id)}
+                      disabled={!selectedTrip.itineraryId}
+                    >
+                      <h2>{t("checklist")}</h2>
+                      <img
+                        className="checklist-bag"
+                        src="/checklist-bag.png"
+                        alt=""
+                        aria-hidden="true"
+                      />
+                      <span className="card-arrow" aria-hidden="true">›</span>
+                    </button>
+                  </div>
+
+                  <button className="today-outfit" onClick={onOpenOutfit}>
+                    <h2>{t("todaysOutfit")}</h2>
+                    <span className="outfit-figure" aria-hidden="true">
+                      <span className="outfit-shirt pixel-garment" />
+                      <span className="outfit-trousers pixel-garment" />
+                    </span>
+                    <span className="card-arrow" aria-hidden="true">›</span>
+                  </button>
+
+                  <div className="today-itinerary">
+                    <button
+                      type="button"
+                      className="trip-open"
+                      onClick={() =>
+                        selectedTrip.itineraryId
+                          ? onOpenItinerary(selectedTrip.itineraryId)
+                          : onOpenTrips()
+                      }
+                    >
+                      <h2>{t("itinerary")}</h2>
+                      <span className="trip-summary">
+                        <span className="trip-place">
+                          {selectedTrip.placeName}
+                          <span className="trip-scenario">
+                            {SCENARIO_LABELS[selectedTrip.scenario]?.[lang] ??
+                              selectedTrip.scenario}
+                          </span>
+                        </span>
+                        <span className="trip-dates">{tripDates(selectedTrip)}</span>
+                        {selectedTrip.generationStatus === "processing" && (
+                          <span className="trip-generation-status is-processing">
+                            {t("tripGeneratingHome")}
+                          </span>
+                        )}
+                        {selectedTrip.generationStatus === "failed" && (
+                          <span className="trip-generation-status is-failed">
+                            {t("tripGenerationFailedHome")}
+                          </span>
+                        )}
+                      </span>
+                      <span className="card-arrow" aria-hidden="true">›</span>
+                    </button>
+
+                    {deletingTripId === null && deleteConfirmId !== selectedTrip.id && (
+                      <button
+                        type="button"
+                        className="trip-delete-trigger"
+                        onClick={() => setDeleteConfirmId(selectedTrip.id)}
+                      >
+                        {t("deleteTrip")}
+                      </button>
+                    )}
+
+                    {deleteConfirmId === selectedTrip.id && (
+                      <div
+                        className="trip-delete-confirm"
+                        role="group"
+                        aria-label={t("deleteTrip")}
+                      >
+                        <strong>{selectedTrip.placeName}</strong>
+                        <p>{t("deleteTripWarning")}</p>
+                        {deleteError && (
+                          <p className="trip-delete-error" role="alert">
+                            {t("deleteTripFailed")}
+                          </p>
+                        )}
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => setDeleteConfirmId(null)}
+                            disabled={deletingTripId === selectedTrip.id}
+                          >
+                            {t("cancelDelete")}
+                          </button>
+                          <button
+                            type="button"
+                            className="trip-delete-danger"
+                            onClick={removeSelectedTrip}
+                            disabled={deletingTripId === selectedTrip.id}
+                          >
+                            {deletingTripId === selectedTrip.id
+                              ? t("deletingTrip")
+                              : t("confirmDeleteTrip")}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+            </>
           ) : (
             <button
               type="button"
-              className="today-body today-empty-state"
+              className="today-card today-empty-card"
               onClick={onOpenTrips}
               aria-label={t("tripPlanner")}
             >
@@ -372,7 +360,6 @@ export default function Home({
               <span className="visually-hidden">{t("noTripYet")}</span>
             </button>
           )}
-          </section>
         </div>
 
         {/* Right: primary navigation tiles */}
