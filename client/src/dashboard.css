@@ -266,6 +266,13 @@
   border: 2px solid var(--black);
 }
 
+.trip-detail {
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
 .trip-dates {
   font-size: 14px;
   font-weight: var(--weight-bold);
