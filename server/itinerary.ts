@@ -74,6 +74,12 @@ export type PhotoPatch = {
   photoSourceUrl: string;
 };
 
+/**
+ * 停靠点 + 它所在那天的城市。配图关键词要用城市来消歧
+ * (「宽窄巷子」加上「成都」命中率明显更高),所以配图路由取的是这个类型。
+ */
+export type StopWithCity = TripStop & { city: string; cityEn: string };
+
 export type ItineraryStore = {
   /** 某用户的全部行程(含天与停靠点)。 */
   list: (userId: string) => Trip[];
@@ -82,8 +88,8 @@ export type ItineraryStore = {
   seedDemoTrip: (userId: string, scenario: string) => Trip;
   /** 把查到的配图写回停靠点,下次不用再查供应商。 */
   setStopPhoto: (userId: string, stopId: string, photo: PhotoPatch) => void;
-  /** 取停靠点(带用户校验),供配图路由用。 */
-  stop: (userId: string, stopId: string) => TripStop | null;
+  /** 取停靠点(带用户校验、带所在城市),供配图路由用。 */
+  stop: (userId: string, stopId: string) => StopWithCity | null;
 };
 
 type TripRow = {
@@ -296,18 +302,21 @@ export function createItineraryStore(db: DatabaseSync): ItineraryStore {
 
     stop(userId, stopId) {
       // 连表回到 trips 校验归属:不能凭 stop id 读到别人行程里的点。
+      // 顺带把那天的城市带出来:配图关键词要用它消歧。
       const row = db
         .prepare(
           `SELECT s.id, s.position, s.kind, s.name, s.name_en, s.start_time,
                   s.duration, s.note, s.note_en, s.photo_query, s.photo_url,
-                  s.photo_credit, s.photo_source_url
+                  s.photo_credit, s.photo_source_url,
+                  d.city AS city, d.city_en AS city_en
              FROM trip_stops s
              JOIN trip_days d ON d.id = s.day_id
              JOIN trips t     ON t.id = d.trip_id
             WHERE s.id = ? AND t.user_id = ?`
         )
-        .get(stopId, userId) as StopRow | undefined;
-      return row ? toStop(row) : null;
+        .get(stopId, userId) as (StopRow & { city: string; city_en: string }) | undefined;
+      if (!row) return null;
+      return { ...toStop(row), city: row.city, cityEn: row.city_en };
     },
 
     setStopPhoto(userId, stopId, photo) {

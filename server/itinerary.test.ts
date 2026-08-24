@@ -8,7 +8,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { createItineraryStore, type ItineraryStore } from "./itinerary.ts";
-import { photoProvider } from "./photos.ts";
+import { photoProvider, photoQueries } from "./photos.ts";
 
 let db: DatabaseSync;
 let store: ItineraryStore;
@@ -136,4 +136,94 @@ test("photoProvider falls back to keyless Openverse and honours explicit choice"
   } finally {
     process.env = saved;
   }
+});
+
+test("photoQueries derives candidates so new stops need no hand-written keyword", () => {
+  // 换城市的新景点:没人填 photoQuery,也必须给出可用候选词。
+  const spot = photoQueries({
+    name: "兵马俑",
+    nameEn: "Terracotta Army",
+    city: "西安",
+    cityEn: "Xian",
+    kind: "spot",
+  });
+  // 中文名 + 城市实测命中率最高(图库原始标题多为中文),所以排最前。
+  assert.equal(spot[0], "兵马俑 西安");
+  assert.ok(spot.includes("Terracotta Army Xian"));
+  // 兜底一定存在:前面全落空也不该让卡片空着。
+  assert.ok(spot.some((q) => q.includes("landmark")));
+
+  // 人工指定的关键词优先于所有推导结果。
+  const overridden = photoQueries({
+    name: "兵马俑",
+    nameEn: "Terracotta Army",
+    city: "西安",
+    cityEn: "Xian",
+    kind: "spot",
+    photoQuery: "Terracotta Army museum pit one",
+  });
+  assert.equal(overridden[0], "Terracotta Army museum pit one");
+
+  // 餐饮/住宿:图库没有"某家店",兜底必须换成同类氛围图。
+  const meal = photoQueries({
+    name: "龙抄手",
+    nameEn: "Long Chaoshou",
+    city: "成都",
+    cityEn: "Chengdu",
+    kind: "meal",
+  });
+  assert.ok(meal.some((q) => q.includes("restaurant")));
+  const hotel = photoQueries({
+    name: "太古里附近酒店",
+    nameEn: "Hotel near Taikoo Li",
+    city: "成都",
+    cityEn: "Chengdu",
+    kind: "hotel",
+  });
+  assert.ok(hotel.some((q) => q.includes("hotel")));
+});
+
+test("photoQueries caps requests per stop but always keeps the generic fallback", () => {
+  // 候选词是串行打图库的,不设上限时一张卡片最坏 7 次请求,免 key 的
+  // Openverse 额度很快被打满。上限必须生效,但兜底词不能被截断掉 ——
+  // 餐饮/住宿完全依赖它出图。
+  const kinds = ["spot", "transit", "meal", "hotel"] as const;
+  for (const kind of kinds) {
+    const queries = photoQueries({
+      name: "某个很长的中文停靠点名字",
+      nameEn: "Some Very Long English Stop Name",
+      city: "西安",
+      cityEn: "Xian",
+      kind,
+    });
+    assert.ok(queries.length <= 4, `${kind}: ${queries.length} candidates exceeds the cap`);
+    assert.ok(
+      queries.some((q) => /landmark|restaurant|hotel|railway/.test(q)),
+      `${kind}: generic fallback was truncated away`
+    );
+  }
+});
+
+test("photoQueries deduplicates and tolerates missing fields", () => {
+  // photoQuery 与推导结果重复时不该产生重复请求。
+  const queries = photoQueries({
+    name: "锦里",
+    nameEn: "Jinli",
+    city: "成都",
+    cityEn: "Chengdu",
+    kind: "spot",
+    photoQuery: "锦里 成都",
+  });
+  assert.equal(new Set(queries).size, queries.length, "no duplicate candidates");
+
+  // 缺城市/缺英文名(AI 生成的行程完全可能这样)也要给出候选,不能返回空数组。
+  const sparse = photoQueries({
+    name: "某个景点",
+    nameEn: "",
+    city: "",
+    cityEn: "",
+    kind: "spot",
+  });
+  assert.ok(sparse.length > 0);
+  assert.ok(sparse.every((q) => q.trim().length > 0));
 });
