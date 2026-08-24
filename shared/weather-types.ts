@@ -14,7 +14,7 @@ export type ForecastDay = {
 };
 
 export type TripForecast = {
-  source: "Open-Meteo";
+  source: "Open-Meteo" | "MET Norway";
   available: boolean;
   note: string;
   days: ForecastDay[];
