@@ -170,6 +170,7 @@ function Shell() {
           user={user}
           scenario={scenario}
           onBack={() => setRoute("trips")}
+          onSaved={() => setRoute("home")}
         />
       )}
       {route === "wardrobe" && user && (

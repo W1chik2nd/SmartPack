@@ -22,6 +22,8 @@ type Props = {
   /** 从哪张场景卡片进来的(commute / travel / business / …)。 */
   scenario: string;
   onBack: () => void;
+  /** 保存成功后回主页;主页会显示这条新行程。 */
+  onSaved: () => void;
 };
 
 /** 中英都按"年月日"读得通的日期显示。 */
@@ -43,7 +45,7 @@ function nightsBetween(range: DateRange): number {
   return Math.round((end - start) / 86_400_000);
 }
 
-export default function TripSetup({ user, scenario, onBack }: Props) {
+export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   const { lang, t } = useLang();
 
   const [query, setQuery] = useState("");
@@ -110,6 +112,9 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
         endDate: range.end,
       });
       setSaved(true);
+      // 落库成功后回主页,主页会拉取并显示这条新行程。
+      onSaved();
+      return;
     } catch (err: any) {
       setError(err?.message ?? t("saveTripFailed"));
     } finally {
