@@ -24,6 +24,11 @@ export type PackingItem = {
   quantity?: number;
   daysUsed?: number[];
   wardrobeItemId?: string;
+  /**
+   * 这一行是不是「衣橱缺口」——该穿的衣服但用户没有。由服务端判定,
+   * 客户端只负责显示(AGENTS.md §3)。装备类不算缺口,见 GEAR_CATEGORIES。
+   */
+  wardrobeGap?: boolean;
   priority?: "core" | "support" | "optional";
 };
 
@@ -231,6 +236,13 @@ export function buildPackingPlan(balance: number, tripDays = 4): PackingPlan {
 }
 
 /**
+ * 不来自衣橱的分类。充电宝、转换插头这类东西衣柜里根本不会有,空的
+ * wardrobeItemId 只说明它不是衣服,不是「缺口」。分类 id 的全部取值见
+ * trip-agent-prompt.ts 里 packing.categories 的 enum。
+ */
+const GEAR_CATEGORIES = new Set(["equipment"]);
+
+/**
  * Apply the existing variety/light slider to the agent's prioritized list.
  * The agent makes the semantic recommendation; this deterministic server rule
  * only reveals support/optional pieces as the user asks for more variety.
@@ -246,10 +258,18 @@ export function buildGeneratedPackingPlan(
     (priority === "support" && b >= 34) ||
     (priority === "optional" && b >= 67);
   const categories = source.categories
-    .map((category) => ({
-      ...category,
-      items: category.items.filter((item) => include(item.priority)),
-    }))
+    .map((category) => {
+      const gear = GEAR_CATEGORIES.has(category.id);
+      return {
+        ...category,
+        items: category.items
+          .filter((item) => include(item.priority))
+          .map((item) => ({
+            ...item,
+            wardrobeGap: !gear && !item.wardrobeItemId,
+          })),
+      };
+    })
     .filter((category) => category.items.length > 0);
   const corePieces = categories
     .flatMap((category) => category.items)
