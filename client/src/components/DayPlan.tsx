@@ -8,7 +8,6 @@ import type { TripDay } from "../api";
 import { useLang } from "../i18n/useLang";
 import { useLocalizedValues } from "../hooks/useLocalizedValues";
 import StopCard from "./StopCard";
-import type { TripOutfitItem } from "../api";
 
 const SPINE_W = 150;
 const ROW_H = 156;

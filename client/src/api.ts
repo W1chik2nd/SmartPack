@@ -6,28 +6,25 @@ import type {
   Trip,
   TripPlan,
 } from "./travel-types";
+import type { OutfitPlan } from "../../shared/outfit-types";
+import type {
+  AssistantClientAction,
+  ChatMessage,
+  Credentials,
+  Profile,
+  ProfileField,
+  ProfileUpdate,
+  RecognizeResponse,
+  Scenario,
+  TripGenerationEstimate,
+  TripWeather,
+  User,
+  WardrobeItem,
+  Weather,
+} from "./api-types";
 export type * from "./travel-types";
-
-export type User = {
-  id: string;
-  email: string;
-  name: string;
-  age: number | null;
-  heightCm: number | null;
-  weightKg: number | null;
-  style: string | null;
-  gender: string | null;
-  bustCm: number | null;
-  waistCm: number | null;
-  hipCm: number | null;
-  bodyType: string | null;
-  seasonColorType: string | null;
-  stylePrefs: string[];
-  wearFeel: string[];
-  wearFeelOther: string | null;
-  travelHabits: string[];
-  travelHabitsOther: string | null;
-};
+export type * from "../../shared/outfit-types";
+export type * from "./api-types";
 
 type AuthResponse = { token: string; user: User };
 
@@ -81,42 +78,6 @@ async function request<T>(
   return body as T;
 }
 
-/** Step-1 credentials, held in memory until the questionnaire completes. */
-export type Credentials = {
-  email: string;
-  password: string;
-};
-
-/**
- * The profile questionnaire payload. Keyed by the field keys the server
- * publishes via /api/profile-options rather than typed field by field: the
- * form is built from that catalog, so a new question needs no client change.
- * Only name/gender/age/heightCm/weightKg are required — the server enforces that.
- */
-export type Profile = Record<string, string | number | string[]>;
-export type ProfileUpdate = Profile;
-
-/** One selectable answer. `id` is stored; the labels are display-only. */
-export type ProfileOption = {
-  id: string;
-  en: string;
-  zh: string;
-};
-
-export type ProfileField = {
-  key: string;
-  kind: "text" | "int" | "decimal" | "single" | "multi";
-  required: boolean;
-  min?: number;
-  max?: number;
-  options?: ProfileOption[];
-  /** Present when this field offers a free-text "other" choice. */
-  otherId?: string;
-  /** The payload key the free text is sent under. */
-  otherKey?: string;
-  otherMax?: number;
-};
-
 /** The questionnaire catalog. Unauthenticated: needed during sign-up step 2. */
 export function profileOptions(): Promise<{ fields: ProfileField[] }> {
   return request<{ fields: ProfileField[] }>("/api/profile-options");
@@ -153,12 +114,6 @@ export function login(email: string, password: string): Promise<AuthResponse> {
   });
 }
 
-export type Scenario = {
-  id: string;
-  label: string;
-  image: string;
-};
-
 export function scenarios(): Promise<{ scenarios: Scenario[] }> {
   return request<{ scenarios: Scenario[] }>("/api/scenarios");
 }
@@ -179,37 +134,6 @@ export function logout(): Promise<{ ok: boolean }> {
 }
 
 // ---- 衣柜:拍照识别 + 电商搜同款 ----
-
-/** 落库后的衣柜单品。细节字段供后续穿搭推荐分析。 */
-export type WardrobeItem = {
-  id: string;
-  title: string; // 大标题,如“黄色宽松工装裤”
-  category: string;
-  subtype: string; // 具体款式,如“工装裤”
-  count: number;
-  colors: string[];
-  fit: string;
-  material: string;
-  seasons: string[];
-  styleTags: string[];
-  details: string;
-  hasPhoto: boolean;
-  createdAt: string;
-};
-
-export type Product = {
-  title: string;
-  imageUrl: string;
-  price: string;
-  url: string;
-};
-
-export type RecognizeResponse = {
-  item: WardrobeItem;
-  provider: "jd" | "taobao" | null;
-  products: Product[];
-  productsError?: string;
-};
 
 export function recognizeClothing(
   imageDataUrl: string
@@ -277,38 +201,6 @@ export function endUploadSession(uploadToken: string): Promise<{ ok: boolean }> 
 
 // ---- 天气 / AI 助手 ----
 
-export type Weather = {
-  tempC: number;
-  condition: string;
-};
-
-export type ForecastDay = {
-  date: string;
-  condition: string;
-  minTempC: number;
-  maxTempC: number;
-  precipitationProbability: number;
-  uvIndex: number;
-  maxWindKph: number;
-};
-
-export type TripWeather = {
-  trip: {
-    id: string;
-    destination: string;
-    destinationDetail: string;
-    startDate: string;
-    endDate: string;
-    dayCount: number;
-  };
-  forecast: {
-    source: "Open-Meteo";
-    available: boolean;
-    note: string;
-    days: ForecastDay[];
-  };
-};
-
 /** Without coordinates the server answers for its default city. */
 export function weather(lat?: number, lon?: number): Promise<Weather> {
   const query =
@@ -321,26 +213,6 @@ export function getTripWeather(id: string): Promise<TripWeather> {
     `/api/trip-plans/${encodeURIComponent(id)}/weather`
   );
 }
-
-export type ChatMessage = {
-  role: "user" | "assistant";
-  content: string;
-};
-
-export type AssistantPage =
-  | "home"
-  | "trips"
-  | "tripSetup"
-  | "itinerary"
-  | "wardrobe"
-  | "profile"
-  | "packing";
-export type AssistantClientAction =
-  | { type: "navigate"; page: AssistantPage; scenario?: string }
-  | { type: "profileUpdated"; user: User }
-  | { type: "wardrobeChanged" }
-  | { type: "tripCreated" }
-  | { type: "packingChanged"; balance?: number; checked?: string[]; unchecked?: string[] };
 
 export function chat(messages: ChatMessage[]): Promise<{ reply: string; actions?: AssistantClientAction[] }> {
   return request<{ reply: string; actions?: AssistantClientAction[] }>("/api/chat", {
@@ -404,19 +276,7 @@ export function searchPlaces(
   );
 }
 
-export function saveTripPlan(plan: NewTripPlan): Promise<{ plan: TripPlan }> {
-  return request<{ plan: TripPlan }>("/api/trip-plans", {
-    method: "POST",
-    body: JSON.stringify(plan),
-  });
-}
-
 /** Queue the analytical agent; generation continues on the server. */
-export type TripGenerationEstimate = {
-  minSeconds: number;
-  maxSeconds: number;
-};
-
 export function generateTripPlan(
   plan: NewTripPlan,
   replaceFailedPlanId?: string
@@ -451,59 +311,6 @@ export function deleteTripPlan(id: string): Promise<{ ok: true }> {
 }
 
 // ---- 今日 / 行程穿搭 ----
-
-export type OutfitPieceKind = "top" | "bottom" | "shoes" | "accessory";
-export type OutfitTone =
-  | "red"
-  | "yellow"
-  | "blue"
-  | "black"
-  | "white"
-  | "green"
-  | "brown"
-  | "gray"
-  | "beige";
-export type OutfitFit = "slim" | "regular" | "relaxed";
-export type OutfitMaterial = "cotton" | "knit" | "denim" | "leather" | "linen" | "technical" | "other";
-export type AccessoryStyle = "bag" | "hat" | "glasses" | "scarf" | "watch" | "necklace";
-export type GarmentStyle = "tee" | "shirt" | "knit" | "trousers" | "skirt" | "jeans" | "loafers" | "sneakers";
-
-export type OutfitPiece = {
-  id: string;
-  kind: OutfitPieceKind;
-  label: string;
-  labelEn: string;
-  tone: OutfitTone;
-  garmentStyle: GarmentStyle | null;
-  accessoryStyle: AccessoryStyle | null;
-  fit: OutfitFit | null;
-  material: OutfitMaterial | null;
-  detail: string;
-  wardrobeItemId: string | null;
-  hasPhoto: boolean;
-};
-
-export type OutfitDay = {
-  id: string;
-  dayNumber: number;
-  date: string;
-  place: string;
-  placeEn: string;
-  scene: string;
-  pieces: OutfitPiece[];
-};
-
-export type OutfitPlan = {
-  destination: string;
-  destinationDetail: string;
-  scenario: string;
-  startDate: string;
-  endDate: string;
-  lat: number;
-  lon: number;
-  usesWardrobe: boolean;
-  days: OutfitDay[];
-};
 
 export function getOutfitPlan(
   tripPlanId?: string

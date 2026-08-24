@@ -16,7 +16,10 @@ export type DemoStop = Omit<
   TripStop,
   "id" | "photoUrl" | "photoCredit" | "photoSourceUrl"
 >;
-export type DemoDay = Omit<TripDay, "id" | "stops"> & { stops: DemoStop[] };
+export type DemoDay = Pick<
+  TripDay,
+  "dayNumber" | "dateLabel" | "city" | "cityEn" | "summary" | "summaryEn"
+> & { stops: DemoStop[] };
 
 export const DEMO_DEPART_LABEL = "3.14";
 export const DEMO_TITLE = "成都三日";

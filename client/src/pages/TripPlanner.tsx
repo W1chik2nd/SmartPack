@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { scenarios, type Scenario, type User } from "../api";
 import { useLang } from "../i18n/useLang";
-import { SCENARIO_LABELS } from "../i18n/strings";
+import { SCENARIO_LABELS } from "../i18n/dynamic-strings";
 
 type Props = {
   user: User;

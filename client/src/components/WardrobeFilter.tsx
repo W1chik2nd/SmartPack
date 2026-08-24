@@ -2,7 +2,7 @@ import {
   WARDROBE_FILTER_OPTIONS,
   type WardrobeFilterId,
 } from "../lib/wardrobe-filter";
-import { wardrobeFilterCountMessage } from "../i18n/strings";
+import { wardrobeFilterCountMessage } from "../i18n/dynamic-strings";
 import { useLang } from "../i18n/useLang";
 import "./WardrobeFilter.css";
 

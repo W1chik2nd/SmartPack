@@ -11,7 +11,8 @@ import {
 import MapView from "../components/MapView";
 import DateRangePicker, { type DateRange } from "../components/DateRangePicker";
 import { useLang } from "../i18n/useLang";
-import { SCENARIO_LABELS } from "../i18n/strings";
+import { SCENARIO_LABELS } from "../i18n/dynamic-strings";
+import { tripDaysInclusive } from "../../../shared/trip-constraints";
 
 // 行程设置页(线框图 2):左边地图 + 下方搜索框,右边日历 + 下方日期条。
 // 从场景卡片点进来,带着 scenario id。
@@ -40,13 +41,6 @@ function formatDay(iso: string, lang: "en" | "zh"): string {
     month: "short",
     year: "numeric",
   });
-}
-
-/** 区间跨了几晚。同一天是 0,显示成"当天往返"。 */
-function nightsBetween(range: DateRange): number {
-  const start = new Date(`${range.start}T00:00:00Z`).getTime();
-  const end = new Date(`${range.end}T00:00:00Z`).getTime();
-  return Math.round((end - start) / 86_400_000);
 }
 
 type GenerationProgress = {
@@ -211,7 +205,7 @@ export default function TripSetup({
   }
 
   const scenarioLabel = SCENARIO_LABELS[scenario]?.[lang] ?? scenario;
-  const nights = range ? nightsBetween(range) : 0;
+  const nights = range ? tripDaysInclusive(range.start, range.end) - 1 : 0;
 
   return (
     <div className="tripsetup">
@@ -281,12 +275,7 @@ export default function TripSetup({
         {/* 右列:日历 + 日期条 */}
         <section className="tripsetup-col">
           <div className="tripsetup-panel">
-            <DateRangePicker
-              value={range}
-              onChange={(r) => {
-                setRange(r);
-              }}
-            />
+            <DateRangePicker value={range} onChange={setRange} />
           </div>
 
           <div className="tripsetup-bar tripsetup-dates">

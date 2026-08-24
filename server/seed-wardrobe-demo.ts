@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 import { existsSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createWardrobeStore, type NewItem } from "./wardrobe.ts";
+import { createWardrobeStore } from "./wardrobe.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const dbPath = join(root, "data", "smartpack.db");
@@ -23,7 +23,19 @@ if (!user) throw new Error(`No user found for ${email}`);
 
 const wardrobe = createWardrobeStore(db, join(root, "data", "photos"));
 const existingTitles = new Set(wardrobe.list(user.id).map((item) => item.title));
-const items: NewItem[] = [
+type SeedItem = [
+  title: string,
+  category: string,
+  subtype: string,
+  colors: string[],
+  fit: string,
+  material: string,
+  seasons: string[],
+  styleTags: string[],
+  details: string,
+];
+
+const items: SeedItem[] = [
   ["雾蓝轻薄衬衫", "上衣", "衬衫", ["蓝色"], "修身", "棉麻", ["春", "夏"], ["通勤", "简约"], "长袖, 可卷袖口"],
   ["白色纯棉T恤", "上衣", "T恤", ["白色"], "宽松", "棉", ["春", "夏"], ["休闲", "基础"], "圆领, 短袖"],
   ["黑色针织上衣", "上衣", "针织衫", ["黑色"], "标准", "羊毛混纺", ["秋", "冬"], ["简约", "保暖"], "细针织, 长袖"],
