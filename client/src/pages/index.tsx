@@ -10,6 +10,7 @@ type Props = {
   onOpenWardrobe: () => void;
   onOpenItinerary: () => void;
   onOpenPacking: () => void;
+  onOpenProfile: () => void;
 };
 
 // Placeholder navigation targets. Wire real routes here as the pages land.
@@ -18,7 +19,6 @@ const TODO_LINKS = {
   weather: () => {},
   dates: () => {},
   outfit: () => {},
-  profile: () => {},
 };
 
 export default function Home({
@@ -27,6 +27,7 @@ export default function Home({
   onOpenWardrobe,
   onOpenItinerary,
   onOpenPacking,
+  onOpenProfile,
 }: Props) {
   const { lang, t } = useLang();
   const [now, setNow] = useState(new Date());
@@ -162,7 +163,7 @@ export default function Home({
             <span className="nav-tile-mark yellow" aria-hidden="true" />
             {t("tripPlanner")}
           </button>
-          <button onClick={TODO_LINKS.profile}>
+          <button onClick={onOpenProfile}>
             <span className="nav-tile-mark blue" aria-hidden="true" />
             {t("myProfile")}
           </button>

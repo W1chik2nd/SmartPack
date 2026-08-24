@@ -11,6 +11,7 @@ import Itinerary from "./pages/Itinerary";
 import Wardrobe from "./pages/Wardrobe";
 import PhoneUpload from "./pages/PhoneUpload";
 import PackingList from "./pages/PackingList";
+import Profile from "./pages/Profile";
 
 type Route =
   | "landing"
@@ -21,6 +22,7 @@ type Route =
   | "trips"
   | "itinerary"
   | "wardrobe"
+  | "profile"
   | "packing";
 
 /** ?upload=<token> 是手机扫码进来的上传页,免登录。 */
@@ -51,6 +53,12 @@ function Shell() {
       .catch(() => setToken(null))
       .finally(() => setBooting(false));
   }, []);
+
+  // This app uses in-memory routes, so the browser does not reset scroll as
+  // it would after a normal navigation. Every page must still open at its top.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, [route]);
 
   function handleAuthed(u: User) {
     setUser(u);
@@ -156,6 +164,7 @@ function Shell() {
           onOpenWardrobe={() => setRoute("wardrobe")}
           onOpenItinerary={() => setRoute("itinerary")}
           onOpenPacking={() => setRoute("packing")}
+          onOpenProfile={() => setRoute("profile")}
         />
       )}
       {route === "trips" && user && (
@@ -177,6 +186,9 @@ function Shell() {
       )}
       {route === "wardrobe" && user && (
         <Wardrobe onBack={() => setRoute("home")} />
+      )}
+      {route === "profile" && user && (
+        <Profile user={user} onBack={() => setRoute("home")} />
       )}
       {route === "packing" && user && (
         <PackingList onBack={() => setRoute("home")} />
