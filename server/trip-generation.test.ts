@@ -378,7 +378,7 @@ test("deleting a processing trip discards the later Agent response", async () =>
   }
 });
 
-test("background generation failures remain visible on the saved trip", async () => {
+test("retrying replaces the failed trip after the new plan is queued", async () => {
   process.env.AI_API_KEY = "test-key-not-used";
   generationFailure = new Error("provider unavailable");
   try {
@@ -390,8 +390,8 @@ test("background generation failures remain visible on the saved trip", async ()
         placeDetail: "法国",
         lat: 48.8566,
         lon: 2.3522,
-        startDate: "2026-10-01",
-        endDate: "2026-10-02",
+        startDate: "2026-09-01",
+        endDate: "2026-09-02",
         notes: "博物馆与步行",
       }),
     });
@@ -400,6 +400,38 @@ test("background generation failures remain visible on the saved trip", async ()
     const failed = await waitForPlan(body.plan.id, "failed");
     assert.equal(failed.itineraryId, null);
     assert.equal(failed.generationError, "provider unavailable");
+
+    generationFailure = null;
+    const retryResponse = await request("/api/trip-plans/generate", {
+      method: "POST",
+      body: JSON.stringify({
+        scenario: "travel",
+        placeName: "巴黎",
+        placeDetail: "法国",
+        lat: 48.8566,
+        lon: 2.3522,
+        startDate: "2026-09-01",
+        endDate: "2026-09-02",
+        notes: "博物馆与步行",
+        replaceFailedPlanId: body.plan.id,
+      }),
+    });
+    const retry = await retryResponse.json();
+    assert.equal(retryResponse.status, 202);
+    assert.equal(retry.replacedPlanId, body.plan.id);
+    assert.notEqual(retry.plan.id, body.plan.id);
+
+    const afterQueue = await (await request("/api/trip-plans")).json();
+    assert.ok(!afterQueue.plans.some((plan: any) => plan.id === body.plan.id));
+    await waitForPlan(retry.plan.id, "completed");
+    assert.equal(
+      (
+        await request(`/api/trip-plans/${retry.plan.id}`, {
+          method: "DELETE",
+        })
+      ).status,
+      200
+    );
   } finally {
     generationFailure = null;
     delete process.env.AI_API_KEY;
