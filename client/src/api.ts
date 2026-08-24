@@ -266,8 +266,23 @@ export type ChatMessage = {
   content: string;
 };
 
-export function chat(messages: ChatMessage[]): Promise<{ reply: string }> {
-  return request<{ reply: string }>("/api/chat", {
+export type AssistantPage =
+  | "home"
+  | "trips"
+  | "tripSetup"
+  | "itinerary"
+  | "wardrobe"
+  | "profile"
+  | "packing";
+export type AssistantClientAction =
+  | { type: "navigate"; page: AssistantPage; scenario?: string }
+  | { type: "profileUpdated"; user: User }
+  | { type: "wardrobeChanged" }
+  | { type: "tripCreated" }
+  | { type: "packingChanged"; balance?: number; checked?: string[]; unchecked?: string[] };
+
+export function chat(messages: ChatMessage[]): Promise<{ reply: string; actions?: AssistantClientAction[] }> {
+  return request<{ reply: string; actions?: AssistantClientAction[] }>("/api/chat", {
     method: "POST",
     body: JSON.stringify({ messages }),
   });

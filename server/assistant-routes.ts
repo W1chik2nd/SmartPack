@@ -6,6 +6,11 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { aiConfigured, chatCompletion, type ChatMessage } from "./ai.ts";
 import { buildSystemPrompt } from "./prompts.ts";
+import {
+  executeAssistantActions,
+  parseAssistantEnvelope,
+  type AssistantDataContext,
+} from "./assistant-actions.ts";
 
 /** buildSystemPrompt 需要的用户画像字段。 */
 type ProfileUser = Parameters<typeof buildSystemPrompt>[0];
@@ -18,6 +23,7 @@ type Ctx = {
   readBody: (req: IncomingMessage, maxBytes?: number) => Promise<any>;
   /** 从 Authorization 头解析用户;未登录返回 null。 */
   userFromHeader: () => ProfileUser | null;
+  actionContext: () => AssistantDataContext | null;
 };
 
 /** 处理了就返回 true,让 app.ts 知道不用继续匹配后面的路由。 */
@@ -57,7 +63,21 @@ export async function handleAssistantRoutes(ctx: Ctx): Promise<boolean> {
     return true;
   }
 
-  const reply = await chatCompletion(buildSystemPrompt(user), messages);
-  json(res, 200, { reply });
+  const actionContext = ctx.actionContext();
+  if (!actionContext) {
+    json(res, 401, { error: "Not signed in." });
+    return true;
+  }
+  const systemPrompt = buildSystemPrompt(user) + actionContext.promptContext;
+  const content = await chatCompletion(systemPrompt, messages);
+  const envelope = parseAssistantEnvelope(content);
+  const result = executeAssistantActions(envelope.actions, actionContext);
+  const resultMessage = result.actions.length > 0
+    ? "Action completed successfully."
+    : "";
+  const reply = [envelope.reply, resultMessage, ...result.errors]
+    .filter(Boolean)
+    .join("\n\n");
+  json(res, 200, { reply, actions: result.actions });
   return true;
 }
