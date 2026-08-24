@@ -13,7 +13,13 @@ import {
 } from "./profile.ts";
 import { buildSystemPrompt } from "./prompts.ts";
 
-const required = { name: "Anna", age: 28, heightCm: 168, weightKg: 55 };
+const required = {
+  name: "Anna",
+  gender: "female",
+  age: 28,
+  heightCm: 168,
+  weightKg: 55,
+};
 
 function ok(body: Record<string, unknown>) {
   const result = validateProfile(body);
@@ -23,7 +29,7 @@ function ok(body: Record<string, unknown>) {
 
 test("only name/age/height/weight are required", () => {
   const requiredKeys = PROFILE_FIELDS.filter((f) => f.required).map((f) => f.key);
-  assert.deepEqual(requiredKeys, ["name", "age", "heightCm", "weightKg"]);
+  assert.deepEqual(requiredKeys, ["name", "gender", "age", "heightCm", "weightKg"]);
 });
 
 test("a required-only profile validates and leaves optional columns NULL", () => {

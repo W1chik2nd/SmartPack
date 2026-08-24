@@ -52,7 +52,13 @@ async function get(path: string, token?: string) {
 }
 
 // The required half of the questionnaire — the only part that gates sign-up.
-const annaProfile = { name: "Anna", age: 28, heightCm: 168, weightKg: 55 };
+const annaProfile = {
+  name: "Anna",
+  gender: "female",
+  age: 28,
+  heightCm: 168,
+  weightKg: 55,
+};
 
 // Every optional answer filled in, for the round-trip test below.
 const annaOptional = {

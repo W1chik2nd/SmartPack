@@ -121,6 +121,13 @@
   outline: none;
 }
 
+/* Questionnaire only: inputs share the page background like the option tiles,
+   so the whole form reads as one surface with borders doing the structure.
+   Sign-in and step 1 keep white fields. */
+.quiz-page .field input {
+  background: var(--bg);
+}
+
 .field input:focus {
   /* flat focus ring, not a glow */
   outline: 3px solid var(--yellow);
@@ -198,9 +205,12 @@
   grid-template-columns: 1fr;
 }
 
+/* Side whitespace scales with the viewport instead of a fixed gutter: clamp
+   keeps a comfortable margin on laptops and stops the form from spanning edge
+   to edge on wide monitors, without ever squeezing it on small screens. */
 .quiz-page .auth-panel {
   align-items: stretch;
-  padding: var(--space-4);
+  padding: var(--space-4) clamp(var(--space-3), 9vw, 200px);
 }
 
 .quiz-page .auth-headline,
@@ -208,14 +218,28 @@
   max-width: none;
 }
 
-/* Wider viewports: let the option blocks spread rather than stretching each
-   one across the whole screen, which would waste the width on empty space. */
-@media (min-width: 1100px) {
+/* Six squares per row on the questionnaire. Narrower viewports step down so
+   the tiles never shrink below a readable size. */
+.quiz-page .style-options {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+.quiz-page .field-row-3 {
+  grid-template-columns: repeat(6, 1fr);
+}
+
+@media (max-width: 1200px) {
+  .quiz-page .style-options {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (max-width: 760px) {
   .quiz-page .style-options {
     grid-template-columns: repeat(3, 1fr);
   }
   .quiz-page .field-row-3 {
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
@@ -242,15 +266,25 @@
   grid-column: 1 / -1;
 }
 
+/* Square tiles (AGENTS.md §8: geometry first, clean grid). aspect-ratio holds
+   the square at any column count, so the shape survives the responsive
+   step-downs without per-breakpoint sizing. Content stacks and centres because
+   a square has vertical room that a single text row does not. */
 .style-option {
+  position: relative;
   display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 10px 12px;
+  align-items: flex-end;
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: var(--space-1);
   font-size: 14px;
   font-weight: var(--weight-bold);
+  line-height: 1.25;
+  text-align: center;
   border: 2px solid var(--black);
-  background: var(--white);
+  /* Same value as the page background: the border carries the shape, not a
+     contrasting fill. */
+  background: var(--bg);
   cursor: pointer;
 }
 
@@ -260,7 +294,14 @@
 }
 
 .style-option input {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: 0;
   accent-color: var(--blue);
+  transform: translate(-50%, -50%);
 }
 
 .style-option:has(input:focus-visible) {

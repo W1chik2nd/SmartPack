@@ -9,6 +9,7 @@ import { OTHER_ID, optionLabels } from "./profile.ts";
 
 export type ProfileForPrompt = {
   name: string;
+  gender?: string | null;
   age: number | null;
   height_cm: number | null;
   weight_kg: number | null;
@@ -75,6 +76,11 @@ export function buildSystemPrompt(profile: ProfileForPrompt): string {
 
   const facts = [
     `- Name: ${profile.name}`,
+    // "Prefer not to say" is passed through rather than dropped: it tells the
+    // assistant to stay neutral on cut and sizing instead of guessing.
+    profile.gender
+      ? `- Gender: ${optionLabels("gender", [profile.gender])[0]}`
+      : null,
     profile.age != null ? `- Age: ${profile.age}` : null,
     profile.height_cm != null ? `- Height: ${profile.height_cm} cm` : null,
     profile.weight_kg != null ? `- Weight: ${profile.weight_kg} kg` : null,

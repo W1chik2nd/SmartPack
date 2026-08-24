@@ -145,6 +145,17 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
     if (!fields) return;
     setError(null);
 
+    // Required choice fields (gender) need an explicit check: the browser's
+    // required attribute is unreliable on a styled radio group, and unlike the
+    // optional fields this is a hard stop, not a warn-then-allow.
+    const missingRequired = fields.filter(
+      (f) => f.required && (f.kind === "single" || f.kind === "multi") && !answered(f)
+    );
+    if (missingRequired.length > 0) {
+      fail(t("requiredMissing"));
+      return;
+    }
+
     // Required fields are enforced by the browser (required attr) and the
     // server. This check is only about the optional ones: an incomplete
     // profile is allowed, but not silently — warn once, submit on the retry.
@@ -199,8 +210,33 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
 
   const byKey = (key: string) => fields?.find((f) => f.key === key);
   const measurementKeys = ["bustCm", "waistCm", "hipCm"];
+  // Required choice fields (gender) render in the mandatory block above, so
+  // this optional loop must not repeat them.
   const choiceFields =
-    fields?.filter((f) => f.kind === "single" || f.kind === "multi") ?? [];
+    fields?.filter(
+      (f) => (f.kind === "single" || f.kind === "multi") && !f.required
+    ) ?? [];
+
+  function choiceGroup(field: ProfileField) {
+    const optionalMark = field.required ? "" : ` (${t("optionalMark")})`;
+    return (
+      <OptionGroup
+        key={field.key}
+        name={field.key}
+        legend={`${label(field.key)}${optionalMark}`}
+        options={field.options ?? []}
+        selected={choices[field.key] ?? []}
+        multiple={field.kind === "multi"}
+        onToggle={(id) => toggleChoice(field, id)}
+        hint={field.kind === "multi" ? t("pickMultiple") : undefined}
+        otherId={field.otherId}
+        otherMax={field.otherMax}
+        otherLabel={t("otherPlaceholder")}
+        otherValue={field.otherKey ? text[field.otherKey] ?? "" : ""}
+        onOtherChange={(v) => field.otherKey && setValue(field.otherKey, v)}
+      />
+    );
+  }
 
   // No side image here, unlike step 1 and sign-in: this form is long enough
   // that the full width buys real layout room for the option grids.
@@ -241,6 +277,8 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
                 />
               </div>
 
+              {byKey("gender") && choiceGroup(byKey("gender")!)}
+
               {numberInput(byKey("age")!)}
 
               <div className="field-row">
@@ -257,23 +295,7 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
                 })}
               </div>
 
-              {choiceFields.map((field) => (
-                <OptionGroup
-                  key={field.key}
-                  name={field.key}
-                  legend={`${label(field.key)} (${t("optionalMark")})`}
-                  options={field.options ?? []}
-                  selected={choices[field.key] ?? []}
-                  multiple={field.kind === "multi"}
-                  onToggle={(id) => toggleChoice(field, id)}
-                  hint={field.kind === "multi" ? t("pickMultiple") : undefined}
-                  otherId={field.otherId}
-                  otherMax={field.otherMax}
-                  otherLabel={t("otherPlaceholder")}
-                  otherValue={field.otherKey ? text[field.otherKey] ?? "" : ""}
-                  onOtherChange={(v) => field.otherKey && setValue(field.otherKey, v)}
-                />
-              ))}
+              {choiceFields.map(choiceGroup)}
             </>
           )}
 
