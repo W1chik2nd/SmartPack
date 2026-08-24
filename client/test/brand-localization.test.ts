@@ -16,6 +16,13 @@ test("the shell and landing page render the localized brand key", () => {
     new URL("../src/pages/Landing.tsx", import.meta.url),
     "utf8"
   );
+  const styles = readFileSync(
+    new URL("../src/styles.css", import.meta.url),
+    "utf8"
+  );
   assert.match(app, /t\("brandName"\)/);
   assert.match(landing, /t\("brandName"\)/);
+  const brandRule = styles.match(/\.nav-brand\s*\{[^}]+\}/)?.[0] ?? "";
+  assert.doesNotMatch(brandRule, /text-transform:\s*uppercase/);
+  assert.doesNotMatch(styles, /\.nav-brand\s*\{[^}]*font-size:\s*0/);
 });

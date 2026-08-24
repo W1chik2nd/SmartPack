@@ -93,7 +93,6 @@ body {
   font-weight: var(--weight-heavy);
   letter-spacing: -0.01em;
   color: var(--text);
-  text-transform: uppercase;
   cursor: pointer;
   background: none;
   border: none;
@@ -296,13 +295,15 @@ body {
     padding: 0 var(--space-1);
   }
   .nav-brand {
-    width: 34px;
-    flex: 0 0 34px;
-    overflow: hidden;
-    font-size: 0;
+    flex: 0 1 auto;
+    font-size: 15px;
+    white-space: nowrap;
   }
   .nav-brand::before {
-    margin-right: 0;
+    width: 28px;
+    height: 26px;
+    flex-basis: 28px;
+    margin-right: 6px;
   }
   .nav-actions {
     gap: 4px;
