@@ -22,18 +22,22 @@ test("today outfit tile opens the outfit overview route", () => {
 
 test("generated garments and wardrobe photos share the pixel-art treatment", () => {
   const visual = readFileSync(new URL("../src/components/OutfitPieceVisual.tsx", import.meta.url), "utf8");
-  assert.match(visual, /pixel-garment dress-piece-photo/);
-  assert.match(visual, /is-accessory-photo/);
+  assert.doesNotMatch(visual, /wardrobePhotoUrl|<img/);
   assert.match(visual, /pixel-garment dress-piece-\$\{piece\.kind\}/);
   assert.match(outfitCss, /image-rendering: pixelated/);
   assert.match(outfitCss, /background: var\(--bg\)/);
-  assert.match(outfitCss, /width: 48px;\s+height: 36px;/);
   assert.match(outfitCss, /--pixel-outline/);
   assert.match(outfitCss, /dress-piece-shoes::before/);
   assert.match(visual, /piece\.kind === "accessory"/);
   assert.match(outfit, /dress-mini-clothes/);
   assert.match(outfit, /dress-featured-accessory/);
   assert.match(visual, /garment-\$\{piece\.garmentStyle\}/);
+  const home = readFileSync(new URL("../src/pages/index.tsx", import.meta.url), "utf8");
+  const dashboardOutfit = readFileSync(new URL("../src/components/DashboardOutfit.tsx", import.meta.url), "utf8");
+  assert.match(home, /<DashboardOutfit/);
+  assert.match(dashboardOutfit, /layered-outer-open/);
+  assert.match(dashboardOutfit, /打开拉链/);
+  assert.match(dashboardOutfit, /outfit-description/);
 });
 
 test("outfit pieces use the white pixel line-art reference style", () => {

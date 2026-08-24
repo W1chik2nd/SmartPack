@@ -99,12 +99,6 @@
   border: 2px solid var(--black);
 }
 
-.day-outfit-photo {
-  width: 28px;
-  height: 28px;
-  object-fit: cover;
-  border: 1px solid var(--black);
-}
 
 .day-weather {
   background: var(--yellow);
