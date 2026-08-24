@@ -5,7 +5,7 @@ type Props = {
   compact?: boolean;
 };
 
-/** Shared wardrobe/photo fallback renderer used by the dashboard and detail page. */
+/** Render every outfit piece from its description, regardless of stored photos. */
 export default function OutfitPieceVisual({ piece, compact = false }: Props) {
   const label = piece.label;
   const isAccessory = piece.kind === "accessory";
