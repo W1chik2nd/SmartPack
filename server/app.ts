@@ -13,6 +13,7 @@ import { createWardrobeStore } from "./wardrobe.ts";
 import { handleWardrobeRoutes } from "./wardrobe-routes.ts";
 import { createTripPlanStore } from "./trip-plan.ts";
 import { handleTripPlanRoutes } from "./trip-plan-routes.ts";
+import { handleOutfitRoutes } from "./outfit-routes.ts";
 import { createItineraryStore } from "./itinerary.ts";
 import { handleItineraryRoutes } from "./itinerary-routes.ts";
 import { createPackingPlanStore } from "./packing-store.ts";
@@ -202,6 +203,21 @@ export function createApp(
             )
           : buildPackingPlan(balance),
       });
+      return;
+    }
+
+    // 穿搭方案由后端整合行程与衣橱，客户端只展示结果。
+    if (
+      await handleOutfitRoutes({
+        req,
+        res,
+        url,
+        wardrobe,
+        tripPlans,
+        json,
+        userFromHeader: () => accounts.userForRequest(req),
+      })
+    ) {
       return;
     }
 

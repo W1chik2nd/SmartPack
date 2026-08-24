@@ -397,3 +397,47 @@ export function deleteTripPlan(id: string): Promise<{ ok: true }> {
     { method: "DELETE" }
   );
 }
+
+// ---- 今日 / 行程穿搭 ----
+
+export type OutfitPieceKind = "top" | "bottom" | "shoes" | "accessory";
+export type OutfitTone = "red" | "yellow" | "blue" | "black" | "white";
+export type AccessoryStyle = "bag" | "hat" | "glasses" | "scarf" | "watch" | "necklace";
+export type GarmentStyle = "tee" | "shirt" | "knit" | "trousers" | "skirt" | "jeans" | "loafers" | "sneakers";
+
+export type OutfitPiece = {
+  id: string;
+  kind: OutfitPieceKind;
+  label: string;
+  labelEn: string;
+  tone: OutfitTone;
+  garmentStyle: GarmentStyle | null;
+  accessoryStyle: AccessoryStyle | null;
+  wardrobeItemId: string | null;
+  hasPhoto: boolean;
+};
+
+export type OutfitDay = {
+  id: string;
+  dayNumber: number;
+  date: string;
+  place: string;
+  scene: string;
+  pieces: OutfitPiece[];
+};
+
+export type OutfitPlan = {
+  destination: string;
+  destinationDetail: string;
+  scenario: string;
+  startDate: string;
+  endDate: string;
+  lat: number;
+  lon: number;
+  usesWardrobe: boolean;
+  days: OutfitDay[];
+};
+
+export function getOutfitPlan(): Promise<{ plan: OutfitPlan }> {
+  return request<{ plan: OutfitPlan }>("/api/outfit-plan");
+}
