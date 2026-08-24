@@ -305,15 +305,31 @@ export function stopPhoto(
 // Packing plan — shapes mirror server/packing.ts. The server owns all the
 // packing logic (AGENTS.md §3); the client only renders these and sends the
 // slider value back.
-export type PackingItem = { id: string; label: string; reuse: number };
-export type PackingCategory = { id: string; title: string; items: PackingItem[] };
-export type EssentialItem = { id: string; label: string };
-export type CorePiece = { id: string; label: string; reuse: number };
+export type PackingItem = {
+  id: string;
+  label: string;
+  labelEn: string;
+  reuse: number;
+};
+export type PackingCategory = {
+  id: string;
+  title: string;
+  titleEn: string;
+  items: PackingItem[];
+};
+export type EssentialItem = { id: string; label: string; labelEn: string };
+export type CorePiece = {
+  id: string;
+  label: string;
+  labelEn: string;
+  reuse: number;
+};
 
 export type PackingPlan = {
   balance: number;
   tripDays: number;
   summary: string;
+  summaryEn: string;
   categories: PackingCategory[];
   essentials: EssentialItem[];
   corePieces: CorePiece[];
