@@ -103,6 +103,13 @@
 
 .avatar-stage svg { width: 90%; height: 95%; }
 
+.avatar-empty {
+  padding: var(--space-2);
+  font-size: 12px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+}
+
 .avatar-line,
 .avatar-face {
   fill: none;
