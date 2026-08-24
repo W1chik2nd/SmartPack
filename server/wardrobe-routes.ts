@@ -1,8 +1,15 @@
-// 衣柜相关路由:列表、编辑、删除、照片。
+// 衣柜相关路由:拍照识别、列表、编辑、删除、照片。
 // 从 app.ts 拆出来是为了守住单文件 400 行上限(AGENTS.md §7)。
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { createReadStream } from "node:fs";
 import type { WardrobeStore, ItemPatch } from "./wardrobe.ts";
+import {
+  recognizeClothing,
+  searchKeyword,
+  visionConfigured,
+  NotClothingError,
+} from "./vision.ts";
+import { searchProducts, ecommerceProvider } from "./ecommerce.ts";
 
 type Ctx = {
   req: IncomingMessage;
@@ -22,6 +29,66 @@ export async function handleWardrobeRoutes(ctx: Ctx): Promise<boolean> {
   const { req, res, url, wardrobe, json, readBody, userFromHeader } = ctx;
   const method = req.method;
   const path = url.pathname;
+
+  // 拍照识别 →(可选)电商搜同款。识别是硬依赖,搜同款未配置时优雅降级。
+  if (method === "POST" && path === "/api/wardrobe/recognize") {
+    const user = userFromHeader();
+    if (!user) {
+      json(res, 401, { error: "Not signed in." });
+      return true;
+    }
+    if (!visionConfigured()) {
+      json(res, 503, {
+        error:
+          "识别服务未配置:请在 server/.env 填入 VISION_API_KEY(见 .env.example)。",
+      });
+      return true;
+    }
+    const { image } = await readBody(req, 8_000_000);
+    if (typeof image !== "string" || !image.startsWith("data:image/")) {
+      json(res, 400, { error: "image must be a data:image/* URL." });
+      return true;
+    }
+    let item;
+    try {
+      item = await recognizeClothing(image);
+    } catch (err: any) {
+      // 不是衣物 / 认不出衣物:这是用户操作问题(拍错了),不是服务故障。
+      // 用 422 区分开,前端据此提示重拍且不把这张加进衣柜。
+      if (err instanceof NotClothingError) {
+        json(res, 422, { error: err.message, notClothing: true });
+        return true;
+      }
+      json(res, 502, { error: `识别失败:${err?.message ?? "unknown"}` });
+      return true;
+    }
+    const provider = ecommerceProvider();
+    let products: Awaited<ReturnType<typeof searchProducts>> = [];
+    let productsError: string | undefined;
+    if (provider) {
+      try {
+        products = await searchProducts(searchKeyword(item));
+      } catch (err: any) {
+        // 搜同款失败不拖垮识别结果,报告但不报错。
+        productsError = err?.message ?? "unknown";
+      }
+    }
+    // 识别结果连同细节字段一起落库,这些细节是后续穿搭推荐要分析的原料。
+    const saved = wardrobe.add(user.id, {
+      title: item.title,
+      category: item.category,
+      subtype: item.subtype,
+      colors: item.colors,
+      fit: item.fit,
+      material: item.material,
+      seasons: item.seasons,
+      styleTags: item.styleTags,
+      details: item.details,
+      photoDataUrl: image,
+    });
+    json(res, 201, { item: saved, provider, products, productsError });
+    return true;
+  }
 
   // 衣柜列表
   if (method === "GET" && path === "/api/wardrobe/items") {

@@ -8,6 +8,7 @@ type Props = {
   user: User;
   onOpenTrips: () => void;
   onOpenWardrobe: () => void;
+  onOpenItinerary: () => void;
 };
 
 // Placeholder navigation targets. Wire real routes here as the pages land.
@@ -17,11 +18,15 @@ const TODO_LINKS = {
   checklist: () => {},
   dates: () => {},
   outfit: () => {},
-  itinerary: () => {},
   profile: () => {},
 };
 
-export default function Home({ user, onOpenTrips, onOpenWardrobe }: Props) {
+export default function Home({
+  user,
+  onOpenTrips,
+  onOpenWardrobe,
+  onOpenItinerary,
+}: Props) {
   const { lang, t } = useLang();
   const [now, setNow] = useState(new Date());
   const [city, setCity] = useState<City>(storedCity);
@@ -138,7 +143,7 @@ export default function Home({ user, onOpenTrips, onOpenWardrobe }: Props) {
               <span className="card-arrow" aria-hidden="true">›</span>
             </button>
 
-            <button className="today-itinerary" onClick={TODO_LINKS.itinerary}>
+            <button className="today-itinerary" onClick={onOpenItinerary}>
               <h2>{t("itinerary")}</h2>
               <span className="itinerary-timeline" aria-hidden="true" />
               <span className="card-arrow" aria-hidden="true">›</span>
