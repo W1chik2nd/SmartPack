@@ -10,6 +10,7 @@ import {
 } from "../api";
 import OptionGroup from "../components/OptionGroup";
 import { useLang } from "../i18n/useLang";
+import PersonalColorGuide from "../components/PersonalColorGuide";
 import { STRINGS, type StringKey } from "../i18n/strings";
 
 type Props = {
@@ -43,6 +44,7 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [shake, setShake] = useState(false);
+  const [colorGuideOpen, setColorGuideOpen] = useState(false);
   // First click on an incomplete form only warns; the second submits.
   const [warned, setWarned] = useState(false);
 
@@ -220,21 +222,27 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
   function choiceGroup(field: ProfileField) {
     const optionalMark = field.required ? "" : ` (${t("optionalMark")})`;
     return (
-      <OptionGroup
-        key={field.key}
-        name={field.key}
-        legend={`${label(field.key)}${optionalMark}`}
-        options={field.options ?? []}
-        selected={choices[field.key] ?? []}
-        multiple={field.kind === "multi"}
-        onToggle={(id) => toggleChoice(field, id)}
-        hint={field.kind === "multi" ? t("pickMultiple") : undefined}
-        otherId={field.otherId}
-        otherMax={field.otherMax}
-        otherLabel={t("otherPlaceholder")}
-        otherValue={field.otherKey ? text[field.otherKey] ?? "" : ""}
-        onOtherChange={(v) => field.otherKey && setValue(field.otherKey, v)}
-      />
+      <div key={field.key} className="choice-field-wrap">
+        <OptionGroup
+          name={field.key}
+          legend={`${label(field.key)}${optionalMark}`}
+          options={field.options ?? []}
+          selected={choices[field.key] ?? []}
+          multiple={field.kind === "multi"}
+          onToggle={(id) => toggleChoice(field, id)}
+          hint={field.kind === "multi" ? t("pickMultiple") : undefined}
+          otherId={field.otherId}
+          otherMax={field.otherMax}
+          otherLabel={t("otherPlaceholder")}
+          otherValue={field.otherKey ? text[field.otherKey] ?? "" : ""}
+          onOtherChange={(v) => field.otherKey && setValue(field.otherKey, v)}
+        />
+        {field.key === "seasonColorType" && (
+          <button type="button" className="season-help-button" onClick={() => setColorGuideOpen(true)}>
+            不知道自己的四季型？做照片分析问卷 →
+          </button>
+        )}
+      </div>
     );
   }
 
@@ -318,6 +326,15 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
           </div>
         </form>
       </div>
+      {colorGuideOpen && (
+        <PersonalColorGuide
+          onClose={() => setColorGuideOpen(false)}
+          onSeasonDetected={(season) => {
+            setChoices((current) => ({ ...current, seasonColorType: [season] }));
+            setColorGuideOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

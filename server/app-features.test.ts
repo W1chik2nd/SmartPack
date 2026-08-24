@@ -63,6 +63,26 @@ test("weather rejects invalid coordinates at the boundary", async () => {
   }
 });
 
+test("personal colour questionnaire helper stays public and validates photos", async () => {
+  const previousKey = process.env.VISION_API_KEY;
+  try {
+    delete process.env.VISION_API_KEY;
+    const unavailable = await post("/api/personal-color/analyze", {
+      image: "data:image/jpeg;base64,AA==",
+    });
+    assert.equal(unavailable.status, 503);
+
+    process.env.VISION_API_KEY = "test-key-not-used";
+    const invalid = await post("/api/personal-color/analyze", {
+      image: "not-an-image",
+    });
+    assert.equal(invalid.status, 400);
+  } finally {
+    if (previousKey === undefined) delete process.env.VISION_API_KEY;
+    else process.env.VISION_API_KEY = previousKey;
+  }
+});
+
 test("chat requires a session and a configured provider", async () => {
   const anonymous = await post("/api/chat", {
     messages: [{ role: "user", content: "hi" }],

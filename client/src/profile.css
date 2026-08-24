@@ -282,6 +282,18 @@
   cursor: pointer;
 }
 
+.season-picker .season-help-button {
+  display: block;
+  margin-bottom: var(--space-1);
+  color: var(--blue);
+  background: var(--yellow);
+}
+
+.season-picker .season-help-button:hover {
+  color: var(--white);
+  background: var(--red);
+}
+
 .season-picker button[aria-pressed="true"],
 .preference-options button[aria-pressed="true"] {
   color: var(--white);
