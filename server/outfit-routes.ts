@@ -36,6 +36,7 @@ export async function handleOutfitRoutes(ctx: Ctx): Promise<boolean> {
     // range is the canonical ISO source for joining outfit days.
     date: latestTrip ? addIsoDays(latestTrip.startDate, index) : day.dateLabel,
     place: day.city,
+    placeEn: day.cityEn,
     scene: linkedItinerary.scenario,
     outfit: day.outfit,
   }));
