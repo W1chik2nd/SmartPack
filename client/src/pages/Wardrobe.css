@@ -50,6 +50,12 @@
   color: var(--blue);
 }
 
+.wardrobe-header-actions {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
 /* 拍照按钮:Bauhaus 方块 + 硬边阴影 */
 .wardrobe-camera {
   width: 56px;
@@ -218,6 +224,27 @@
   color: var(--text-secondary);
 }
 
+.wardrobe-reset-filter {
+  margin-top: 4px;
+  padding: 8px 14px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  color: var(--white);
+  background: var(--blue);
+  border: 2px solid var(--text);
+  cursor: pointer;
+}
+
+.wardrobe-reset-filter:hover {
+  background: var(--red);
+}
+
+.wardrobe-reset-filter:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
 /* 手机拍照用的隐藏 input */
 .wardrobe-file {
   position: absolute;
@@ -317,6 +344,23 @@
   }
   .wardrobe-grid {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
+  .wardrobe-header {
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .wardrobe-title {
+    flex: 1 0 100%;
+    font-size: 28px;
+  }
+  .wardrobe-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  .wardrobe-camera {
+    width: 48px;
+    height: 48px;
   }
 }
 

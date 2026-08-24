@@ -11,11 +11,19 @@ import {
   type WardrobeItem,
 } from "../api";
 import { toDataUrl } from "../lib/image";
+import {
+  filterWardrobeItems,
+  WARDROBE_FILTER_OPTIONS,
+  type WardrobeFilterId,
+} from "../lib/wardrobe-filter";
 import { useLang } from "../i18n/useLang";
 import {
   confirmDeleteMessage,
   unreachableHostMessage,
+  wardrobeFilterRegionLabel,
+  wardrobeNoFilteredItemsMessage,
 } from "../i18n/strings";
+import WardrobeFilter from "../components/WardrobeFilter";
 import "./Wardrobe.css";
 
 /** 正在识别中的临时卡片:还没落库,所以没有真实 id。 */
@@ -70,7 +78,14 @@ export default function Wardrobe({ onBack }: Props) {
   const [qrUrl, setQrUrl] = useState("");
   const [qrHint, setQrHint] = useState<string | null>(null);
   const [uploadToken, setUploadToken] = useState<string | null>(null);
+  const [categoryFilter, setCategoryFilter] = useState<WardrobeFilterId>("all");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const filteredItems = filterWardrobeItems(items, categoryFilter);
+  const activeFilterLabel =
+    t(
+      WARDROBE_FILTER_OPTIONS.find((option) => option.id === categoryFilter)
+        ?.labelKey ?? "wardrobeFilterAll"
+    );
 
   // 从后端拉真实衣柜(之前是写死的示例数据,刷新就丢)。
   useEffect(() => {
@@ -185,45 +200,56 @@ export default function Wardrobe({ onBack }: Props) {
 
       <header className="wardrobe-header">
         <h1 className="wardrobe-title">{t("wardrobeTitle")}</h1>
-        <button
-          className="wardrobe-camera"
-          onClick={handleCameraClick}
-          aria-label={t("wardrobeAddPhoto")}
-          title={t("wardrobeAddPhoto")}
-        >
-          <svg viewBox="0 0 32 32" aria-hidden="true">
-            <rect
-              x="3"
-              y="9"
-              width="26"
-              height="19"
-              rx="3"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            />
-            <path
-              d="M11 9 L13 4 L19 4 L21 9"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinejoin="round"
-            />
-            <circle
-              cx="16"
-              cy="18"
-              r="5.5"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-            />
-          </svg>
-        </button>
+        <div className="wardrobe-header-actions">
+          <WardrobeFilter
+            value={categoryFilter}
+            visibleCount={filteredItems.length}
+            totalCount={items.length}
+            onChange={setCategoryFilter}
+          />
+          <button
+            className="wardrobe-camera"
+            onClick={handleCameraClick}
+            aria-label={t("wardrobeAddPhoto")}
+            title={t("wardrobeAddPhoto")}
+          >
+            <svg viewBox="0 0 32 32" aria-hidden="true">
+              <rect
+                x="3"
+                y="9"
+                width="26"
+                height="19"
+                rx="3"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              />
+              <path
+                d="M11 9 L13 4 L19 4 L21 9"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinejoin="round"
+              />
+              <circle
+                cx="16"
+                cy="18"
+                r="5.5"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+              />
+            </svg>
+          </button>
+        </div>
       </header>
 
       {loadError && <p className="wardrobe-error">{loadError}</p>}
 
-      <section className="wardrobe-grid" aria-label={t("wardrobeMine")}>
+      <section
+        className="wardrobe-grid"
+        aria-label={wardrobeFilterRegionLabel(lang, activeFilterLabel)}
+      >
         {/* 正在识别的占位卡片:还没落库 */}
         {pending.map((p) => (
           <article key={p.tempId} className="wardrobe-cell">
@@ -232,7 +258,7 @@ export default function Wardrobe({ onBack }: Props) {
           </article>
         ))}
 
-        {items.map((item) => (
+        {filteredItems.map((item) => (
           <article key={item.id} className="wardrobe-cell">
             <span className="wardrobe-count">×{item.count}</span>
             <button
@@ -268,6 +294,19 @@ export default function Wardrobe({ onBack }: Props) {
           <article className="wardrobe-cell wardrobe-empty">
             <p>{t("wardrobeEmpty")}</p>
             <p className="wardrobe-empty-hint">{t("wardrobeEmptyHint")}</p>
+          </article>
+        )}
+
+        {items.length > 0 && filteredItems.length === 0 && pending.length === 0 && (
+          <article className="wardrobe-cell wardrobe-empty">
+            <p>{wardrobeNoFilteredItemsMessage(lang, activeFilterLabel)}</p>
+            <button
+              type="button"
+              className="wardrobe-reset-filter"
+              onClick={() => setCategoryFilter("all")}
+            >
+              {t("wardrobeShowAll")}
+            </button>
           </article>
         )}
       </section>

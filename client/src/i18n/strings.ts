@@ -162,6 +162,18 @@ export const STRINGS = {
   wardrobePhotoFailed: { en: "Could not process the photo.", zh: "图片处理失败" },
   wardrobeDeleteFailed: { en: "Could not delete the item.", zh: "删除失败" },
   wardrobeDelete: { en: "Delete", zh: "删除" },
+  wardrobeFilter: { en: "Filter", zh: "筛选" },
+  wardrobeFilterAria: {
+    en: "Filter by clothing category",
+    zh: "按衣服品类筛选",
+  },
+  wardrobeFilterAll: { en: "All categories", zh: "全部品类" },
+  wardrobeFilterTops: { en: "Tops", zh: "上装" },
+  wardrobeFilterPants: { en: "Pants", zh: "裤装" },
+  wardrobeFilterSkirts: { en: "Skirts", zh: "裙装" },
+  wardrobeFilterShoes: { en: "Shoes", zh: "鞋履" },
+  wardrobeFilterAccessories: { en: "Accessories", zh: "配饰" },
+  wardrobeShowAll: { en: "Show all items", zh: "查看全部衣物" },
   wardrobeQrDialog: { en: "Scan with your phone to shoot", zh: "用手机扫码拍照" },
   wardrobeQrAlt: { en: "QR code for phone photo upload", zh: "手机拍照上传的二维码" },
   wardrobeQrText: {
@@ -233,6 +245,29 @@ export type StringKey = keyof typeof STRINGS;
 
 // Sentences with a number in a different position per language need a
 // formatter rather than a lookup: word order is part of the translation.
+
+export function wardrobeFilterCountMessage(
+  lang: Lang,
+  visibleCount: number,
+  totalCount: number
+): string {
+  return lang === "zh"
+    ? `${visibleCount} / ${totalCount} 款`
+    : `${visibleCount} of ${totalCount} items`;
+}
+
+export function wardrobeFilterRegionLabel(lang: Lang, filter: string): string {
+  return lang === "zh"
+    ? `我的衣柜，当前筛选：${filter}`
+    : `My wardrobe, current filter: ${filter}`;
+}
+
+export function wardrobeNoFilteredItemsMessage(
+  lang: Lang,
+  filter: string
+): string {
+  return lang === "zh" ? `还没有${filter}` : `No ${filter.toLowerCase()} yet`;
+}
 
 export function photosSentMessage(lang: Lang, count: number): string {
   return lang === "zh"
