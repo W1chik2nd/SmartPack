@@ -6,7 +6,11 @@
 @import "./auth.css";
 @import "./chat.css";
 @import "./dashboard.css";
+@import "./profile.css";
 @import "./scenarios.css";
+@import "./packing.css";
+@import "./itinerary.css";
+@import "./day-plan.css";
 
 * {
   margin: 0;
@@ -260,6 +264,31 @@ body {
 }
 
 @media (max-width: 600px) {
+  .nav {
+    padding: 0 var(--space-1);
+  }
+  .nav-brand {
+    width: 50px;
+    flex: 0 0 50px;
+    overflow: hidden;
+    font-size: 0;
+  }
+  .nav-brand::before {
+    margin-right: 0;
+  }
+  .nav-actions {
+    gap: 4px;
+  }
+  .nav-link {
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  .nav-lang {
+    min-width: 40px;
+  }
+  .nav-user {
+    display: none;
+  }
   .landing-hero {
     padding: 40px 28px 0;
   }

@@ -27,7 +27,7 @@ function ok(body: Record<string, unknown>) {
   return result.ok ? result.values : {};
 }
 
-test("only name/age/height/weight are required", () => {
+test("only name/gender/age/height/weight are required", () => {
   const requiredKeys = PROFILE_FIELDS.filter((f) => f.required).map((f) => f.key);
   assert.deepEqual(requiredKeys, ["name", "gender", "age", "heightCm", "weightKg"]);
 });

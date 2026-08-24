@@ -7,8 +7,11 @@ import Register from "./pages/Register";
 import Questionnaire from "./pages/Questionnaire";
 import Home from "./pages/index";
 import TripPlanner from "./pages/TripPlanner";
+import Itinerary from "./pages/Itinerary";
 import Wardrobe from "./pages/Wardrobe";
 import PhoneUpload from "./pages/PhoneUpload";
+import PackingList from "./pages/PackingList";
+import Profile from "./pages/Profile";
 
 type Route =
   | "landing"
@@ -17,7 +20,10 @@ type Route =
   | "questionnaire"
   | "home"
   | "trips"
-  | "wardrobe";
+  | "itinerary"
+  | "wardrobe"
+  | "profile"
+  | "packing";
 
 /** ?upload=<token> 是手机扫码进来的上传页,免登录。 */
 const uploadToken = new URLSearchParams(window.location.search).get("upload");
@@ -30,6 +36,8 @@ function Shell() {
   // nothing is persisted anywhere until /api/register succeeds.
   const [pendingCreds, setPendingCreds] = useState<Credentials | null>(null);
   const [booting, setBooting] = useState(true);
+  // 从场景选择页带过来的场景 id,行程页据此请求对应行程。
+  const [scenario, setScenario] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // 手机上传页不需要登录态,跳过 me() 免得白等一次请求。
@@ -45,6 +53,12 @@ function Shell() {
       .catch(() => setToken(null))
       .finally(() => setBooting(false));
   }, []);
+
+  // This app uses in-memory routes, so the browser does not reset scroll as
+  // it would after a normal navigation. Every page must still open at its top.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0 });
+  }, [route]);
 
   function handleAuthed(u: User) {
     setUser(u);
@@ -104,6 +118,8 @@ function Shell() {
           {langToggle}
           {user ? (
             <>
+              {/* No section jump links in the nav: sections are reached from
+                  the dashboard tiles, each page has its own back button. */}
               <span className="nav-user">{user.name}</span>
               <button className="nav-link" onClick={handleSignOut}>
                 {t("navSignOut")}
@@ -146,13 +162,40 @@ function Shell() {
           user={user}
           onOpenTrips={() => setRoute("trips")}
           onOpenWardrobe={() => setRoute("wardrobe")}
+          onOpenItinerary={() => setRoute("itinerary")}
+          onOpenPacking={() => setRoute("packing")}
+          onOpenProfile={() => setRoute("profile")}
         />
       )}
       {route === "trips" && user && (
-        <TripPlanner user={user} onBack={() => setRoute("home")} />
+        <TripPlanner
+          user={user}
+          onBack={() => setRoute("home")}
+          onPlanTrip={(id) => {
+            setScenario(id);
+            setRoute("itinerary");
+          }}
+        />
+      )}
+      {route === "itinerary" && user && (
+        <Itinerary
+          user={user}
+          scenario={scenario}
+          onBack={() => setRoute("home")}
+        />
       )}
       {route === "wardrobe" && user && (
         <Wardrobe onBack={() => setRoute("home")} />
+      )}
+      {route === "profile" && user && (
+        <Profile
+          user={user}
+          onBack={() => setRoute("home")}
+          onSaved={(updated) => setUser(updated)}
+        />
+      )}
+      {route === "packing" && user && (
+        <PackingList onBack={() => setRoute("home")} />
       )}
     </>
   );

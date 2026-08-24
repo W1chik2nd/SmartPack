@@ -79,6 +79,45 @@ test("accepts a normal clothing result", async () => {
   mock.restoreAll();
 });
 
+test("treats accessories as valid wardrobe items and normalizes their category", async () => {
+  process.env.VISION_API_KEY = "test-key";
+  let requestPrompt = "";
+  mock.method(globalThis, "fetch", async (_input, init) => {
+    const request = JSON.parse(String(init?.body));
+    requestPrompt = request.messages[0].content[1].text;
+    return {
+      ok: true,
+      json: async () => ({
+        choices: [
+          {
+            message: {
+              content: JSON.stringify({
+                title: "银色金属腕表",
+                category: "手表",
+                subtype: "链带腕表",
+                colors: ["银色"],
+                fit: "不适用",
+                material: "金属",
+                seasons: ["春", "夏", "秋", "冬"],
+                styleTags: ["通勤", "正式"],
+                details: "圆形表盘，金属链带，折叠表扣。",
+              }),
+            },
+          },
+        ],
+      }),
+    };
+  });
+
+  const item = await recognizeClothing(IMG);
+
+  assert.equal(item.category, "配饰");
+  assert.equal(item.subtype, "链带腕表");
+  assert.match(requestPrompt, /手表、领带、手套和珠宝首饰/);
+  assert.match(requestPrompt, /绝不能标记为 notClothing/);
+  mock.restoreAll();
+});
+
 test("a single unknown field does not reject an otherwise good result", async () => {
   // 只有材质没看出来时仍应入库,不能一刀切。
   process.env.VISION_API_KEY = "test-key";
@@ -99,4 +138,3 @@ test("a single unknown field does not reject an otherwise good result", async ()
   assert.equal(item.title, "白色圆领T恤");
   mock.restoreAll();
 });
-

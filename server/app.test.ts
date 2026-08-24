@@ -51,7 +51,20 @@ async function get(path: string, token?: string) {
   return { status: res.status, body: await res.json() };
 }
 
-// The required half of the questionnaire — the only part that gates sign-up.
+async function put(path: string, body: unknown, token?: string) {
+  const res = await fetch(base + path, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  return { status: res.status, body: await res.json() };
+}
+
+// The required half of the current questionnaire — the only part that gates
+// sign-up. Optional profile answers are exercised separately below.
 const annaProfile = {
   name: "Anna",
   gender: "female",
@@ -136,7 +149,7 @@ test("register without the required questionnaire fields stores nothing", async 
 });
 
 test("optional answers never block sign-up and round-trip intact", async () => {
-  // Only name/age/height/weight gate the account. Unanswered optional fields
+  // Only name/gender/age/height/weight gate the account. Unanswered optional fields
   // stay NULL — "skipped" must stay distinguishable from "answered with
   // nothing" — and multi-selects land as JSON arrays.
   async function registered(email: string, payload: object) {
@@ -286,6 +299,41 @@ test("scenarios requires auth and returns the catalog", async () => {
   }
 });
 
+test("profile update persists measurements, gender, and preferences", async () => {
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const update = await put("/api/profile", {
+    name: "Anna Updated",
+    gender: "female",
+    age: 29,
+    heightCm: 168,
+    weightKg: 55,
+    bustCm: 88,
+    waistCm: 68,
+    hipCm: 94,
+    bodyType: "hourglass",
+    seasonColorType: "autumn",
+    stylePrefs: ["minimalist", "elegant"],
+    wearFeel: ["runs-cold", "prefers-loose"],
+    travelHabits: ["packs-light"],
+  }, login.body.token);
+  assert.equal(update.status, 200);
+  assert.equal(update.body.user.gender, "female");
+  assert.equal(update.body.user.bustCm, 88);
+  assert.deepEqual(update.body.user.stylePrefs, ["minimalist", "elegant"]);
+  const current = await get("/api/me", login.body.token);
+  assert.equal(current.body.user.name, "Anna Updated");
+  assert.equal(current.body.user.bodyType, "hourglass");
+  assert.deepEqual(current.body.user.travelHabits, ["packs-light"]);
+});
+
+test("profile update requires authentication", async () => {
+  const response = await put("/api/profile", { name: "Nobody" });
+  assert.equal(response.status, 401);
+});
+
 test("logout invalidates the session token", async () => {
   const login = await post("/api/login", {
     email: "anna@example.com",
@@ -376,6 +424,34 @@ test("chat requires a session and a configured provider", async () => {
   assert.match(unconfigured.body.error, /AI_API_KEY/);
 });
 
+test("packing requires a session and returns a plan for the slider value", async () => {
+  const anon = await get("/api/packing?balance=50");
+  assert.equal(anon.status, 401);
+
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+
+  const lean = await get("/api/packing?balance=0", token);
+  assert.equal(lean.status, 200);
+  assert.equal(lean.body.plan.balance, 0);
+  assert.ok(lean.body.plan.categories.length > 0);
+  assert.equal(lean.body.plan.essentials[0].label, "身份证");
+
+  // The slider changes the plan: more variety packs more items.
+  const varied = await get("/api/packing?balance=100", token);
+  const count = (p: any) =>
+    p.categories.reduce((n: number, c: any) => n + c.items.length, 0);
+  assert.ok(count(varied.body.plan) > count(lean.body.plan));
+
+  // A missing/garbage balance falls back to the middle rather than erroring.
+  const noParam = await get("/api/packing", token);
+  assert.equal(noParam.status, 200);
+  assert.equal(noParam.body.plan.balance, 50);
+});
+
 test("chat validates the message payload at the boundary", async () => {
   const login = await post("/api/login", {
     email: "anna@example.com",
@@ -400,4 +476,64 @@ test("chat validates the message payload at the boundary", async () => {
   } finally {
     delete process.env.AI_API_KEY;
   }
+});
+
+test("itinerary endpoints require a session", async () => {
+  for (const path of [
+    "/api/itinerary/trips",
+    "/api/itinerary/trips/some-id",
+    "/api/itinerary/photo/some-stop",
+  ]) {
+    const { status } = await get(path);
+    assert.equal(status, 401);
+  }
+});
+
+test("itinerary returns a trip whose days and stops drive both panels", async () => {
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+
+  const { status, body } = await get("/api/itinerary/trips", token);
+  assert.equal(status, 200);
+  assert.ok(Array.isArray(body.trips) && body.trips.length > 0);
+  // 配图供应商永远有值:没配 key 时兜底 openverse。
+  assert.ok(
+    typeof body.photoProvider === "string" && body.photoProvider.length > 0
+  );
+
+  const trip = body.trips[0];
+  assert.ok(trip.departLabel.length > 0, "left panel shows 'x.xx 出发'");
+  assert.ok(trip.days.length > 0);
+  for (const day of trip.days) {
+    assert.equal(typeof day.dayNumber, "number");
+    assert.equal(typeof day.dateLabel, "string");
+    assert.ok(day.stops.length > 0, "right panel needs stops per day");
+  }
+
+  // 同一用户再取一次不该又造一份演示行程。
+  const again = await get("/api/itinerary/trips", token);
+  assert.equal(again.body.trips.length, body.trips.length);
+
+  const one = await get(`/api/itinerary/trips/${trip.id}`, token);
+  assert.equal(one.status, 200);
+  assert.equal(one.body.trip.id, trip.id);
+
+  const missing = await get("/api/itinerary/trips/not-a-trip", token);
+  assert.equal(missing.status, 404);
+});
+
+test("itinerary photo endpoint rejects unknown stops", async () => {
+  // 真实图库调用需要外部网络,不在单测范围;这里只测存在性/归属这道门。
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const { status } = await get(
+    "/api/itinerary/photo/not-a-stop",
+    login.body.token
+  );
+  assert.equal(status, 404);
 });
