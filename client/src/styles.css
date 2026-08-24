@@ -20,6 +20,7 @@
 @import "./outfit.css";
 @import "./outfit-garments.css";
 @import "./outfit-accessories.css";
+@import "./trip-weather.css";
 
 * {
   margin: 0;

@@ -19,16 +19,13 @@ type Props = {
   onOpenWardrobe: () => void;
   onOpenItinerary: (itineraryId: string) => void;
   onOpenPacking: (tripPlanId: string) => void;
+  onOpenWeather: (tripPlanId: string) => void;
   onOpenProfile: () => void;
   onOpenOutfit: () => void;
 };
 
-// Placeholder navigation targets. Wire real routes here as the pages land.
-// TODO: replace with real navigation once the profile/detail pages exist.
-const TODO_LINKS = {
-  weather: () => {},
-  dates: () => {},
-};
+// TODO: wire the recent-date header once a calendar overview exists.
+const openDates = () => {};
 
 export default function Home({
   user,
@@ -37,6 +34,7 @@ export default function Home({
   onOpenWardrobe,
   onOpenItinerary,
   onOpenPacking,
+  onOpenWeather,
   onOpenProfile,
   onOpenOutfit,
 }: Props) {
@@ -226,7 +224,7 @@ export default function Home({
                 aria-label="Today"
               >
                 <div className="today-header">
-                  <button className="today-dates" onClick={TODO_LINKS.dates}>
+                  <button className="today-dates" onClick={openDates}>
                     {t("upcoming")} · {dateLong} <span aria-hidden="true">›</span>
                   </button>
                   <div className="trip-switch-copy" aria-live="polite">
@@ -242,7 +240,10 @@ export default function Home({
 
                 <div className="today-body">
                   <div className="today-left">
-                    <button className="today-weather" onClick={TODO_LINKS.weather}>
+                    <button
+                      className="today-weather"
+                      onClick={() => onOpenWeather(selectedTrip.id)}
+                    >
                       <h2>{t("destinationWeatherToday")}</h2>
                       {wx ? (
                         <p className="weather-reading">

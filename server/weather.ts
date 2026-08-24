@@ -25,6 +25,18 @@ export type TripForecast = {
   days: ForecastDay[];
 };
 
+export type TripWeather = {
+  trip: {
+    id: string;
+    destination: string;
+    destinationDetail: string;
+    startDate: string;
+    endDate: string;
+    dayCount: number;
+  };
+  forecast: TripForecast;
+};
+
 // Fallback when the browser denies geolocation: the team's home base.
 export const DEFAULT_COORDS = { lat: 53.8008, lon: -1.5491 }; // Leeds, UK
 
@@ -153,4 +165,39 @@ export async function destinationForecast(
       days: [],
     };
   }
+}
+
+/**
+ * Assemble the client-ready weather view from one saved trip. Keeping the
+ * inclusive day count and provider call here gives web and iOS one contract.
+ */
+export async function weatherForTrip(plan: {
+  id: string;
+  placeName: string;
+  placeDetail: string;
+  lat: number;
+  lon: number;
+  startDate: string;
+  endDate: string;
+}): Promise<TripWeather> {
+  const forecast = await destinationForecast(
+    plan.lat,
+    plan.lon,
+    plan.startDate,
+    plan.endDate
+  );
+  const start = Date.parse(`${plan.startDate}T00:00:00Z`);
+  const end = Date.parse(`${plan.endDate}T00:00:00Z`);
+
+  return {
+    trip: {
+      id: plan.id,
+      destination: plan.placeName,
+      destinationDetail: plan.placeDetail,
+      startDate: plan.startDate,
+      endDate: plan.endDate,
+      dayCount: Math.round((end - start) / 86_400_000) + 1,
+    },
+    forecast,
+  };
 }

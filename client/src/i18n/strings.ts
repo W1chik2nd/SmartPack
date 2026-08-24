@@ -97,6 +97,30 @@ export const STRINGS = {
   weatherLoading: { en: "Loading…", zh: "加载中…" },
   weatherUnavailable: { en: "Unavailable", zh: "暂不可用" },
   weatherNoDestination: { en: "Set a trip destination", zh: "请先设置行程目的地" },
+  tripWeatherEyebrow: { en: "Destination forecast", zh: "目的地天气" },
+  tripWeatherTitle: { en: "Trip Weather", zh: "行程天气" },
+  tripWeatherDays: { en: "Trip days", zh: "行程天数" },
+  tripWeatherDayUnit: { en: "days", zh: "天" },
+  tripWeatherDates: { en: "Travel dates", zh: "出行日期" },
+  tripWeatherDaily: { en: "Daily forecast", zh: "逐日预报" },
+  tripWeatherDay: { en: "Day", zh: "第" },
+  tripWeatherHigh: { en: "High", zh: "最高" },
+  tripWeatherLow: { en: "Low", zh: "最低" },
+  tripWeatherRain: { en: "Rain", zh: "降雨" },
+  tripWeatherUv: { en: "UV", zh: "紫外线" },
+  tripWeatherWind: { en: "Wind", zh: "风速" },
+  tripWeatherSource: { en: "Forecast source", zh: "预报来源" },
+  tripWeatherOutsideWindow: {
+    en: "A reliable daily forecast is not available for these travel dates yet. Check again closer to departure.",
+    zh: "这些出行日期暂时还没有可靠的逐日预报，请在临近出发时再查看。",
+  },
+  tripWeatherLoadFailed: {
+    en: "Could not load this trip's weather.",
+    zh: "暂时无法加载这次行程的天气。",
+  },
+  tripWeatherRetry: { en: "Try again", zh: "重新加载" },
+  tripWeatherPreviousDays: { en: "Previous forecast days", zh: "上一组天气" },
+  tripWeatherNextDays: { en: "Next forecast days", zh: "下一组天气" },
   checklist: { en: "Checklist", zh: "物品清单" },
   todaysOutfit: { en: "Today's Outfit", zh: "今日穿搭" },
   outfitOverviewTitle: { en: "Trip Outfit Overview", zh: "行程穿搭总览" },
@@ -412,4 +436,20 @@ export const SCENARIO_LABELS: Record<string, { en: string; zh: string }> = {
   date: { en: "Date", zh: "约会" },
   sport: { en: "Sport", zh: "运动" },
   formal: { en: "Formal", zh: "正式场合" },
+};
+
+export const WEATHER_CONDITION_LABELS: Record<
+  string,
+  { en: string; zh: string }
+> = {
+  Clear: { en: "Clear", zh: "晴" },
+  "Partly cloudy": { en: "Partly cloudy", zh: "多云" },
+  Overcast: { en: "Overcast", zh: "阴" },
+  Fog: { en: "Fog", zh: "雾" },
+  Drizzle: { en: "Drizzle", zh: "毛毛雨" },
+  Rain: { en: "Rain", zh: "雨" },
+  Snow: { en: "Snow", zh: "雪" },
+  Showers: { en: "Showers", zh: "阵雨" },
+  "Snow showers": { en: "Snow showers", zh: "阵雪" },
+  Thunderstorm: { en: "Thunderstorm", zh: "雷暴" },
 };
