@@ -13,13 +13,21 @@
   animation: fadeIn 0.3s ease both;
 }
 
+/* English captions are far longer than the Chinese ones, so the slider column
+   needs more width when the app is in English (see .pk-slider-cap below). */
+html[lang="en"] .pk-page {
+  grid-template-columns: 132px 1fr;
+}
+
 /* ---------- vertical slider (丰富造型 ↔ 精简出行) ---------- */
 
 .pk-slider {
   position: sticky;
   top: 88px;
   align-self: start;
-  height: 460px;
+  /* Grow with the captions instead of clipping them: Chinese stays at the
+     sketch height, English needs more room for its longer labels. */
+  min-height: 460px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -43,6 +51,15 @@
   color: var(--white);
   border: 2px solid var(--black);
   padding: 10px 6px;
+}
+
+/* Latin text stacked one glyph per line would run off the card ("More variety"
+   = 12 stacked characters). Rotate the whole word instead: it still reads
+   top-to-bottom alongside the track, but occupies one line's width. */
+html[lang="en"] .pk-slider-cap {
+  text-orientation: mixed;
+  letter-spacing: 0.08em;
+  padding: 12px 8px;
 }
 
 .pk-slider-top {
@@ -111,6 +128,32 @@
 
 .pk-main {
   min-width: 0;
+}
+
+/* Back to the dashboard — same flat block as the other sections */
+.pk-backbar {
+  margin-bottom: var(--space-2);
+}
+
+.pk-back {
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  background: var(--white);
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+
+.pk-back:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+.pk-back:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
 }
 
 .pk-header {
