@@ -41,9 +41,23 @@ test("save 存下行程并回填 id 和 createdAt", () => {
   assert.equal(saved.placeName, "京都市");
   assert.equal(saved.startDate, "2026-04-01");
   assert.equal(saved.endDate, "2026-04-05");
+  assert.equal(saved.generationStatus, "pending");
   // 坐标要原样存取,不能被取整或转成字符串。
   assert.equal(saved.lat, 35.0116);
   assert.equal(saved.lon, 135.7681);
+});
+
+test("重启时把中断的后台任务标成失败", () => {
+  const db = freshDb();
+  const store = createTripPlanStore(db);
+  const saved = store.save("u1", KYOTO);
+  store.markGenerating("u1", saved.id);
+  assert.equal(store.list("u1")[0].generationStatus, "processing");
+
+  const reopened = createTripPlanStore(db);
+  const interrupted = reopened.list("u1")[0];
+  assert.equal(interrupted.generationStatus, "failed");
+  assert.match(interrupted.generationError ?? "", /interrupted/);
 });
 
 test("list 只返回本人的行程,且最新在前", () => {

@@ -1,0 +1,228 @@
+/* Dashboard trip selector and selected-trip summary. Kept separate so the
+   main dashboard stylesheet stays below the project's 400-line limit. */
+
+.trip-switcher {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: stretch;
+  background: var(--white);
+}
+
+.trip-switch-button {
+  display: grid;
+  place-items: center;
+  padding: 0 !important;
+  font-size: 24px;
+  font-weight: var(--weight-heavy);
+}
+
+.trip-switch-button:first-child {
+  border-right: 2px solid var(--black) !important;
+}
+
+.trip-switch-button:last-child {
+  border-left: 2px solid var(--black) !important;
+}
+
+.trip-switch-button:disabled {
+  cursor: default;
+  color: var(--text-secondary);
+  opacity: 0.35;
+}
+
+.trip-switch-copy {
+  min-width: 0;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 5px 7px;
+  line-height: 1;
+}
+
+.trip-switch-copy > span {
+  margin-bottom: 3px;
+  font-size: 9px;
+  font-weight: var(--weight-bold);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.trip-switch-copy strong {
+  overflow: hidden;
+  font-size: 13px;
+  font-weight: var(--weight-heavy);
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.trip-switch-copy small {
+  position: absolute;
+  right: 6px;
+  top: 5px;
+  font-size: 9px;
+  font-weight: var(--weight-heavy);
+  color: var(--blue);
+}
+
+/* Selected trip: destination + scenario + durable background-job status. */
+.trip-summary {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+}
+
+.trip-place {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  font-size: 20px;
+  font-weight: var(--weight-heavy);
+  line-height: 1.1;
+}
+
+.trip-scenario {
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--yellow);
+  border: 2px solid var(--black);
+}
+
+.trip-dates,
+.trip-generation-status,
+.trip-empty {
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+}
+
+.trip-dates,
+.trip-empty {
+  color: var(--text-secondary);
+}
+
+.trip-generation-status {
+  width: fit-content;
+  padding: 4px 7px;
+  border: 2px solid var(--black);
+}
+
+.trip-generation-status.is-processing {
+  background: var(--yellow);
+}
+
+.trip-generation-status.is-failed {
+  color: var(--white);
+  background: var(--red);
+}
+
+.trip-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-top: var(--space-2);
+}
+
+.trip-open {
+  flex: 1;
+  min-height: 0;
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.trip-delete-trigger {
+  flex: none;
+  padding: 9px var(--space-2);
+  font-size: 11px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--red) !important;
+  border-top: 2px solid var(--black) !important;
+}
+
+.trip-delete-trigger:hover {
+  color: var(--white) !important;
+  background: var(--red) !important;
+}
+
+.trip-delete-confirm {
+  flex: none;
+  padding: 10px;
+  background: var(--yellow);
+  border-top: var(--border);
+}
+
+.trip-delete-confirm > strong {
+  display: block;
+  overflow: hidden;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: var(--weight-heavy);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.trip-delete-confirm > p {
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  line-height: 1.25;
+}
+
+.trip-delete-confirm > .trip-delete-error {
+  margin-top: 5px;
+  color: var(--red);
+}
+
+.trip-delete-confirm > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.trip-delete-confirm button {
+  min-width: 0;
+  padding: 7px 4px;
+  font-size: 10px;
+  font-weight: var(--weight-heavy);
+  text-align: center;
+  text-transform: uppercase;
+  border: 2px solid var(--black);
+}
+
+.trip-delete-confirm button:disabled {
+  cursor: progress;
+  opacity: 0.55;
+}
+
+.trip-delete-danger,
+.trip-delete-danger:hover {
+  color: var(--white) !important;
+  background: var(--red) !important;
+}
+
+@media (max-width: 600px) {
+  .today-header {
+    grid-template-columns: 1fr;
+  }
+
+  .today-dates {
+    grid-column: 1;
+    border-right: none !important;
+    border-bottom: var(--border) !important;
+  }
+
+  .trip-switcher {
+    min-height: 54px;
+  }
+}

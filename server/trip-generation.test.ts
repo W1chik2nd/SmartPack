@@ -14,6 +14,9 @@ let base: string;
 let dir: string;
 let token: string;
 let received: TripAgentInput | null = null;
+let releaseGeneration: (() => void) | null = null;
+let blockGeneration = false;
+let generationFailure: Error | null = null;
 
 const generated: GeneratedTripPlan = {
   title: "京都两日文化旅行",
@@ -133,6 +136,12 @@ before(async () => {
   app = createApp(join(dir, "test.db"), {
     generateTrip: async (input) => {
       received = input;
+      if (blockGeneration) {
+        await new Promise<void>((resolve) => {
+          releaseGeneration = resolve;
+        });
+      }
+      if (generationFailure) throw generationFailure;
       return structuredClone(generated);
     },
   });
@@ -177,6 +186,19 @@ function request(path: string, init: RequestInit = {}) {
   });
 }
 
+async function waitForPlan(
+  planId: string,
+  status: "completed" | "failed"
+): Promise<any> {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    const body = await (await request("/api/trip-plans")).json();
+    const plan = body.plans.find((candidate: any) => candidate.id === planId);
+    if (plan?.generationStatus === status) return plan;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+  }
+  throw new Error(`plan ${planId} did not become ${status}`);
+}
+
 test("generation requires a configured server-side API key", async () => {
   delete process.env.AI_API_KEY;
   const response = await request("/api/trip-plans/generate", {
@@ -197,6 +219,7 @@ test("generation requires a configured server-side API key", async () => {
 
 test("one agent run synchronizes trip, itinerary, outfits, equipment, and packing", async () => {
   process.env.AI_API_KEY = "test-key-not-used";
+  blockGeneration = true;
   try {
     const response = await request("/api/trip-plans/generate", {
       method: "POST",
@@ -211,19 +234,30 @@ test("one agent run synchronizes trip, itinerary, outfits, equipment, and packin
         notes: "第二天节奏慢一点,只带登机箱",
       }),
     });
-    assert.equal(response.status, 201);
+    assert.equal(response.status, 202);
     const body = await response.json();
-    assert.ok(body.plan.itineraryId);
+    assert.equal(body.plan.itineraryId, null);
+    assert.equal(body.plan.generationStatus, "processing");
+
+    const queued = await (await request("/api/trip-plans")).json();
+    const queuedPlan = queued.plans.find((plan: any) => plan.id === body.plan.id);
+    assert.equal(queuedPlan.generationStatus, "processing");
+    assert.equal(queuedPlan.itineraryId, null);
+
+    releaseGeneration?.();
+    const completed = await waitForPlan(body.plan.id, "completed");
+    assert.ok(completed.itineraryId);
     assert.equal(received?.user.name, "Anna");
     assert.match(received?.user.style_prefs ?? "", /business/);
     assert.match(received?.plan.notes ?? "", /登机箱/);
 
     const homeTrips = await (await request("/api/trip-plans")).json();
-    assert.equal(homeTrips.plans[0].scenario, "travel");
-    assert.equal(homeTrips.plans[0].itineraryId, body.plan.itineraryId);
+    const homeTrip = homeTrips.plans.find((plan: any) => plan.id === body.plan.id);
+    assert.equal(homeTrip.scenario, "travel");
+    assert.equal(homeTrip.itineraryId, completed.itineraryId);
 
     const itinerary = await (
-      await request(`/api/itinerary/trips/${body.plan.itineraryId}`)
+      await request(`/api/itinerary/trips/${completed.itineraryId}`)
     ).json();
     assert.equal(itinerary.trip.days.length, 2);
     assert.match(itinerary.trip.days[0].weatherRisk, /湿滑/);
@@ -240,7 +274,85 @@ test("one agent run synchronizes trip, itinerary, outfits, equipment, and packin
       plan.categories.reduce((n: number, category: any) => n + category.items.length, 0);
     assert.ok(count(varied.plan) > count(lean.plan));
     assert.ok(varied.plan.essentials.some((item: any) => item.label === "折叠伞"));
+
+    const removed = await request(`/api/trip-plans/${body.plan.id}`, {
+      method: "DELETE",
+    });
+    assert.equal(removed.status, 200);
+    const afterDelete = await (await request("/api/trip-plans")).json();
+    assert.ok(!afterDelete.plans.some((plan: any) => plan.id === body.plan.id));
+    assert.equal(
+      (await request(`/api/itinerary/trips/${completed.itineraryId}`)).status,
+      404
+    );
   } finally {
+    blockGeneration = false;
+    releaseGeneration = null;
+    delete process.env.AI_API_KEY;
+  }
+});
+
+test("deleting a processing trip discards the later Agent response", async () => {
+  process.env.AI_API_KEY = "test-key-not-used";
+  blockGeneration = true;
+  try {
+    const response = await request("/api/trip-plans/generate", {
+      method: "POST",
+      body: JSON.stringify({
+        scenario: "travel",
+        placeName: "伦敦",
+        placeDetail: "英国",
+        lat: 51.5074,
+        lon: -0.1278,
+        startDate: "2026-11-01",
+        endDate: "2026-11-02",
+        notes: "步行与晚餐",
+      }),
+    });
+    const body = await response.json();
+    assert.equal(response.status, 202);
+    assert.equal(
+      (await request(`/api/trip-plans/${body.plan.id}`, { method: "DELETE" })).status,
+      200
+    );
+    releaseGeneration?.();
+    await new Promise((resolve) => setTimeout(resolve, 20));
+
+    const plans = await (await request("/api/trip-plans")).json();
+    assert.ok(!plans.plans.some((plan: any) => plan.id === body.plan.id));
+    const trips = await (await request("/api/itinerary/trips")).json();
+    assert.ok(!trips.trips.some((trip: any) => trip.sourcePlanId === body.plan.id));
+  } finally {
+    blockGeneration = false;
+    releaseGeneration = null;
+    delete process.env.AI_API_KEY;
+  }
+});
+
+test("background generation failures remain visible on the saved trip", async () => {
+  process.env.AI_API_KEY = "test-key-not-used";
+  generationFailure = new Error("provider unavailable");
+  try {
+    const response = await request("/api/trip-plans/generate", {
+      method: "POST",
+      body: JSON.stringify({
+        scenario: "travel",
+        placeName: "巴黎",
+        placeDetail: "法国",
+        lat: 48.8566,
+        lon: 2.3522,
+        startDate: "2026-10-01",
+        endDate: "2026-10-02",
+        notes: "博物馆与步行",
+      }),
+    });
+    assert.equal(response.status, 202);
+    const body = await response.json();
+    const failed = await waitForPlan(body.plan.id, "failed");
+    assert.equal(failed.itineraryId, null);
+    assert.equal(failed.generationError, "provider unavailable");
+  } finally {
+    generationFailure = null;
     delete process.env.AI_API_KEY;
   }
 });

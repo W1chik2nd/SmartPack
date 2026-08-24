@@ -2,7 +2,6 @@ import { type IncomingMessage, type ServerResponse } from "node:http";
 import { aiConfigured } from "./ai.ts";
 import type { ItineraryStore } from "./itinerary.ts";
 import type { PackingPlanStore } from "./packing-store.ts";
-import { buildGeneratedPackingPlan } from "./packing.ts";
 import type { TripPlanStore } from "./trip-plan.ts";
 import { parseTripInput, tripDayCount } from "./trip-input.ts";
 import type { GenerateTrip, TripAgentInput } from "./trip-agent.ts";
@@ -25,7 +24,7 @@ type Ctx = {
   userFromHeader: () => AgentUser | null;
 };
 
-/** Generate and persist one complete, linked SmartPack travel decision. */
+/** Queue and persist one complete, linked SmartPack travel decision. */
 export async function handleTripGenerationRoutes(ctx: Ctx): Promise<boolean> {
   const { req, res, url, json } = ctx;
   if (req.method !== "POST" || url.pathname !== "/api/trip-plans/generate") {
@@ -50,40 +49,44 @@ export async function handleTripGenerationRoutes(ctx: Ctx): Promise<boolean> {
     return true;
   }
 
-  let generated;
-  try {
-    generated = await ctx.generateTrip({
-      user,
-      plan: parsed.plan,
-      wardrobe: ctx.wardrobe.list(user.id),
-    });
-  } catch (error: any) {
-    json(res, 502, {
-      error: error?.message ?? "旅行 Agent 生成失败,请稍后重试。",
-    });
-    return true;
-  }
-
   const plan = ctx.tripPlans.save(user.id, parsed.plan);
-  const itinerary = ctx.itinerary.saveGenerated(
-    user.id,
-    plan.id,
-    plan.scenario,
-    generated
-  );
-  ctx.tripPlans.attachItinerary(user.id, plan.id, itinerary.id);
-  plan.itineraryId = itinerary.id;
-  const packing = ctx.packingPlans.save(
-    user.id,
-    plan.id,
-    tripDayCount(plan.startDate, plan.endDate),
-    generated.packing
-  );
+  ctx.tripPlans.markGenerating(user.id, plan.id);
+  plan.generationStatus = "processing";
+  const wardrobe = ctx.wardrobe.list(user.id);
 
-  json(res, 201, {
-    plan,
-    itinerary,
-    packing: buildGeneratedPackingPlan(packing.packing, 50, packing.tripDays),
+  // Return before the model call starts. The saved plan and its status remain
+  // visible across page changes; clients can poll the normal trip list.
+  json(res, 202, { plan });
+  setImmediate(() => {
+    void ctx
+      .generateTrip({ user, plan: parsed.plan, wardrobe })
+      .then((generated) => {
+        // The user may delete a processing trip while the model is running.
+        // In that case discard the answer instead of recreating orphan data.
+        if (!ctx.tripPlans.get(user.id, plan.id)) return;
+        const itinerary = ctx.itinerary.saveGenerated(
+          user.id,
+          plan.id,
+          plan.scenario,
+          generated
+        );
+        ctx.packingPlans.save(
+          user.id,
+          plan.id,
+          tripDayCount(plan.startDate, plan.endDate),
+          generated.packing
+        );
+        ctx.tripPlans.attachItinerary(user.id, plan.id, itinerary.id);
+      })
+      .catch((error: any) => {
+        const message = String(
+          error?.message ?? "旅行 Agent 生成失败,请稍后重试。"
+        )
+          .replace(/\s+/g, " ")
+          .trim()
+          .slice(0, 500);
+        ctx.tripPlans.markFailed(user.id, plan.id, message);
+      });
   });
   return true;
 }

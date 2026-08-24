@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
   searchPlaces,
   generateTripPlan,
@@ -9,7 +9,7 @@ import MapView from "../components/MapView";
 import DateRangePicker, { type DateRange } from "../components/DateRangePicker";
 import ChatWidget from "../components/ChatWidget";
 import { useLang } from "../i18n/useLang";
-import { SCENARIO_LABELS } from "../i18n/strings";
+import { SCENARIO_LABELS, tripRedirectMessage } from "../i18n/strings";
 
 // 行程设置页(线框图 2):左边地图 + 下方搜索框,右边日历 + 下方日期条。
 // 从场景卡片点进来,带着 scenario id。
@@ -56,12 +56,25 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   const [agenda, setAgenda] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [redirectIn, setRedirectIn] = useState<number | null>(null);
 
   // 没选地点时地图停在一个能看出是世界地图的位置,而不是空白海面。
   const center = place
     ? { lat: place.lat, lon: place.lon }
     : { lat: 30, lon: 20 };
+
+  useEffect(() => {
+    if (redirectIn === null) return;
+    if (redirectIn === 0) {
+      onSaved();
+      return;
+    }
+    const timer = window.setTimeout(
+      () => setRedirectIn((current) => (current === null ? null : current - 1)),
+      1_000
+    );
+    return () => window.clearTimeout(timer);
+  }, [redirectIn, onSaved]);
 
   async function handleSearch(e: FormEvent) {
     e.preventDefault();
@@ -76,7 +89,6 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
       // 不用再点一下列表。列表仍然留着,同名地点(如多个"北京")可以换选。
       if (places.length > 0) {
         setPlace(places[0]);
-        setSaved(false);
       }
     } catch (err: any) {
       // 透出后端的真实原因(未登录 / 上游 502 / 校验),而不是一律"搜索失败",
@@ -92,7 +104,6 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   function choosePlace(p: Place) {
     setPlace(p);
     setResults(null);
-    setSaved(false);
   }
 
   async function handleSave() {
@@ -113,9 +124,9 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
         endDate: range.end,
         notes: agenda,
       });
-      setSaved(true);
-      // 落库成功后回主页,主页会拉取并显示这条新行程。
-      onSaved();
+      // The server has durably queued the trip. Keep this confirmation visible
+      // briefly, then leave while the Agent continues in the background.
+      setRedirectIn(3);
       return;
     } catch (err: any) {
       setError(err?.message ?? t("saveTripFailed"));
@@ -146,12 +157,6 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
           {error}
         </div>
       )}
-      {saved && (
-        <div className="success-banner" role="status">
-          {t("tripSaved")}
-        </div>
-      )}
-
       <div className="tripsetup-grid">
         {/* 左列:地图 + 搜索框 */}
         <section className="tripsetup-col">
@@ -207,7 +212,6 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
               value={range}
               onChange={(r) => {
                 setRange(r);
-                setSaved(false);
               }}
             />
           </div>
@@ -254,17 +258,35 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
         />
       </section>
 
+      {redirectIn !== null && (
+        <div className="tripsetup-queued" role="status" aria-live="polite">
+          <div>
+            <strong>{t("tripQueuedTitle")}</strong>
+            <p>{tripRedirectMessage(lang, redirectIn)}</p>
+          </div>
+          <span aria-hidden="true">{String(redirectIn).padStart(2, "0")}</span>
+        </div>
+      )}
+
       <div className="tripsetup-actions">
         <button
           type="button"
           className="tripsetup-save"
           onClick={handleSave}
-          disabled={saving}
+          disabled={saving || redirectIn !== null}
         >
-          {saving ? t("generatingTrip") : t("generateTrip")}
+          {redirectIn !== null
+            ? t("tripQueuedButton")
+            : saving
+              ? t("generatingTrip")
+              : t("generateTrip")}
         </button>
         <p className="tripsetup-agent-note" aria-live="polite">
-          {saving ? t("tripAgentWorking") : t("tripAgentNote")}
+          {redirectIn !== null
+            ? t("tripAgentBackground")
+            : saving
+              ? t("tripAgentWorking")
+              : t("tripAgentNote")}
         </p>
       </div>
     </div>

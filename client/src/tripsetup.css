@@ -54,6 +54,44 @@
   border-radius: var(--radius);
 }
 
+.tripsetup-queued {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  color: var(--black);
+  background: var(--yellow);
+  border: var(--border);
+  box-shadow: 6px 6px 0 var(--black);
+}
+
+.tripsetup-queued strong {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 20px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+}
+
+.tripsetup-queued p {
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+}
+
+.tripsetup-queued > span {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  font-size: 24px;
+  font-weight: var(--weight-heavy);
+  color: var(--white);
+  background: var(--blue);
+  border: var(--border);
+}
+
 /* 两列等宽;窄屏堆叠成一列。 */
 .tripsetup-grid {
   display: grid;
