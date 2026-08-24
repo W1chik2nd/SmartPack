@@ -80,6 +80,7 @@ test("行程接口都要登录态", async () => {
     await req("/api/trip-plans", {}, false),
     await save(KYOTO, false),
     await req("/api/trip-plans/missing", {}, false),
+    await req("/api/trip-plans/missing/weather", {}, false),
     await req("/api/trip-plans/missing", { method: "DELETE" }, false),
   ]) {
     assert.equal(res.status, 401);
@@ -119,6 +120,62 @@ test("保存后能取回,字段原样往返", async () => {
     list.plans.some((p: { id: string }) => p.id === plan.id),
     "列表里应当有刚保存的行程"
   );
+});
+
+test("行程天气按保存日期返回含首尾天数和逐日预报", async (t) => {
+  const nativeFetch = globalThis.fetch;
+  t.mock.method(
+    globalThis,
+    "fetch",
+    async (input: string | URL | Request, init?: RequestInit) => {
+      const target = input instanceof Request ? input.url : String(input);
+      if (!target.startsWith("https://api.open-meteo.com/")) {
+        return nativeFetch(input, init);
+      }
+      return new Response(
+        JSON.stringify({
+          daily: {
+            time: ["2026-08-26", "2026-08-27", "2026-08-28"],
+            weather_code: [3, 61, 1],
+            temperature_2m_max: [31, 29, 32],
+            temperature_2m_min: [25, 24, 26],
+            precipitation_probability_max: [20, 75, 10],
+            uv_index_max: [6.2, 3.4, 7.1],
+            wind_speed_10m_max: [12, 18, 10],
+          },
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } }
+      );
+    }
+  );
+
+  const created = await (
+    await save({
+      ...KYOTO,
+      placeName: "上海市",
+      placeDetail: "中国 上海",
+      lat: 31.23,
+      lon: 121.47,
+      startDate: "2026-08-26",
+      endDate: "2026-08-28",
+    })
+  ).json();
+  const response = await req(`/api/trip-plans/${created.plan.id}/weather`);
+  assert.equal(response.status, 200);
+  const result = await response.json();
+  assert.equal(result.trip.destination, "上海市");
+  assert.equal(result.trip.dayCount, 3);
+  assert.equal(result.forecast.available, true);
+  assert.equal(result.forecast.days.length, 3);
+  assert.deepEqual(result.forecast.days[1], {
+    date: "2026-08-27",
+    condition: "Rain",
+    minTempC: 24,
+    maxTempC: 29,
+    precipitationProbability: 75,
+    uvIndex: 3.4,
+    maxWindKph: 18,
+  });
 });
 
 test("场景 id 必须是后端认识的那几个", async () => {
