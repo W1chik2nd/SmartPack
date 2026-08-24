@@ -164,6 +164,23 @@ test("third-party Responses gateways omit OpenAI-only safety identifier", () => 
   assert.equal(official.safety_identifier, "user-123");
 });
 
+test("non-reasoning models omit GPT-5 controls and use their output limit", () => {
+  const body = structuredResponseRequestBody(
+    {
+      instructions: "Plan a trip",
+      input: { destination: "Dubai" },
+      schema: { type: "object" },
+      safetyIdentifier: "user-123",
+    },
+    "https://api.openai-next.com/v1",
+    "gpt-4o-mini"
+  );
+
+  assert.equal("reasoning" in body, false);
+  assert.equal("verbosity" in (body.text as Record<string, unknown>), false);
+  assert.equal(body.max_output_tokens, 16_000);
+});
+
 test("trip agent reuses the chatbot model unless explicitly overridden", () => {
   assert.equal(tripAgentModel({ AI_MODEL: "shared-model" }), "shared-model");
   assert.equal(
