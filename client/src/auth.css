@@ -244,6 +244,20 @@
   }
 }
 
+.choice-field-wrap { position: relative; }
+
+.season-help-button {
+  margin: 0 0 var(--space-1);
+  padding: 8px 12px;
+  font: var(--weight-bold) 14px var(--font);
+  color: var(--blue);
+  background: var(--yellow);
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+
+.season-help-button:hover { color: var(--white); background: var(--red); }
+
 /* Questionnaire style picker: radio choices as flat selectable blocks */
 .style-options {
   border: none;
