@@ -19,7 +19,10 @@ export default function Landing({ onEnter }: Props) {
 
       {/* 品牌标题 */}
       <div className="landing-hero">
-        <h1 className="landing-title">SmartPack</h1>
+        <h1 className="landing-title">
+          <span className="landing-logo" aria-hidden="true" />
+          SmartPack
+        </h1>
         <p className="landing-tagline">{t("landingTagline")}</p>
       </div>
 
