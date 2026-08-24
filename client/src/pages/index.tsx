@@ -225,6 +225,7 @@ export default function Home({
             </div>
           </div>
 
+          {selectedTrip ? (
           <div className="today-body">
             <div className="today-left">
               <button className="today-weather" onClick={TODO_LINKS.weather}>
@@ -360,6 +361,17 @@ export default function Home({
               )}
             </div>
           </div>
+          ) : (
+            <button
+              type="button"
+              className="today-body today-empty-state"
+              onClick={onOpenTrips}
+              aria-label={t("tripPlanner")}
+            >
+              <span className="trip-empty" aria-hidden="true">+</span>
+              <span className="visually-hidden">{t("noTripYet")}</span>
+            </button>
+          )}
           </section>
         </div>
 

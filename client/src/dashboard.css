@@ -191,6 +191,20 @@
   min-width: 0;
 }
 
+.today-empty-state {
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+}
+
+.today-empty-state .trip-empty {
+  margin: 0;
+  font-size: clamp(58px, 8vw, 96px);
+  line-height: 1;
+  font-weight: var(--weight-regular);
+}
+
 /* ---------- nav tiles (right) ---------- */
 
 /* Three equal tiles filling exactly the today-card height (stretch grid) */
