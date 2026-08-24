@@ -110,12 +110,6 @@ function Shell() {
           {langToggle}
           {user ? (
             <>
-              <button
-                className="nav-link"
-                onClick={() => setRoute(route === "packing" ? "home" : "packing")}
-              >
-                {route === "packing" ? "Home" : "Packing List"}
-              </button>
               <span className="nav-user">{user.name}</span>
               <button className="nav-link" onClick={handleSignOut}>
                 {t("navSignOut")}
