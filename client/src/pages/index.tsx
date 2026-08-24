@@ -15,6 +15,7 @@ import { dashboardTrips, tripAfterDeletionId } from "../lib/trip-dashboard";
 type Props = {
   user: User;
   onOpenTrips: () => void;
+  onRetryTrip: (trip: TripPlan) => void;
   onOpenWardrobe: () => void;
   onOpenItinerary: (itineraryId: string) => void;
   onOpenPacking: (tripPlanId: string) => void;
@@ -32,6 +33,7 @@ const TODO_LINKS = {
 export default function Home({
   user,
   onOpenTrips,
+  onRetryTrip,
   onOpenWardrobe,
   onOpenItinerary,
   onOpenPacking,
@@ -154,6 +156,19 @@ export default function Home({
     setSelectedTripId(id);
   }
 
+  function openSelectedTrip() {
+    if (!selectedTrip) return;
+    if (selectedTrip.generationStatus === "failed") {
+      onRetryTrip(selectedTrip);
+      return;
+    }
+    if (selectedTrip.itineraryId) {
+      onOpenItinerary(selectedTrip.itineraryId);
+      return;
+    }
+    onOpenTrips();
+  }
+
   const locale = lang === "zh" ? "zh-CN" : "en-GB";
   const dateLong = now.toLocaleDateString(locale, {
     weekday: "long",
@@ -271,11 +286,7 @@ export default function Home({
                     <button
                       type="button"
                       className="trip-open"
-                      onClick={() =>
-                        selectedTrip.itineraryId
-                          ? onOpenItinerary(selectedTrip.itineraryId)
-                          : onOpenTrips()
-                      }
+                      onClick={openSelectedTrip}
                     >
                       <h2>{t("itinerary")}</h2>
                       <span className="trip-summary">

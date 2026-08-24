@@ -40,10 +40,30 @@ export async function handleTripGenerationRoutes(ctx: Ctx): Promise<boolean> {
     json(res, 401, { error: "Not signed in." });
     return true;
   }
-  const parsed = parseTripInput(await ctx.readBody(req), ctx.scenarioIds);
+  const body = await ctx.readBody(req);
+  const parsed = parseTripInput(body, ctx.scenarioIds);
   if (!parsed.ok) {
     json(res, 400, { error: parsed.error });
     return true;
+  }
+  const replaceFailedPlanId = body?.replaceFailedPlanId;
+  if (
+    replaceFailedPlanId !== undefined &&
+    (typeof replaceFailedPlanId !== "string" || !replaceFailedPlanId.trim())
+  ) {
+    json(res, 400, { error: "replaceFailedPlanId must be a trip id." });
+    return true;
+  }
+  if (typeof replaceFailedPlanId === "string") {
+    const failedPlan = ctx.tripPlans.get(user.id, replaceFailedPlanId);
+    if (!failedPlan) {
+      json(res, 404, { error: "Failed trip not found." });
+      return true;
+    }
+    if (failedPlan.generationStatus !== "failed") {
+      json(res, 409, { error: "Only a failed trip can be replaced." });
+      return true;
+    }
   }
   if (!aiConfigured()) {
     json(res, 503, {
@@ -56,12 +76,17 @@ export async function handleTripGenerationRoutes(ctx: Ctx): Promise<boolean> {
   const plan = ctx.tripPlans.save(user.id, parsed.plan);
   ctx.tripPlans.markGenerating(user.id, plan.id);
   plan.generationStatus = "processing";
+  if (typeof replaceFailedPlanId === "string") {
+    ctx.tripPlans.remove(user.id, replaceFailedPlanId);
+  }
   const wardrobe = ctx.wardrobe.list(user.id);
 
   // Return before the model call starts. The saved plan and its status remain
   // visible across page changes; clients can poll the normal trip list.
   json(res, 202, {
     plan,
+    replacedPlanId:
+      typeof replaceFailedPlanId === "string" ? replaceFailedPlanId : null,
     estimate: estimateTripGeneration(
       tripDayCount(plan.startDate, plan.endDate)
     ),
