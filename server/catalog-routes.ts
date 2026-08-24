@@ -18,6 +18,12 @@ const SCENARIOS = [
   { id: "formal", label: "正式场合", image: "/scenarios/formal.jpg" },
 ] as const;
 
+// 合法场景 id 集合。行程保存(trip-plan-routes)要据此校验前端传来的 scenario,
+// 所以从这里导出,让场景目录仍然只有一处定义(AGENTS.md §3)。
+export const SCENARIO_IDS: ReadonlySet<string> = new Set(
+  SCENARIOS.map((s) => s.id)
+);
+
 type Ctx = {
   req: IncomingMessage;
   res: ServerResponse;

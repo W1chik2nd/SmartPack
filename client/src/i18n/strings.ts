@@ -95,6 +95,9 @@ export const STRINGS = {
   checklist: { en: "Checklist", zh: "物品清单" },
   todaysOutfit: { en: "Today's Outfit", zh: "今日穿搭" },
   itinerary: { en: "Itinerary", zh: "行程" },
+  noTripYet: { en: "No trips planned yet", zh: "还没有行程" },
+  tripNights: { en: "nights", zh: "晚" },
+  tripSameDay: { en: "Day trip", zh: "当天往返" },
   digitalWardrobe: { en: "Digital Wardrobe", zh: "电子衣橱" },
   tripPlanner: { en: "Trip Planner", zh: "行程计划" },
   myProfile: { en: "My Profile", zh: "个人档案" },
@@ -144,6 +147,31 @@ export const STRINGS = {
   nextScenario: { en: "Next scenario", zh: "下一个场景" },
   pickScenario: { en: "Pick a scenario", zh: "选择一个场景" },
   backToHome: { en: "Back to Home", zh: "返回主页" },
+
+  // trip setup (map + calendar)
+  tripSetupTitle: { en: "Where and when?", zh: "去哪里,什么时候?" },
+  backToScenarios: { en: "Back to scenarios", zh: "返回场景选择" },
+  searchPlace: { en: "Search a destination…", zh: "搜索目的地…" },
+  searchAction: { en: "Search", zh: "搜索" },
+  searching: { en: "Searching…", zh: "搜索中…" },
+  noPlaces: { en: "No places found.", zh: "没有找到地点。" },
+  placeSearchFailed: { en: "Place search failed.", zh: "地点搜索失败。" },
+  pickDates: { en: "Pick your dates", zh: "选择日期" },
+  prevMonth: { en: "Previous month", zh: "上个月" },
+  nextMonth: { en: "Next month", zh: "下个月" },
+  clearDates: { en: "Clear dates", zh: "清除日期" },
+  noDates: { en: "No dates picked", zh: "未选择日期" },
+  mapLabel: { en: "Destination map", zh: "目的地地图" },
+  saveTrip: { en: "Save trip", zh: "保存行程" },
+  savingTrip: { en: "Saving…", zh: "保存中…" },
+  tripSaved: { en: "Trip saved.", zh: "行程已保存。" },
+  needPlaceAndDates: {
+    en: "Pick a destination and your dates first.",
+    zh: "请先选择目的地和日期。",
+  },
+  saveTripFailed: { en: "Could not save the trip.", zh: "行程保存失败。" },
+  nights: { en: "nights", zh: "晚" },
+  sameDay: { en: "Day trip", zh: "当天往返" },
 
   // chat
   chatTitle: { en: "Assistant", zh: "助手" },
@@ -254,6 +282,7 @@ export const STRINGS = {
   photoNone: { en: "No photo", zh: "暂无配图" },
   photoSource: { en: "Photos", zh: "图片来源" },
   continueToItinerary: { en: "Plan this trip", zh: "规划这趟行程" },
+  continueToSetup: { en: "Set destination & dates", zh: "选目的地和日期" },
 } as const;
 
 export type StringKey = keyof typeof STRINGS;

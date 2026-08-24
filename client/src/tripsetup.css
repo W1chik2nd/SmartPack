@@ -1,0 +1,234 @@
+/* 行程设置页(地图 + 日历)。颜色和间距一律取 theme.css 的 token(AGENTS.md §8)。
+   线框图布局:上下两块并排的方形面板,各自下方一条同宽的横条。 */
+
+.tripsetup {
+  min-height: 100vh;
+  /* 顶部 88px 避开固定导航栏(56px)+ 余量,否则返回按钮被压在栏下。
+     与 .scenarios 页保持一致。 */
+  padding: 88px var(--space-4) var(--space-4);
+  background: var(--bg);
+  font-family: var(--font);
+  color: var(--text);
+}
+
+.tripsetup-head {
+  margin-bottom: var(--space-3);
+}
+
+.tripsetup-back {
+  margin-bottom: var(--space-2);
+  padding: 8px var(--space-2);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--white);
+  background: var(--blue);
+  border: var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.tripsetup-eyebrow {
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.tripsetup-title {
+  margin-top: 4px;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: var(--weight-heavy);
+  line-height: 1.1;
+}
+
+.success-banner {
+  margin-bottom: var(--space-2);
+  padding: 12px var(--space-2);
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--black);
+  background: var(--yellow);
+  border: var(--border);
+  border-radius: var(--radius);
+}
+
+/* 两列等宽;窄屏堆叠成一列。 */
+.tripsetup-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .tripsetup-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.tripsetup-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* 线框图里的方块:正方形、粗边、硬阴影,不用渐变或柔和投影。 */
+.tripsetup-panel {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: 8px 8px 0 var(--black);
+  overflow: hidden;
+}
+
+/* 面板下方那条横条:搜索框和日期条共用。 */
+.tripsetup-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 10px 12px;
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: 4px 4px 0 var(--black);
+}
+
+.tripsetup-bar input[type="search"] {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 8px;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--text);
+  background: transparent;
+  border: none;
+  outline-offset: 2px;
+}
+
+.tripsetup-bar button {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: var(--weight-heavy);
+  color: var(--white);
+  background: var(--blue);
+  border: var(--border-w) solid var(--black);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.tripsetup-bar button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.tripsetup-dates {
+  justify-content: flex-start;
+}
+
+.tripsetup-dates p {
+  flex: 1;
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+}
+
+.tripsetup-clear {
+  background: var(--red) !important;
+}
+
+.tripsetup-nights {
+  margin-left: var(--space-1);
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  background: var(--yellow);
+  border: 2px solid var(--black);
+}
+
+/* 搜索结果列表 */
+.tripsetup-results {
+  list-style: none;
+  border: var(--border);
+  background: var(--surface);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.tripsetup-results li + li {
+  border-top: 2px solid var(--black);
+}
+
+.tripsetup-results button {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  padding: 10px 12px;
+  font-family: inherit;
+  text-align: left;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.tripsetup-results button:hover,
+.tripsetup-results button:focus-visible {
+  background: var(--yellow);
+}
+
+/* 地图当前定位的那条:蓝色左边条标出,和 hover 的黄色区分开。 */
+.tripsetup-results button.is-selected {
+  border-left: 6px solid var(--blue);
+  padding-left: 6px;
+}
+
+.tripsetup-results strong {
+  font-size: 15px;
+  font-weight: var(--weight-heavy);
+}
+
+.tripsetup-results span {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.tripsetup-empty {
+  padding: 10px 12px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.tripsetup-actions {
+  margin-top: var(--space-3);
+}
+
+.tripsetup-save {
+  padding: 14px var(--space-4);
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--white);
+  background: var(--red);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: 6px 6px 0 var(--black);
+  cursor: pointer;
+}
+
+/* 保存中:仍是红色按钮,只减淡并去掉硬阴影,不变灰。 */
+.tripsetup-save:disabled {
+  cursor: progress;
+  opacity: 0.6;
+  box-shadow: none;
+}
