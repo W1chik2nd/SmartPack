@@ -1,6 +1,6 @@
 // Structured actions for the SmartPack assistant. Model output is untrusted:
 // only this allow-list can reach database-backed operations.
-import { isIsoDate, tripDayCount, MAX_TRIP_DAYS } from "./trip-plan-routes.ts";
+import { isIsoDate, tripDayCount, MAX_TRIP_DAYS } from "./trip-input.ts";
 import type { TripPlanStore } from "./trip-plan.ts";
 import type { WardrobeStore, NewItem, ItemPatch } from "./wardrobe.ts";
 import { validateProfile, type ProfileValues } from "./profile.ts";

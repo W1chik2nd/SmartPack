@@ -7,7 +7,7 @@ import {
   type OutfitPlan,
   type Weather,
 } from "../api";
-import { SCENARIO_LABELS } from "../i18n/strings";
+import { SCENARIO_LABELS } from "../i18n/dynamic-strings";
 import { useLang } from "../i18n/useLang";
 import OutfitPieceVisual from "../components/OutfitPieceVisual";
 

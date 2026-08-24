@@ -12,59 +12,20 @@
 //   US 6.3 — a slider trading outfit variety against luggage minimization
 //   US 7.1 — a tickable checklist so nothing gets left behind
 //   US 1.3 — surface how often each core piece is used
+import type {
+  EssentialItem,
+  PackingCategory,
+  PackingItem,
+  PackingPlan,
+} from "../shared/packing-types.ts";
 
-/** One line item on the checklist. `id` is stable so the client can key on it. */
-export type PackingItem = {
-  id: string;
-  label: string;
-  /** English label. The plan ships both languages; the client picks by lang. */
-  labelEn: string;
-  /** How many trip scenarios this piece covers — the reuse count (US 6.2). */
-  reuse: number;
-  quantity?: number;
-  daysUsed?: number[];
-  wardrobeItemId?: string;
-  /**
-   * 这一行是不是「衣橱缺口」——该穿的衣服但用户没有。由服务端判定,
-   * 客户端只负责显示(AGENTS.md §3)。装备类不算缺口,见 GEAR_CATEGORIES。
-   */
-  wardrobeGap?: boolean;
-  priority?: "core" | "support" | "optional";
-};
-
-export type PackingCategory = {
-  id: string;
-  title: string;
-  titleEn: string;
-  items: PackingItem[];
-};
-
-/** A non-clothing must-bring (US 7.1–7.3). */
-export type EssentialItem = {
-  id: string;
-  label: string;
-  labelEn: string;
-};
-
-/** A most-reused hero piece surfaced as a card (sketch: 复用次数 / 核心单品). */
-export type CorePiece = {
-  id: string;
-  label: string;
-  labelEn: string;
-  reuse: number;
-};
-
-export type PackingPlan = {
-  /** 0 = pack as light as possible · 100 = maximum outfit variety (US 6.3). */
-  balance: number;
-  /** Trip length the plan is sized for. TODO: derive from a real itinerary. */
-  tripDays: number;
-  summary: string;
-  summaryEn: string;
-  categories: PackingCategory[];
-  essentials: EssentialItem[];
-  corePieces: CorePiece[];
-};
+export type {
+  CorePiece,
+  EssentialItem,
+  PackingCategory,
+  PackingItem,
+  PackingPlan,
+} from "../shared/packing-types.ts";
 
 export type StoredGeneratedPacking = {
   summary: string;

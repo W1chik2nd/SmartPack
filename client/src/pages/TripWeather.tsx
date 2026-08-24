@@ -5,7 +5,7 @@ import {
   type TripWeather as TripWeatherData,
 } from "../api";
 import { useLang } from "../i18n/useLang";
-import { WEATHER_CONDITION_LABELS } from "../i18n/strings";
+import { WEATHER_CONDITION_LABELS } from "../i18n/dynamic-strings";
 
 type Props = {
   tripPlanId: string;

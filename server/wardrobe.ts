@@ -10,24 +10,9 @@ import { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
 import { writeFileSync, unlinkSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
+import type { WardrobeItem } from "../shared/wardrobe-types.ts";
 
-export type WardrobeItem = {
-  id: string;
-  title: string; // 大标题,如“黄色宽松工装裤”
-  category: string;
-  /** 具体款式,如“工装裤”“飞行夹克”。 */
-  subtype: string;
-  count: number;
-  colors: string[];
-  fit: string;
-  material: string;
-  seasons: string[];
-  styleTags: string[];
-  details: string;
-  /** 有照片时为 true;图片本体走 /api/wardrobe/photo/<id> 取。 */
-  hasPhoto: boolean;
-  createdAt: string;
-};
+export type { WardrobeItem } from "../shared/wardrobe-types.ts";
 
 /** 新增单品时的入参(照片是可选的 data URL)。 */
 export type NewItem = {
@@ -240,4 +225,3 @@ export function createWardrobeStore(
     },
   };
 }
-

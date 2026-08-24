@@ -16,3 +16,11 @@ export function addIsoDays(date: string, days: number): string {
   value.setUTCDate(value.getUTCDate() + days);
   return value.toISOString().slice(0, 10);
 }
+
+/** 返回包含起止日的 ISO 日期序列。 */
+export function isoDateRange(start: string, end: string): string[] {
+  return Array.from(
+    { length: tripDaysInclusive(start, end) },
+    (_, index) => addIsoDays(start, index)
+  );
+}

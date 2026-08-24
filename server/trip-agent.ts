@@ -5,6 +5,9 @@ import type { WardrobeItem } from "./wardrobe.ts";
 import type { NewTripPlan } from "./trip-plan.ts";
 import { TRIP_AGENT_PROMPT, tripPlanSchema } from "./trip-agent-prompt.ts";
 import type { GeneratedTripPlan } from "./trip-agent-types.ts";
+import { isoDateRange } from "../shared/trip-constraints.ts";
+
+export { isoDateRange as tripDates } from "../shared/trip-constraints.ts";
 
 export type TripAgentInput = {
   user: ProfileForPrompt & { id: string };
@@ -71,18 +74,6 @@ function repairDerivableText(raw: GeneratedTripPlan): void {
       );
     }
   }
-}
-
-/** Inclusive ISO date sequence; the route already validated both endpoints. */
-export function tripDates(start: string, end: string): string[] {
-  const result: string[] = [];
-  const cursor = new Date(`${start}T00:00:00Z`);
-  const last = new Date(`${end}T00:00:00Z`).getTime();
-  while (cursor.getTime() <= last) {
-    result.push(cursor.toISOString().slice(0, 10));
-    cursor.setUTCDate(cursor.getUTCDate() + 1);
-  }
-  return result;
 }
 
 /**
@@ -154,7 +145,7 @@ export function normalizeGeneratedTrip(
 }
 
 export const generateTrip: GenerateTrip = async ({ user, plan, wardrobe }) => {
-  const dates = tripDates(plan.startDate, plan.endDate);
+  const dates = isoDateRange(plan.startDate, plan.endDate);
   const forecast = await destinationForecast(
     plan.lat,
     plan.lon,
