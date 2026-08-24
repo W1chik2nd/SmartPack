@@ -97,14 +97,16 @@ body {
   font-family: inherit;
 }
 
-/* Brand mark: the three Bauhaus primaries as a functional logo, not imagery */
+/* Brand mark: /logo.svg。用 mask 而不是 <img>,颜色才能继续走 --text 令牌 */
 .nav-brand::before {
   content: "";
-  width: 14px;
-  height: 14px;
-  background: var(--red);
-  box-shadow: 18px 0 0 var(--yellow), 36px 0 0 var(--blue);
-  margin-right: 46px;
+  width: 34px;
+  height: 30px;
+  flex: 0 0 34px;
+  background: var(--text);
+  -webkit-mask: url("/logo.svg") no-repeat center / contain;
+  mask: url("/logo.svg") no-repeat center / contain;
+  margin-right: 12px;
 }
 
 .nav-actions {
@@ -204,11 +206,25 @@ body {
 }
 
 .landing-title {
+  display: flex;
+  align-items: center;
+  gap: 0.24em;
   font-size: 56px;
   font-weight: var(--weight-heavy);
   letter-spacing: -0.02em;
   color: var(--blue);
   line-height: 1;
+}
+
+/* 标题前的品牌图形,和导航栏同一个 /logo.svg。
+   尺寸用 em,跟着标题字号缩放,移动端不用再写一条规则。 */
+.landing-logo {
+  flex: none;
+  width: 1.25em;
+  height: 1.1em;
+  background: currentColor;
+  -webkit-mask: url("/logo.svg") no-repeat center / contain;
+  mask: url("/logo.svg") no-repeat center / contain;
 }
 
 .landing-tagline {
@@ -277,8 +293,8 @@ body {
     padding: 0 var(--space-1);
   }
   .nav-brand {
-    width: 50px;
-    flex: 0 0 50px;
+    width: 34px;
+    flex: 0 0 34px;
     overflow: hidden;
     font-size: 0;
   }
