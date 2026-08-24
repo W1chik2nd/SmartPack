@@ -100,8 +100,6 @@ export const STRINGS = {
   myProfile: { en: "My Profile", zh: "个人档案" },
   profileTitle: { en: "Personal Profile", zh: "个人档案" },
   profileAvatar: { en: "Profile portrait", zh: "档案头像" },
-  profileMaleAvatar: { en: "Male profile portrait", zh: "男性头像" },
-  profileFemaleAvatar: { en: "Female profile portrait", zh: "女性头像" },
   profileSaved: { en: "Profile saved.", zh: "个人资料已保存。" },
   profileSaveFailed: { en: "Could not save profile.", zh: "个人资料保存失败。" },
   profileNickname: { en: "Nickname", zh: "昵称" },
