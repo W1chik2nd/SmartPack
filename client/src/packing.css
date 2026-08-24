@@ -104,14 +104,14 @@ html[lang="en"] .pk-slider-cap {
   width: 26px;
   height: 26px;
   margin-left: -10px; /* center the 26px block over the 6px track */
-  background: var(--red);
+  background: var(--yellow);
   border: 3px solid var(--black);
   border-radius: 0;
 }
 .pk-range::-moz-range-thumb {
   width: 26px;
   height: 26px;
-  background: var(--red);
+  background: var(--yellow);
   border: 3px solid var(--black);
   border-radius: 0;
 }
