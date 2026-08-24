@@ -21,11 +21,11 @@ WearRoute:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么�
 
 ## 2. 当前状态(动手前必看)
 
-- 项目处于早期阶段,大部分是设计文档。
-- **当前重心:先做一版 web app,在 Mac 上本地跑起来。iOS 暂时搁置。**
-- `ios/WearRoute/` 下的 SwiftUI 原型(今日主页、衣橱列表)+ 假数据是**纯展示层,没有后端**。这是早期原型,暂不维护,不要在上面继续加功能。
-- 还**没有** web 前端、没有后端。这是接下来要搭的。
-- 目录里的 Swift 只做过 `-typecheck` 校验,没在模拟器跑过。
+- web 端(`client/` + `server/`)已经跑起来了,是当前的主线。
+- `ios/` 下是原生 SwiftUI 客户端,覆盖 web 端的全部页面,**调同一套后端 API,不含业务逻辑**。
+  目录结构、和 web 的逐文件对应关系、手机适配清单都在 `ios/README.md`。
+- iOS 端已用真实 iOS SDK 编译通过(零警告),并在 iPhone 模拟器和真机上跑起来过。
+  这台机器使用 `/Applications/Xcode-beta.app`,命令行构建要带 `DEVELOPER_DIR`,见第 10 节。
 
 ---
 
@@ -33,7 +33,7 @@ WearRoute:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么�
 
 **薄客户端 + 厚后端。逻辑全部放后端,前端只做展示。**
 
-计划是 web 先行,之后用 SwiftUI 做原生 iOS。两端前端不能复用代码,能复用的只有后端。所以:
+web 和 iOS(SwiftUI)两端前端不能复用代码,能复用的只有后端。所以:
 
 - 推荐算法、天气对接、行李优化、业务规则(比如"客户会议必须正装")——**一律放后端 API**。
 - 前端(web 和 iOS)只负责调 API + 展示 + 收集用户输入。
@@ -80,11 +80,12 @@ WearRoute:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么�
 **Web app(当前阶段,已定):**
 - 前端:**React + TypeScript + Vite**
 - 后端:**Node + TypeScript**
-- 数据库:**SQLite** 起步(开发用,零配置),上线前再平滑迁移到 PostgreSQL
+- 数据库:本地开发使用 **SQLite**,生产环境使用 **PostgreSQL / Neon**
 - 前后端同为 TypeScript,类型尽量共享,减少上下文切换
 
-**iOS(已搁置):**
-- 原生 **SwiftUI**(原型目录为 `ios/WearRoute/`),当前阶段不动。
+**iOS(已定):**
+- 原生 **SwiftUI**,iOS 17+,代码在 `ios/SmartPack/`。零第三方依赖。
+- 设计令牌从 `client/src/theme.css` 镜像到 `Theme/Theme.swift`,两边改动要同步。
 
 **待定(要引入前先在对话里确认,不要擅自选型后大规模铺开):**
 - Node 侧的具体框架(Express / Fastify / NestJS 等)、ORM(如 Prisma)、前端组件库、LLM 供应商。
@@ -96,7 +97,7 @@ WearRoute:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么�
 ## 7. 代码规范
 
 - 跟随现有代码风格,不要引入新的格式化/命名习惯。
-- Swift:遵循已有文件的写法(`// MARK:` 分区、示例数据放 `SampleData`、颜色走 `Color(hex:)`)。
+- Swift:遵循已有文件的写法(`// MARK:` 分区、颜色只从 `Theme` 取、`Color(hex:)` 只在 `Theme.swift` 里用)。
 - 注释解释**为什么**,不解释**是什么**。
 - 面向开发者用词,代码要完整可用,不要留半成品当成品交付。
 - UI 要考虑无障碍(可访问性)。
@@ -123,7 +124,7 @@ WearRoute:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么�
 
 改完代码,交付前必须验证:
 
-- Swift 类型检查(当前没有 Xcode 工程,用命令行 typecheck),命令见第 10 节。
+- Swift:用 `xcodebuild` 编译一次,命令见第 10 节。要求零警告。
 - 新功能 / 修 bug 要配测试;没有测试框架就按该语言的标准选择建一个。
 - 跑不起来(缺依赖 / 环境限制)就如实说明,别假装通过。
 - 清理验证过程产生的临时文件。
@@ -132,22 +133,23 @@ WearRoute:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么�
 
 ## 10. 常用命令
 
-对 iOS Swift 文件做类型检查(macOS 上,绕开 Xcode license 提示):
+构建 iOS app。**Xcode 是 beta 且装在 `/Applications/Xcode-beta.app`**,命令行构建要显式给
+`DEVELOPER_DIR`(不需要 sudo):
 
 ```bash
-cd ios/WearRoute
-DEV="/Applications/Xcode.app/Contents/Developer"
-SDK="$DEV/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"
-PLUGDIR="$DEV/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins"
-/Library/Developer/CommandLineTools/usr/bin/swiftc -typecheck \
-  -target arm64-apple-ios17.0 -sdk "$SDK" \
-  -plugin-path "$PLUGDIR" \
-  -module-cache-path .modulecache \
-  *.swift
-rm -rf .modulecache   # 清理临时缓存
+DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer xcodebuild -project ios/SmartPack.xcodeproj -scheme SmartPack -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
-说明:必须用 CommandLineTools 的 `swiftc`(Xcode 那个会弹 license 提示);`-plugin-path` 是为了加载 SwiftUI 的宏(`@State`、`#Preview`)。
+装到模拟器上跑:
+
+```bash
+DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer xcrun simctl install "iPhone 17 Pro" <DerivedData>/Build/Products/Debug-iphonesimulator/SmartPack.app
+```
+
+设备名从 `xcrun simctl list devices available` 里挑。
+
+执行 `sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer` 之后,上面的
+`DEVELOPER_DIR` 前缀就可以省掉。
 
 ---
 

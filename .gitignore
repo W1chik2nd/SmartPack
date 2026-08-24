@@ -13,3 +13,8 @@ server/.env.*
 *.tsbuildinfo
 # npm run check:render 的临时打包产物(脚本跑完会自己删,异常中断才会留下)
 .render-check.bundle.mjs
+# Xcode 的用户级状态和构建产物:每个人各不相同,不该进仓库
+ios/**/xcuserdata/
+ios/**/*.xcworkspace/xcuserdata/
+ios/build/
+ios/**/.modulecache/

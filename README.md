@@ -59,12 +59,14 @@ The repository contains the WearRoute web app, its Node API, and local SQLite / 
 ```
 server/   Node + TypeScript API — SQLite locally, PostgreSQL on Neon
 client/   React + TypeScript + Vite front end
+ios/      Native SwiftUI client — iOS 17+, backed by the same API
 ```
 
 ### Requirements
 
 - Node.js 22.6+ (uses the built-in `node:sqlite` module and type stripping)
 - npm — the client and server are npm workspaces
+- Xcode 17+ for the optional native iOS client
 
 ### Run
 
@@ -76,6 +78,21 @@ npm run dev   # server + client together; open http://localhost:5177
 ```
 
 The API server creates `server/data/wearroute.db` automatically for local development.
+
+### Native iOS app
+
+The SwiftUI app lives in `ios/` and uses the same API as the web client. See
+[ios/README.md](ios/README.md) for its structure, web-to-iOS page mapping, backend setup, and device configuration.
+
+Build it for the local simulator with:
+
+```sh
+DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer xcodebuild \
+  -project ios/SmartPack.xcodeproj \
+  -scheme SmartPack \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' \
+  build
+```
 
 ### AI assistant (optional)
 
@@ -151,4 +168,4 @@ The migration is idempotent and defaults to `server/data/wearroute.db`. Set `SQL
 
 ## Status
 
-This project is in active development. The web app currently covers accounts, profiles, wardrobes, trip generation, itinerary views, outfit rendering, and packing lists.
+This project is in active development. The web and native iOS apps currently cover accounts, profiles, wardrobes, trip generation, itinerary views, outfit rendering, and packing lists.
