@@ -92,6 +92,7 @@ export const STRINGS = {
   todaysWeather: { en: "Today's Weather", zh: "今日天气" },
   weatherLoading: { en: "Loading…", zh: "加载中…" },
   weatherUnavailable: { en: "Unavailable", zh: "暂不可用" },
+  weatherNoDestination: { en: "Set a trip destination", zh: "请先设置行程目的地" },
   checklist: { en: "Checklist", zh: "物品清单" },
   todaysOutfit: { en: "Today's Outfit", zh: "今日穿搭" },
   itinerary: { en: "Itinerary", zh: "行程" },
