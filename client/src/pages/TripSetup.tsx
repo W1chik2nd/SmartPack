@@ -75,8 +75,10 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
         setPlace(places[0]);
         setSaved(false);
       }
-    } catch {
-      setError(t("placeSearchFailed"));
+    } catch (err: any) {
+      // 透出后端的真实原因(未登录 / 上游 502 / 校验),而不是一律"搜索失败",
+      // 否则排障时看不出卡在哪一环。
+      setError(err?.message ?? t("placeSearchFailed"));
       setResults(null);
     } finally {
       setSearching(false);
