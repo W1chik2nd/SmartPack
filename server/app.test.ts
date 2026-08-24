@@ -358,3 +358,63 @@ test("chat validates the message payload at the boundary", async () => {
     delete process.env.AI_API_KEY;
   }
 });
+
+test("itinerary endpoints require a session", async () => {
+  for (const path of [
+    "/api/itinerary/trips",
+    "/api/itinerary/trips/some-id",
+    "/api/itinerary/photo/some-stop",
+  ]) {
+    const { status } = await get(path);
+    assert.equal(status, 401);
+  }
+});
+
+test("itinerary returns a trip whose days and stops drive both panels", async () => {
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+
+  const { status, body } = await get("/api/itinerary/trips", token);
+  assert.equal(status, 200);
+  assert.ok(Array.isArray(body.trips) && body.trips.length > 0);
+  // 配图供应商永远有值:没配 key 时兜底 openverse。
+  assert.ok(
+    typeof body.photoProvider === "string" && body.photoProvider.length > 0
+  );
+
+  const trip = body.trips[0];
+  assert.ok(trip.departLabel.length > 0, "left panel shows 'x.xx 出发'");
+  assert.ok(trip.days.length > 0);
+  for (const day of trip.days) {
+    assert.equal(typeof day.dayNumber, "number");
+    assert.equal(typeof day.dateLabel, "string");
+    assert.ok(day.stops.length > 0, "right panel needs stops per day");
+  }
+
+  // 同一用户再取一次不该又造一份演示行程。
+  const again = await get("/api/itinerary/trips", token);
+  assert.equal(again.body.trips.length, body.trips.length);
+
+  const one = await get(`/api/itinerary/trips/${trip.id}`, token);
+  assert.equal(one.status, 200);
+  assert.equal(one.body.trip.id, trip.id);
+
+  const missing = await get("/api/itinerary/trips/not-a-trip", token);
+  assert.equal(missing.status, 404);
+});
+
+test("itinerary photo endpoint rejects unknown stops", async () => {
+  // 真实图库调用需要外部网络,不在单测范围;这里只测存在性/归属这道门。
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const { status } = await get(
+    "/api/itinerary/photo/not-a-stop",
+    login.body.token
+  );
+  assert.equal(status, 404);
+});

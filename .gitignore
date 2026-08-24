@@ -8,3 +8,5 @@ server/data/
 .env
 # tsc 增量构建产物:每次 build 都变,跟踪它只会制造无意义的合并冲突
 *.tsbuildinfo
+# npm run check:render 的临时打包产物(脚本跑完会自己删,异常中断才会留下)
+.render-check.bundle.mjs

@@ -8,6 +8,7 @@ type Props = {
   user: User;
   onOpenTrips: () => void;
   onOpenWardrobe: () => void;
+  onOpenItinerary: () => void;
   onOpenPacking: () => void;
 };
 
@@ -17,7 +18,6 @@ const TODO_LINKS = {
   weather: () => {},
   dates: () => {},
   outfit: () => {},
-  itinerary: () => {},
   profile: () => {},
 };
 
@@ -25,6 +25,7 @@ export default function Home({
   user,
   onOpenTrips,
   onOpenWardrobe,
+  onOpenItinerary,
   onOpenPacking,
 }: Props) {
   const { lang, t } = useLang();
@@ -143,7 +144,7 @@ export default function Home({
               <span className="card-arrow" aria-hidden="true">›</span>
             </button>
 
-            <button className="today-itinerary" onClick={TODO_LINKS.itinerary}>
+            <button className="today-itinerary" onClick={onOpenItinerary}>
               <h2>{t("itinerary")}</h2>
               <span className="itinerary-timeline" aria-hidden="true" />
               <span className="card-arrow" aria-hidden="true">›</span>
