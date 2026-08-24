@@ -75,7 +75,7 @@ test("Terra strict schema omits unsupported minLength", () => {
   assert.match(schema, /"minItems"/);
 });
 
-test("backend rejects blank generated text but allows wardrobe gaps", () => {
+test("backend identifies critical blank text but allows wardrobe gaps", () => {
   const valid = generatedPlan();
   const normalized = normalizeGeneratedTrip(valid, ["2026-09-01"], []);
   assert.equal(normalized.packing.categories[0].items[0].wardrobeItemId, "");
@@ -84,8 +84,25 @@ test("backend rejects blank generated text but allows wardrobe gaps", () => {
   blank.days[0].city = "  ";
   assert.throws(
     () => normalizeGeneratedTrip(blank, ["2026-09-01"], []),
-    /empty required text field/
+    /empty required text field at \$\.days\[0\]\.city/
   );
+});
+
+test("backend repairs safe empty notes, risks, labels, and photo queries", () => {
+  const plan = generatedPlan();
+  plan.departLabel = "";
+  plan.days[0].dateLabel = " ";
+  plan.days[0].weatherRisk = "";
+  plan.days[0].weatherRiskEn = "";
+  plan.days[0].stops[0].note = "";
+  plan.days[0].stops[0].noteEn = "";
+  plan.days[0].stops[0].photoQuery = "";
+
+  const normalized = normalizeGeneratedTrip(plan, ["2026-09-01"], []);
+  assert.equal(normalized.departLabel, "09-01");
+  assert.equal(normalized.days[0].dateLabel, "09-01");
+  assert.match(normalized.days[0].weatherRiskEn, /No specific weather risk/);
+  assert.equal(normalized.days[0].stops[0].photoQuery, "伏见稻荷 Kyoto");
 });
 
 test("provider error detail is compact, bounded, and shape-checked", () => {

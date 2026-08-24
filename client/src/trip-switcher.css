@@ -1,34 +1,71 @@
 /* Dashboard trip selector and selected-trip summary. Kept separate so the
    main dashboard stylesheet stays below the project's 400-line limit. */
 
-.trip-switcher {
+.today-card-shell {
+  position: relative;
   min-width: 0;
-  display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) 34px;
-  align-items: stretch;
-  background: var(--white);
+  display: flex;
+  isolation: isolate;
 }
 
-.trip-switch-button {
+.today-card-shell > .today-card {
+  flex: 1;
+  min-width: 0;
+}
+
+.trip-card-controls {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.trip-card-switch {
+  position: absolute;
+  top: 50%;
   display: grid;
   place-items: center;
-  padding: 0 !important;
-  font-size: 24px;
+  width: 46px;
+  height: 92px;
+  padding: 0;
+  font-family: inherit;
+  font-size: 34px;
   font-weight: var(--weight-heavy);
+  line-height: 1;
+  color: var(--black);
+  background: var(--yellow);
+  border: var(--border);
+  box-shadow: 4px 4px 0 var(--black);
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translateY(-50%);
 }
 
-.trip-switch-button:first-child {
-  border-right: 2px solid var(--black) !important;
+.trip-card-switch.is-previous {
+  left: -24px;
 }
 
-.trip-switch-button:last-child {
-  border-left: 2px solid var(--black) !important;
+.trip-card-switch.is-next {
+  right: -24px;
 }
 
-.trip-switch-button:disabled {
+.trip-card-switch:hover,
+.trip-card-switch:focus-visible {
+  color: var(--white);
+  background: var(--blue);
+}
+
+.trip-card-switch:focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 3px;
+}
+
+.trip-card-switch:disabled {
   cursor: default;
   color: var(--text-secondary);
-  opacity: 0.35;
+  background: var(--white);
+  box-shadow: none;
+  opacity: 0.42;
 }
 
 .trip-switch-copy {
@@ -65,6 +102,36 @@
   font-size: 9px;
   font-weight: var(--weight-heavy);
   color: var(--blue);
+}
+
+@keyframes tripCardInFromRight {
+  from {
+    opacity: 0.45;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes tripCardInFromLeft {
+  from {
+    opacity: 0.45;
+    transform: translateX(-18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.trip-card-enter-right {
+  animation: tripCardInFromRight 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.trip-card-enter-left {
+  animation: tripCardInFromLeft 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 /* Selected trip: destination + scenario + durable background-job status. */
@@ -222,7 +289,27 @@
     border-bottom: var(--border) !important;
   }
 
-  .trip-switcher {
+  .trip-switch-copy {
     min-height: 54px;
+  }
+
+  .trip-card-switch {
+    width: 42px;
+    height: 76px;
+  }
+
+  .trip-card-switch.is-previous {
+    left: 6px;
+  }
+
+  .trip-card-switch.is-next {
+    right: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-card-enter-right,
+  .trip-card-enter-left {
+    animation: none;
   }
 }

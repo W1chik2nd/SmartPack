@@ -164,10 +164,17 @@ export function createApp(
       const rawParam = url.searchParams.get("balance");
       const raw = rawParam === null ? NaN : Number(rawParam);
       const balance = Number.isFinite(raw) ? raw : 50;
-      const generated = packingPlans.latest(
-        user.id,
-        url.searchParams.get("scenario") ?? undefined
-      );
+      const tripPlanId = url.searchParams.get("tripPlanId");
+      const generated = tripPlanId
+        ? packingPlans.get(user.id, tripPlanId)
+        : packingPlans.latest(
+            user.id,
+            url.searchParams.get("scenario") ?? undefined
+          );
+      if (tripPlanId && !generated) {
+        json(res, 404, { error: "Packing plan not found for this trip." });
+        return;
+      }
       json(res, 200, {
         plan: generated
           ? buildGeneratedPackingPlan(

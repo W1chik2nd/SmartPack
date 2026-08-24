@@ -1,10 +1,15 @@
 import type { TripPlan } from "../travel-types";
 
-/** Travel-only plans worth showing on the home dashboard. */
+// Only scenarios that represent a destination-based occasion belong in the
+// home itinerary carousel. Commutes, workouts, and one-off formal dressing
+// still receive Agent recommendations, but are not durable home trips.
+const HOME_TRIP_SCENARIOS = new Set(["travel", "business", "date"]);
+
+/** Agent-backed destination plans worth showing on the home dashboard. */
 export function dashboardTrips(plans: TripPlan[]): TripPlan[] {
   return plans.filter(
     (plan) =>
-      plan.scenario === "travel" &&
+      HOME_TRIP_SCENARIOS.has(plan.scenario) &&
       (Boolean(plan.itineraryId) ||
         plan.generationStatus === "processing" ||
         plan.generationStatus === "failed")

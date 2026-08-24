@@ -204,10 +204,14 @@ export const STRINGS = {
   },
   tripQueuedTitle: { en: "Trip accepted", zh: "行程已进入后台规划" },
   tripQueuedButton: { en: "Planning in background", zh: "正在后台规划" },
-  tripAgentBackground: {
-    en: "You can keep using SmartPack. The home page will update automatically.",
-    zh: "你可以继续使用 SmartPack，主页会自动更新生成状态。",
-  },
+  tripEstimateLabel: { en: "Estimated time", zh: "预计用时" },
+  tripMinutesShort: { en: "min", zh: "分钟" },
+  tripEstimateHint: { en: "This is an approximate window; destination research and provider traffic can change it.", zh: "这是预计区间；目的地资料量和模型服务繁忙程度可能影响实际用时。" },
+  tripEstimateExceeded: { en: "Taking longer than estimated — the Agent is still working.", zh: "已超出预计区间，Agent 仍在继续规划。" },
+  tripElapsedLabel: { en: "Elapsed", zh: "已等待" },
+  tripReadyTitle: { en: "Your trip is ready", zh: "旅行方案已完成" },
+  tripReadyMessage: { en: "Itinerary, outfits, equipment, and packing are now synchronized.", zh: "行程、穿搭、装备和打包清单已同步完成。" },
+  tripViewPlan: { en: "View completed trip", zh: "查看完整方案" },
   nights: { en: "nights", zh: "晚" },
   sameDay: { en: "Day trip", zh: "当天往返" },
 
@@ -364,12 +368,6 @@ export function confirmDeleteMessage(lang: Lang, title: string): string {
   return lang === "zh"
     ? `确定删除「${title}」?`
     : `Delete "${title}"?`;
-}
-
-export function tripRedirectMessage(lang: Lang, seconds: number): string {
-  return lang === "zh"
-    ? `Agent 将继续生成，${seconds} 秒后自动返回主页。`
-    : `The Agent will keep working. Returning home in ${seconds} seconds.`;
 }
 
 export function unreachableHostMessage(lang: Lang, hostname: string): string {

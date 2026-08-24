@@ -3,7 +3,11 @@ import { aiConfigured } from "./ai.ts";
 import type { ItineraryStore } from "./itinerary.ts";
 import type { PackingPlanStore } from "./packing-store.ts";
 import type { TripPlanStore } from "./trip-plan.ts";
-import { parseTripInput, tripDayCount } from "./trip-input.ts";
+import {
+  estimateTripGeneration,
+  parseTripInput,
+  tripDayCount,
+} from "./trip-input.ts";
 import type { GenerateTrip, TripAgentInput } from "./trip-agent.ts";
 import type { WardrobeStore } from "./wardrobe.ts";
 
@@ -56,7 +60,12 @@ export async function handleTripGenerationRoutes(ctx: Ctx): Promise<boolean> {
 
   // Return before the model call starts. The saved plan and its status remain
   // visible across page changes; clients can poll the normal trip list.
-  json(res, 202, { plan });
+  json(res, 202, {
+    plan,
+    estimate: estimateTripGeneration(
+      tripDayCount(plan.startDate, plan.endDate)
+    ),
+  });
   setImmediate(() => {
     void ctx
       .generateTrip({ user, plan: parsed.plan, wardrobe })

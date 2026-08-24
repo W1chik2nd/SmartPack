@@ -1,15 +1,18 @@
 import { useEffect, useState, type FormEvent } from "react";
 import {
-  searchPlaces,
   generateTripPlan,
+  getTripPlan,
+  searchPlaces,
   type Place,
+  type TripGenerationEstimate,
+  type TripPlan,
   type User,
 } from "../api";
 import MapView from "../components/MapView";
 import DateRangePicker, { type DateRange } from "../components/DateRangePicker";
 import ChatWidget from "../components/ChatWidget";
 import { useLang } from "../i18n/useLang";
-import { SCENARIO_LABELS, tripRedirectMessage } from "../i18n/strings";
+import { SCENARIO_LABELS } from "../i18n/strings";
 
 // 行程设置页(线框图 2):左边地图 + 下方搜索框,右边日历 + 下方日期条。
 // 从场景卡片点进来,带着 scenario id。
@@ -45,6 +48,19 @@ function nightsBetween(range: DateRange): number {
   return Math.round((end - start) / 86_400_000);
 }
 
+type GenerationProgress = {
+  planId: string;
+  status: TripPlan["generationStatus"];
+  estimate: TripGenerationEstimate;
+  error: string | null;
+};
+
+function elapsedLabel(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+}
+
 export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   const { lang, t } = useLang();
 
@@ -56,25 +72,56 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   const [agenda, setAgenda] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [redirectIn, setRedirectIn] = useState<number | null>(null);
+  const [generation, setGeneration] = useState<GenerationProgress | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   // 没选地点时地图停在一个能看出是世界地图的位置,而不是空白海面。
   const center = place
     ? { lat: place.lat, lon: place.lon }
     : { lat: 30, lon: 20 };
 
+  const isGenerating =
+    generation?.status === "pending" || generation?.status === "processing";
+
   useEffect(() => {
-    if (redirectIn === null) return;
-    if (redirectIn === 0) {
-      onSaved();
-      return;
-    }
-    const timer = window.setTimeout(
-      () => setRedirectIn((current) => (current === null ? null : current - 1)),
+    if (!isGenerating) return;
+    const timer = window.setInterval(
+      () => setElapsedSeconds((seconds) => seconds + 1),
       1_000
     );
-    return () => window.clearTimeout(timer);
-  }, [redirectIn, onSaved]);
+    return () => window.clearInterval(timer);
+  }, [isGenerating]);
+
+  useEffect(() => {
+    if (!generation || !isGenerating) return;
+    const planId = generation.planId;
+    let active = true;
+    let timer: number;
+
+    async function poll() {
+      try {
+        const { plan, estimate } = await getTripPlan(planId);
+        if (!active) return;
+        setGeneration({
+          planId,
+          status: plan.generationStatus,
+          estimate,
+          error: plan.generationError,
+        });
+        if (plan.generationStatus === "pending" || plan.generationStatus === "processing") {
+          timer = window.setTimeout(poll, 2_500);
+        }
+      } catch {
+        if (active) timer = window.setTimeout(poll, 4_000);
+      }
+    }
+
+    timer = window.setTimeout(poll, 2_500);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [generation?.planId, isGenerating]);
 
   async function handleSearch(e: FormEvent) {
     e.preventDefault();
@@ -114,7 +161,7 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
     setSaving(true);
     setError(null);
     try {
-      await generateTripPlan({
+      const { plan, estimate } = await generateTripPlan({
         scenario,
         placeName: place.name,
         placeDetail: place.detail,
@@ -124,9 +171,13 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
         endDate: range.end,
         notes: agenda,
       });
-      // The server has durably queued the trip. Keep this confirmation visible
-      // briefly, then leave while the Agent continues in the background.
-      setRedirectIn(3);
+      setElapsedSeconds(0);
+      setGeneration({
+        planId: plan.id,
+        status: plan.generationStatus,
+        estimate,
+        error: plan.generationError,
+      });
       return;
     } catch (err: any) {
       setError(err?.message ?? t("saveTripFailed"));
@@ -258,13 +309,44 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
         />
       </section>
 
-      {redirectIn !== null && (
-        <div className="tripsetup-queued" role="status" aria-live="polite">
+      {generation && (
+        <div
+          className={`tripsetup-queued is-${generation.status}`}
+          role={generation.status === "failed" ? "alert" : "status"}
+          aria-live="polite"
+        >
           <div>
-            <strong>{t("tripQueuedTitle")}</strong>
-            <p>{tripRedirectMessage(lang, redirectIn)}</p>
+            <strong>
+              {isGenerating
+                ? t("tripQueuedTitle")
+                : generation.status === "completed"
+                  ? t("tripReadyTitle")
+                  : t("tripGenerationFailedHome")}
+            </strong>
+            {isGenerating ? (
+              <>
+                <p className="tripsetup-estimate">
+                  {t("tripEstimateLabel")} · {Math.ceil(generation.estimate.minSeconds / 60)}–
+                  {Math.ceil(generation.estimate.maxSeconds / 60)} {t("tripMinutesShort")}
+                </p>
+                <p>
+                  {elapsedSeconds > generation.estimate.maxSeconds
+                    ? t("tripEstimateExceeded")
+                    : t("tripEstimateHint")}
+                </p>
+                <p className="tripsetup-elapsed">
+                  {t("tripElapsedLabel")} <time>{elapsedLabel(elapsedSeconds)}</time>
+                </p>
+              </>
+            ) : generation.status === "completed" ? (
+              <p>{t("tripReadyMessage")}</p>
+            ) : (
+              <p>{generation.error ?? t("saveTripFailed")}</p>
+            )}
           </div>
-          <span aria-hidden="true">{String(redirectIn).padStart(2, "0")}</span>
+          <span className="tripsetup-status-mark" aria-hidden="true">
+            {isGenerating ? "AI" : generation.status === "completed" ? "✓" : "!"}
+          </span>
         </div>
       )}
 
@@ -272,22 +354,29 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
         <button
           type="button"
           className="tripsetup-save"
-          onClick={handleSave}
-          disabled={saving || redirectIn !== null}
+          onClick={generation ? onSaved : handleSave}
+          disabled={saving || isGenerating}
         >
-          {redirectIn !== null
+          {isGenerating
             ? t("tripQueuedButton")
-            : saving
+            : generation?.status === "completed"
+              ? t("tripViewPlan")
+              : generation?.status === "failed"
+                ? t("backToHome")
+                : saving
               ? t("generatingTrip")
               : t("generateTrip")}
         </button>
-        <p className="tripsetup-agent-note" aria-live="polite">
-          {redirectIn !== null
-            ? t("tripAgentBackground")
-            : saving
-              ? t("tripAgentWorking")
-              : t("tripAgentNote")}
-        </p>
+        {isGenerating && (
+          <button type="button" className="tripsetup-home" onClick={onSaved}>
+            {t("backToHome")}
+          </button>
+        )}
+        {!generation && (
+          <p className="tripsetup-agent-note" aria-live="polite">
+            {saving ? t("tripAgentWorking") : t("tripAgentNote")}
+          </p>
+        )}
       </div>
     </div>
   );

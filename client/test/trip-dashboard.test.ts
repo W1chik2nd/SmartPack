@@ -30,17 +30,21 @@ function plan(
   };
 }
 
-test("dashboard keeps generated, processing, and failed travel plans", () => {
+test("dashboard keeps travel, business, and date plans only", () => {
   const visible = dashboardTrips([
     plan("complete", "completed", "trip-1"),
     plan("working", "processing"),
     plan("failed", "failed"),
     plan("manual", "pending"),
     plan("business", "completed", "trip-2", "business"),
+    plan("date", "completed", "trip-3", "date"),
+    plan("commute", "completed", "trip-4", "commute"),
+    plan("sport", "completed", "trip-5", "sport"),
+    plan("formal", "completed", "trip-6", "formal"),
   ]);
   assert.deepEqual(
     visible.map((trip) => trip.id),
-    ["complete", "working", "failed"]
+    ["complete", "working", "failed", "business", "date"]
   );
 });
 

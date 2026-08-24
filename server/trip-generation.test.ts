@@ -142,7 +142,10 @@ before(async () => {
         });
       }
       if (generationFailure) throw generationFailure;
-      return structuredClone(generated);
+      const result = structuredClone(generated);
+      result.packing.summary = `${input.plan.placeName}专属物品清单`;
+      result.packing.summaryEn = `Packing list for ${input.plan.placeName}`;
+      return result;
     },
   });
   server = createServer(app.handle);
@@ -238,6 +241,7 @@ test("one agent run synchronizes trip, itinerary, outfits, equipment, and packin
     const body = await response.json();
     assert.equal(body.plan.itineraryId, null);
     assert.equal(body.plan.generationStatus, "processing");
+    assert.deepEqual(body.estimate, { minSeconds: 180, maxSeconds: 480 });
 
     const queued = await (await request("/api/trip-plans")).json();
     const queuedPlan = queued.plans.find((plan: any) => plan.id === body.plan.id);
@@ -275,6 +279,43 @@ test("one agent run synchronizes trip, itinerary, outfits, equipment, and packin
     assert.ok(count(varied.plan) > count(lean.plan));
     assert.ok(varied.plan.essentials.some((item: any) => item.label === "折叠伞"));
 
+    // A newer scenario must not replace the packing list selected from an
+    // older home card: the client addresses generated packing by plan id.
+    blockGeneration = false;
+    const dateResponse = await request("/api/trip-plans/generate", {
+      method: "POST",
+      body: JSON.stringify({
+        scenario: "date",
+        placeName: "上海",
+        placeDetail: "中国",
+        lat: 31.2304,
+        lon: 121.4737,
+        startDate: "2026-09-03",
+        endDate: "2026-09-04",
+        notes: "晚餐和散步",
+      }),
+    });
+    const dateBody = await dateResponse.json();
+    assert.equal(dateResponse.status, 202);
+    await waitForPlan(dateBody.plan.id, "completed");
+
+    const travelPacking = await (
+      await request(
+        `/api/packing?balance=50&tripPlanId=${encodeURIComponent(body.plan.id)}`
+      )
+    ).json();
+    const datePacking = await (
+      await request(
+        `/api/packing?balance=50&tripPlanId=${encodeURIComponent(dateBody.plan.id)}`
+      )
+    ).json();
+    assert.match(travelPacking.plan.summary, /京都/);
+    assert.match(datePacking.plan.summary, /上海/);
+    assert.equal(
+      (await request("/api/packing?balance=50&tripPlanId=missing")).status,
+      404
+    );
+
     const removed = await request(`/api/trip-plans/${body.plan.id}`, {
       method: "DELETE",
     });
@@ -284,6 +325,14 @@ test("one agent run synchronizes trip, itinerary, outfits, equipment, and packin
     assert.equal(
       (await request(`/api/itinerary/trips/${completed.itineraryId}`)).status,
       404
+    );
+    assert.equal(
+      (
+        await request(`/api/trip-plans/${dateBody.plan.id}`, {
+          method: "DELETE",
+        })
+      ).status,
+      200
     );
   } finally {
     blockGeneration = false;

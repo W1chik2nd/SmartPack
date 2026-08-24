@@ -15,19 +15,62 @@ export type TripAgentInput = {
 export type GenerateTrip = (input: TripAgentInput) => Promise<GeneratedTripPlan>;
 
 /** `wardrobeItemId` may be blank to mark a genuine wardrobe gap. */
-function hasBlankRequiredText(value: unknown, key = ""): boolean {
+function blankRequiredTextPath(
+  value: unknown,
+  key = "",
+  path = "$"
+): string | null {
   if (typeof value === "string") {
-    return key !== "wardrobeItemId" && value.trim().length === 0;
+    return key !== "wardrobeItemId" && value.trim().length === 0 ? path : null;
   }
   if (Array.isArray(value)) {
-    return value.some((item) => hasBlankRequiredText(item));
+    for (let index = 0; index < value.length; index++) {
+      const blank = blankRequiredTextPath(value[index], "", `${path}[${index}]`);
+      if (blank) return blank;
+    }
+    return null;
   }
   if (value && typeof value === "object") {
-    return Object.entries(value).some(([childKey, child]) =>
-      hasBlankRequiredText(child, childKey)
-    );
+    for (const [childKey, child] of Object.entries(value)) {
+      const blank = blankRequiredTextPath(child, childKey, `${path}.${childKey}`);
+      if (blank) return blank;
+    }
   }
-  return false;
+  return null;
+}
+
+function present(value: string, fallback: string): string {
+  return value.trim() || fallback;
+}
+
+/**
+ * Empty text is valid JSON Schema but not useful UI. Repair only fields with a
+ * truthful deterministic fallback; critical itinerary content remains strict.
+ */
+function repairDerivableText(raw: GeneratedTripPlan): void {
+  raw.departLabel = present(raw.departLabel, raw.days[0]?.date.slice(5) ?? "Trip");
+  for (const day of raw.days) {
+    day.dateLabel = present(day.dateLabel, day.date.slice(5));
+    day.weatherRisk = present(
+      day.weatherRisk,
+      "未提供具体天气风险，请在出发前核对实时天气。"
+    );
+    day.weatherRiskEn = present(
+      day.weatherRiskEn,
+      "No specific weather risk was provided; check live conditions before departure."
+    );
+    for (const stop of day.stops) {
+      stop.note = present(stop.note, "按计划前往，抵达前确认现场信息。");
+      stop.noteEn = present(
+        stop.noteEn,
+        "Continue as planned and confirm local details before arrival."
+      );
+      stop.photoQuery = present(
+        stop.photoQuery,
+        `${stop.nameEn || stop.name} ${day.cityEn || day.city}`.trim()
+      );
+    }
+  }
 }
 
 /** Inclusive ISO date sequence; the route already validated both endpoints. */
@@ -54,8 +97,12 @@ export function normalizeGeneratedTrip(
   if (!raw || !Array.isArray(raw.days) || !raw.packing?.categories) {
     throw new Error("AI trip planner returned an incomplete plan.");
   }
-  if (hasBlankRequiredText(raw)) {
-    throw new Error("AI trip planner returned an empty required text field.");
+  repairDerivableText(raw);
+  const blankPath = blankRequiredTextPath(raw);
+  if (blankPath) {
+    throw new Error(
+      `AI trip planner returned an empty required text field at ${blankPath}.`
+    );
   }
   if (
     raw.days.length !== dates.length ||
