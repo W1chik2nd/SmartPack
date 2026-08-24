@@ -38,8 +38,11 @@ test("generated garments and wardrobe photos share the pixel-art treatment", () 
 
 test("outfit pieces use the white pixel line-art reference style", () => {
   assert.match(outfitCss, /--detail-color/);
-  assert.match(outfitCss, /\.dress-piece-top \{[\s\S]*background: var\(--white\)/);
-  assert.match(outfitCss, /\.dress-piece-bottom \{[\s\S]*background: var\(--white\)/);
+  assert.match(outfitCss, /\.dress-piece-top \{[\s\S]*background: var\(--piece-color\)/);
+  assert.match(outfitCss, /\.dress-piece-bottom \{[\s\S]*background: var\(--piece-color\)/);
+  assert.match(outfitCss, /\.tone-green/);
+  assert.match(outfitCss, /\.tone-brown/);
+  assert.match(outfitCss, /\.fit-relaxed/);
   assert.match(garmentCss, /\.garment-sneakers::before/);
   assert.match(garmentCss, /inset 0 -6px 0 var\(--black\)/);
   assert.match(outfitCss, /后鞋退到左上、前鞋压在右下/);

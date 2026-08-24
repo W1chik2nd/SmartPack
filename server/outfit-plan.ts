@@ -9,8 +9,19 @@ import type { WardrobeItem } from "./wardrobe.ts";
 import { DEFAULT_COORDS } from "./weather.ts";
 
 export type OutfitPieceKind = "top" | "bottom" | "shoes" | "accessory";
-export type OutfitTone = "red" | "yellow" | "blue" | "black" | "white";
+export type OutfitTone =
+  | "red"
+  | "yellow"
+  | "blue"
+  | "black"
+  | "white"
+  | "green"
+  | "brown"
+  | "gray"
+  | "beige";
 export type AccessoryStyle = "bag" | "hat" | "glasses" | "scarf" | "watch" | "necklace";
+export type OutfitFit = "slim" | "regular" | "relaxed";
+export type OutfitMaterial = "cotton" | "knit" | "denim" | "leather" | "linen" | "technical" | "other";
 export type GarmentStyle = "tee" | "shirt" | "knit" | "trousers" | "skirt" | "jeans" | "loafers" | "sneakers";
 
 export type OutfitPiece = {
@@ -21,6 +32,9 @@ export type OutfitPiece = {
   tone: OutfitTone;
   garmentStyle: GarmentStyle | null;
   accessoryStyle: AccessoryStyle | null;
+  fit: OutfitFit | null;
+  material: OutfitMaterial | null;
+  detail: string;
   wardrobeItemId: string | null;
   hasPhoto: boolean;
 };
@@ -89,6 +103,9 @@ function piece(
     tone,
     garmentStyle: style.garmentStyle ?? null,
     accessoryStyle: style.accessoryStyle ?? null,
+    fit: null,
+    material: null,
+    detail: "",
     wardrobeItemId: null,
     hasPhoto: false,
   };
@@ -139,12 +156,34 @@ function garmentStyleOf(item: WardrobeItem, kind: OutfitPieceKind): GarmentStyle
 }
 
 function toneOf(item: WardrobeItem): OutfitTone {
-  const color = item.colors.join(" ").toLowerCase();
-  if (/red|红/.test(color)) return "red";
-  if (/yellow|黄/.test(color)) return "yellow";
-  if (/white|白|cream|米/.test(color)) return "white";
+  const color = `${item.colors.join(" ")} ${item.title} ${item.details}`.toLowerCase();
+  if (/red|红|砖红/.test(color)) return "red";
+  if (/yellow|黄|金色/.test(color)) return "yellow";
+  if (/green|绿|橄榄/.test(color)) return "green";
+  if (/brown|棕|咖啡/.test(color)) return "brown";
+  if (/gray|grey|灰/.test(color)) return "gray";
+  if (/beige|cream|米|奶油|卡其/.test(color)) return "beige";
+  if (/white|白/.test(color)) return "white";
   if (/black|黑/.test(color)) return "black";
   return "blue";
+}
+
+function fitOf(item: WardrobeItem): OutfitFit {
+  const text = `${item.fit} ${item.details} ${item.title}`.toLowerCase();
+  if (/slim|fitted|修身|紧身/.test(text)) return "slim";
+  if (/loose|relaxed|oversized|宽松|阔腿/.test(text)) return "relaxed";
+  return "regular";
+}
+
+function materialOf(item: WardrobeItem): OutfitMaterial {
+  const text = `${item.material} ${item.details}`.toLowerCase();
+  if (/cotton|棉/.test(text)) return "cotton";
+  if (/knit|wool|cashmere|针织|羊毛|羊绒/.test(text)) return "knit";
+  if (/denim|jean|丹宁|牛仔/.test(text)) return "denim";
+  if (/leather|皮革/.test(text)) return "leather";
+  if (/linen|麻/.test(text)) return "linen";
+  if (/nylon|polyester|technical|速干|尼龙|聚酯|机能/.test(text)) return "technical";
+  return "other";
 }
 
 function fromWardrobe(item: WardrobeItem, kind: OutfitPieceKind): Candidate {
@@ -156,6 +195,9 @@ function fromWardrobe(item: WardrobeItem, kind: OutfitPieceKind): Candidate {
     tone: toneOf(item),
     garmentStyle: garmentStyleOf(item, kind),
     accessoryStyle: kind === "accessory" ? accessoryStyleOf(item) : null,
+    fit: fitOf(item),
+    material: materialOf(item),
+    detail: item.details,
     wardrobeItemId: item.id,
     hasPhoto: item.hasPhoto,
   };
