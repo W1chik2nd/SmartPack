@@ -43,7 +43,11 @@ export default function DashboardOutfit({ day, placeName }: Props) {
     <span className="outfit-figure" aria-label={pieces.map((piece) => description(piece, lang)).join("，")}>
       <span className="dashboard-outfit-stack">
         <span className="dashboard-outfit-torso">
-          {outfit.inner && <OutfitPieceVisual piece={outfit.inner} compact />}
+          {outfit.inner && (
+            <span className="dashboard-outfit-inner">
+              <OutfitPieceVisual piece={outfit.inner} compact />
+            </span>
+          )}
           {outfit.outer && (
             <span
               className="dashboard-outfit-outer"
@@ -53,7 +57,12 @@ export default function DashboardOutfit({ day, placeName }: Props) {
                   : `${description(outfit.outer, lang)}, worn open over ${outfit.inner ? description(outfit.inner, lang) : "the inner layer"}`
               }
             >
-              <OutfitPieceVisual piece={outfit.outer} compact />
+              <span className="dashboard-outfit-panel dashboard-outfit-panel-left">
+                <OutfitPieceVisual piece={outfit.outer} compact />
+              </span>
+              <span className="dashboard-outfit-panel dashboard-outfit-panel-right" aria-hidden="true">
+                <OutfitPieceVisual piece={outfit.outer} compact />
+              </span>
               <span className="dashboard-outfit-zip" aria-hidden="true" />
             </span>
           )}

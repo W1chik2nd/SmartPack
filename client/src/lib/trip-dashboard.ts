@@ -1,9 +1,16 @@
 import type { TripPlan } from "../travel-types";
 
-// Only scenarios that represent a destination-based occasion belong in the
-// home itinerary carousel. Commutes, workouts, and one-off formal dressing
-// still receive Agent recommendations, but are not durable home trips.
-const HOME_TRIP_SCENARIOS = new Set(["travel", "business", "date"]);
+// Every saved scenario with a generated or active plan is useful on Home:
+// commute and other agenda-based plans still have an upcoming date and Agent
+// recommendations, so hiding them makes the dashboard disagree with the user.
+const HOME_TRIP_SCENARIOS = new Set([
+  "travel",
+  "business",
+  "date",
+  "commute",
+  "sport",
+  "formal",
+]);
 
 /** Agent-backed destination plans worth showing on the home dashboard. */
 export function dashboardTrips(plans: TripPlan[]): TripPlan[] {
