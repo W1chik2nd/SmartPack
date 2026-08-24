@@ -6,6 +6,17 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { searchPlaces } from "./geocode.ts";
 import type { TripPlanStore, NewTripPlan } from "./trip-plan.ts";
+import {
+  MAX_TRIP_DAYS,
+  tripDaysInclusive,
+} from "../shared/trip-constraints.ts";
+
+export { MAX_TRIP_DAYS };
+
+/** 对外保留 main 分支已有的命名,实现仍复用共享约束。 */
+export function tripDayCount(start: string, end: string): number {
+  return tripDaysInclusive(start, end);
+}
 
 type Ctx = {
   req: IncomingMessage;
@@ -30,20 +41,6 @@ export function isIsoDate(value: unknown): value is string {
   }
   const d = new Date(`${value}T00:00:00Z`);
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
-}
-
-/** 行程最长天数(含首尾)。业务规则:不允许超过 30 天的行程。 */
-export const MAX_TRIP_DAYS = 30;
-
-/**
- * 行程总天数(含首尾)。start=end 记 1 天。
- * 调用方需保证两个都是合法 ISO 日期(信任边界已校验)。
- */
-export function tripDayCount(start: string, end: string): number {
-  const ms =
-    new Date(`${end}T00:00:00Z`).getTime() -
-    new Date(`${start}T00:00:00Z`).getTime();
-  return Math.round(ms / 86_400_000) + 1;
 }
 
 /** 处理了就返回 true,让 app.ts 知道不用继续匹配后面的路由。 */
@@ -124,11 +121,8 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
       json(res, 400, { error: "endDate must not precede startDate." });
       return true;
     }
-    // 业务规则:行程不超过 30 天(含首尾)。信任边界强制校验,前端只是即时提示。
     if (tripDayCount(body.startDate, body.endDate) > MAX_TRIP_DAYS) {
-      json(res, 400, {
-        error: `Trip must not exceed ${MAX_TRIP_DAYS} days.`,
-      });
+      json(res, 400, { error: `Trip must not exceed ${MAX_TRIP_DAYS} days.` });
       return true;
     }
 
