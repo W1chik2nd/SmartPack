@@ -114,24 +114,15 @@
   align-items: center;
 }
 
-/* City picker: flat select, no native chrome beyond the arrow */
-.today-location select {
-  width: 100%;
-  height: 100%;
+/* The destination is read-only on the dashboard; Trip Planner owns it. */
+.today-location {
   padding: 0 var(--space-2);
-  font-family: inherit;
   font-size: 14px;
   font-weight: var(--weight-heavy);
   text-transform: uppercase;
   color: var(--text);
-  background: var(--white);
-  border: none;
-  cursor: pointer;
-}
-
-.today-location select:focus-visible {
-  outline: 3px solid var(--yellow);
-  outline-offset: -3px;
+  display: flex;
+  align-items: center;
 }
 
 .today-body {
@@ -235,6 +226,16 @@
   padding: var(--space-2);
   display: flex;
   flex-direction: column;
+}
+
+.today-itinerary-empty {
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+
+.today-itinerary-empty .trip-empty {
+  margin: 0;
 }
 
 /* 已保存行程:目的地 + 场景标签 + 日期区间。几何色块,粗字,左对齐。 */

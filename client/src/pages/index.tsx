@@ -8,7 +8,6 @@ import {
 } from "../api";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/strings";
-import { CITIES, storedCity, storeCity, type City } from "../i18n/cities";
 
 type Props = {
   user: User;
@@ -37,7 +36,7 @@ export default function Home({
 }: Props) {
   const { lang, t } = useLang();
   const [now, setNow] = useState(new Date());
-  const [city, setCity] = useState<City>(storedCity);
+  const [city, setCity] = useState<{ name: string; lat: number; lon: number } | null>(null);
   const [wx, setWx] = useState<Weather | null>(null);
   const [wxError, setWxError] = useState(false);
   // 已保存的行程,最新在前;进主页时拉一次,保存后跳回来会重新挂载再拉。
@@ -49,15 +48,28 @@ export default function Home({
     return () => clearInterval(timer);
   }, []);
 
-  // 拉取行程列表。失败(如未登录)就当作空,主页不因此报错。
+  // The dashboard destination is owned by the latest saved trip. There is no
+  // second, unrelated city preference to get out of sync with Trip Planner.
   useEffect(() => {
     listTripPlans()
-      .then(({ plans }) => setTrips(plans))
-      .catch(() => setTrips([]));
+      .then(({ plans }) => {
+        setTrips(plans);
+        const latest = plans[0];
+        setCity(latest ? { name: latest.placeName, lat: latest.lat, lon: latest.lon } : null);
+      })
+      .catch(() => {
+        setTrips([]);
+        setCity(null);
+      });
   }, []);
 
-  // Weather follows the picked city; the choice persists across sessions.
+  // Weather follows the destination selected in the saved trip plan.
   useEffect(() => {
+    if (!city) {
+      setWx(null);
+      setWxError(false);
+      return;
+    }
     setWx(null);
     setWxError(false);
     weather(city.lat, city.lon)
@@ -124,25 +136,9 @@ export default function Home({
             <button className="today-dates" onClick={TODO_LINKS.dates}>
               {t("upcoming")} · {dateLong} <span aria-hidden="true">›</span>
             </button>
-            <label className="today-location">
-              <span className="visually-hidden">{t("cityLabel")}</span>
-              <select
-                value={city.id}
-                onChange={(e) => {
-                  const next = CITIES.find((c) => c.id === e.target.value);
-                  if (next) {
-                    storeCity(next.id);
-                    setCity(next);
-                  }
-                }}
-              >
-                {CITIES.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {lang === "zh" ? c.zh : c.en}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="today-location" aria-live="polite">
+              {city?.name ?? "—"}
+            </div>
           </div>
 
           <div className="today-body">
@@ -156,7 +152,11 @@ export default function Home({
                   </p>
                 ) : (
                   <p className="weather-reading weather-pending">
-                    {wxError ? t("weatherUnavailable") : t("weatherLoading")}
+                    {wxError
+                      ? t("weatherUnavailable")
+                      : city
+                        ? t("weatherLoading")
+                        : t("weatherNoDestination")}
                   </p>
                 )}
                 <span className="card-arrow" aria-hidden="true">›</span>
@@ -184,13 +184,13 @@ export default function Home({
               <span className="card-arrow" aria-hidden="true">›</span>
             </button>
 
-            <button
-              className="today-itinerary"
-              onClick={latestTrip ? onOpenItinerary : onOpenTrips}
-              aria-label={latestTrip ? t("itinerary") : t("tripPlanner")}
-            >
-              <h2>{t("itinerary")}</h2>
-              {latestTrip ? (
+            {latestTrip ? (
+              <button
+                className="today-itinerary"
+                onClick={onOpenItinerary}
+                aria-label={t("itinerary")}
+              >
+                <h2>{t("itinerary")}</h2>
                 <span className="trip-summary">
                   <span className="trip-place">
                     {latestTrip.placeName}
@@ -201,13 +201,17 @@ export default function Home({
                   </span>
                   <span className="trip-dates">{tripDates(latestTrip)}</span>
                 </span>
-              ) : (
-                <span className="trip-empty" aria-hidden="true">
-                  {trips === null ? "" : "+"}
-                </span>
-              )}
-              <span className="card-arrow" aria-hidden="true">›</span>
-            </button>
+                <span className="card-arrow" aria-hidden="true">›</span>
+              </button>
+            ) : (
+              <button
+                className="today-itinerary today-itinerary-empty"
+                onClick={onOpenTrips}
+                aria-label={t("tripPlanner")}
+              >
+                <span className="trip-empty" aria-hidden="true">+</span>
+              </button>
+            )}
           </div>
         </section>
 
