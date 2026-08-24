@@ -135,7 +135,22 @@ function hitsIn(pts, box) {
   ).length;
 }
 
-console.log("=== 左栏 TripSpine(真实渲染) ===");
+console.log("=== 个人档案页(真实渲染) ===");
+{
+  const html = harness.renderProfile();
+  const inputs = [...html.matchAll(/<input/g)].length;
+  const selects = [...html.matchAll(/<select/g)].length;
+  const sections = [...html.matchAll(/<details/g)].length;
+  const avatars = [...html.matchAll(/aria-label="Choose portrait/g)].length;
+  if (inputs !== 6) fail(`profile: expected 6 text/measurement inputs, got ${inputs}`);
+  if (selects !== 2) fail(`profile: expected 2 selects, got ${selects}`);
+  if (sections !== 3) fail(`profile: expected 3 preference sections, got ${sections}`);
+  if (avatars !== 2) fail(`profile: expected 2 labelled avatars, got ${avatars}`);
+  if (!html.includes("Anna")) fail("profile: user name was not prefilled");
+  console.log(`  inputs ${inputs}  selects ${selects}  preferences ${sections}  avatars ${avatars}`);
+}
+
+console.log("\n=== 左栏 TripSpine(真实渲染) ===");
 for (const days of [1, 2, 3, 4, 5, 7]) {
   const html = harness.renderSpine(days);
   const vb = viewBoxOf(html);
