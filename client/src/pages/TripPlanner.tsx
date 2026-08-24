@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { scenarios, type Scenario, type User } from "../api";
-import ChatWidget from "../components/ChatWidget";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/strings";
 
@@ -157,8 +156,6 @@ export default function TripPlanner({
 
   return (
     <div className="scenarios">
-      <ChatWidget />
-
       <header className="scenarios-head">
         <button type="button" className="scenarios-back" onClick={onBack}>
           ‹ {t("backToHome")}

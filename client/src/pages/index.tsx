@@ -7,7 +7,6 @@ import {
   type Weather,
   type TripPlan,
 } from "../api";
-import ChatWidget from "../components/ChatWidget";
 import TripSwitcher from "../components/TripSwitcher";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/strings";
@@ -185,8 +184,6 @@ export default function Home({
 
   return (
     <div className="home dashboard">
-      <ChatWidget />
-
       {/* Greeting bar */}
       <header className="dash-greeting">
         <h1>

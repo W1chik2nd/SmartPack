@@ -87,7 +87,7 @@ cp server/.env.example server/.env
 # switch vendors via AI_BASE_URL / AI_MODEL — see the comments in the file)
 ```
 
-`server/.env` is gitignored — never commit real keys. Without a key the endpoint responds 503 and the chat shows a clear "not configured" message; everything else works normally.
+`server/.env` is gitignored — never commit real keys. The checked-in default assistant model is `gpt-5.6-terra`; override `AI_MODEL` in a local environment when needed. Without a key the endpoint responds 503 and the chat shows a clear "not configured" message; everything else works normally.
 
 <details>
 <summary>Run the two processes separately (optional)</summary>

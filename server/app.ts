@@ -19,10 +19,11 @@ import { createPackingPlanStore } from "./packing-store.ts";
 import { handleTripGenerationRoutes } from "./trip-generation-routes.ts";
 import { generateTrip, type GenerateTrip } from "./trip-agent.ts";
 import { handleAssistantRoutes } from "./assistant-routes.ts";
+import { assistantDataContext } from "./assistant-context.ts";
 import { handleCatalogRoutes, SCENARIO_IDS } from "./catalog-routes.ts";
 import { dirname, join } from "node:path";
 import { buildGeneratedPackingPlan, buildPackingPlan } from "./packing.ts";
-import { createAccountService } from "./account-routes.ts";
+import { createAccountService, publicUser } from "./account-routes.ts";
 
 export type App = {
   handle: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
@@ -112,6 +113,23 @@ export function createApp(
         json,
         readBody,
         userFromHeader: () => accounts.userForRequest(req),
+        actionContext: () => {
+          const actor = accounts.userForRequest(req);
+          if (!actor) return null;
+          return {
+            userId: actor.id,
+            scenarioIds,
+            wardrobe,
+            tripPlans,
+            promptContext: assistantDataContext(
+              wardrobe.list(actor.id),
+              tripPlans.list(actor.id)
+            ),
+            currentProfile: () =>
+              publicUser(accounts.userForRequest(req) ?? actor),
+            updateProfile: (values) => accounts.updateProfile(actor.id, values),
+          };
+        },
       })
     ) {
       return;
