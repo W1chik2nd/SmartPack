@@ -35,7 +35,7 @@ test("generated garments and wardrobe photos share the pixel-art treatment", () 
   const home = readFileSync(new URL("../src/pages/index.tsx", import.meta.url), "utf8");
   const dashboardOutfit = readFileSync(new URL("../src/components/DashboardOutfit.tsx", import.meta.url), "utf8");
   assert.match(home, /<DashboardOutfit/);
-  assert.match(dashboardOutfit, /layered-outer-open/);
+  assert.match(dashboardOutfit, /dashboard-outfit-outer/);
   assert.match(dashboardOutfit, /打开拉链/);
   assert.match(dashboardOutfit, /outfit-description/);
 });
