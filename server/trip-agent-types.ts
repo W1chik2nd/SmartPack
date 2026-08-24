@@ -1,9 +1,15 @@
 import type { StopKind } from "./itinerary.ts";
 
+export type OutfitItemKind = "top" | "bottom" | "shoes" | "accessory";
+
 export type BilingualItem = {
   label: string;
   labelEn: string;
-};
+  /** Outfit items may point to the exact owned wardrobe piece. */
+  wardrobeItemId?: string;
+  kind?: OutfitItemKind;
+  hasPhoto?: boolean;
+}
 
 export type GeneratedPackingItem = BilingualItem & {
   quantity: number;

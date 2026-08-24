@@ -60,7 +60,7 @@ function generatedPlan(): GeneratedTripPlan {
               reuse: 1,
               priority: "core",
               daysUsed: [1],
-              wardrobeItemId: "",
+              wardrobeItemId: "owned-shirt",
             },
           ],
         },
@@ -78,8 +78,31 @@ test("Terra strict schema omits unsupported minLength", () => {
 
 test("backend identifies critical blank text but allows wardrobe gaps", () => {
   const valid = generatedPlan();
-  const normalized = normalizeGeneratedTrip(valid, ["2026-09-01"], []);
-  assert.equal(normalized.packing.categories[0].items[0].wardrobeItemId, "");
+  valid.days[0].outfit = [
+    { label: "蓝色衬衫", labelEn: "Blue shirt", wardrobeItemId: "owned-shirt", kind: "top" },
+    { label: "未拥有的裤子", labelEn: "Unowned trousers", wardrobeItemId: "missing", kind: "bottom" },
+  ];
+  const normalized = normalizeGeneratedTrip(valid, ["2026-09-01"], [
+    {
+      id: "owned-shirt",
+      title: "蓝色衬衫",
+      category: "上衣",
+      subtype: "衬衫",
+      count: 1,
+      colors: ["蓝色"],
+      fit: "",
+      material: "",
+      seasons: [],
+      styleTags: [],
+      details: "",
+      hasPhoto: true,
+      createdAt: "2026-08-01",
+    },
+  ]);
+  assert.equal(normalized.days[0].outfit[0].wardrobeItemId, "owned-shirt");
+  assert.equal(normalized.days[0].outfit[0].hasPhoto, true);
+  assert.equal(normalized.days[0].outfit[1].wardrobeItemId, "");
+  assert.equal(normalized.packing.categories[0].items[0].wardrobeItemId, "owned-shirt");
 
   const blank = generatedPlan();
   blank.days[0].city = "  ";

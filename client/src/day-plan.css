@@ -89,11 +89,21 @@
 }
 
 .day-decisions li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 4px 7px;
   font-size: 12px;
   font-weight: var(--weight-bold);
   background: var(--bg);
   border: 2px solid var(--black);
+}
+
+.day-outfit-photo {
+  width: 28px;
+  height: 28px;
+  object-fit: cover;
+  border: 1px solid var(--black);
 }
 
 .day-weather {
