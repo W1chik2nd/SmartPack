@@ -1,3 +1,4 @@
+import Combine
 import SwiftUI
 
 /// The whole app in one switch, mirroring `App.tsx`: an unauthenticated flow
@@ -41,6 +42,7 @@ private struct SignedInShell: View {
     @Environment(AppState.self) private var app
     @Environment(\.lang) private var lang
     @State private var chatOpen = false
+    @State private var keyboardVisible = false
 
     var body: some View {
         @Bindable var app = app
@@ -57,13 +59,22 @@ private struct SignedInShell: View {
         }
         .tint(Theme.blue)
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            BottomNavigationDock(chatOpen: $chatOpen)
-                .padding(.horizontal, 12)
-                .padding(.top, Theme.space1)
-                .padding(.bottom, 6)
+            if !keyboardVisible {
+                BottomNavigationDock(chatOpen: $chatOpen)
+                    .padding(.horizontal, 12)
+                    .padding(.top, Theme.space1)
+                    .padding(.bottom, 6)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
         }
         .sheet(isPresented: $chatOpen) { ChatView() }
         .background(Theme.bg)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            withAnimation(.easeOut(duration: 0.18)) { keyboardVisible = true }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            withAnimation(.easeOut(duration: 0.18)) { keyboardVisible = false }
+        }
     }
 
     @ViewBuilder

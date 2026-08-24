@@ -28,6 +28,19 @@ struct TodayCard: View {
         .bauhausCard()
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Today")
+        .alert(
+            Strings.deleteTrip(lang),
+            isPresented: deleteConfirmation
+        ) {
+            Button(Strings.cancelDelete(lang), role: .cancel) {
+                model.confirmingDeleteId = nil
+            }
+            Button(Strings.confirmDeleteTrip(lang), role: .destructive) {
+                Task { await model.deleteSelected() }
+            }
+        } message: {
+            Text("\(trip.placeName)\n\(Strings.deleteTripWarning(lang))")
+        }
     }
 
     // MARK: - Header
@@ -212,42 +225,44 @@ struct TodayCard: View {
 
     // MARK: - Delete
 
-    @ViewBuilder
     private var deleteControls: some View {
-        if model.confirmingDeleteId == trip.id {
-            VStack(alignment: .leading, spacing: Theme.space1) {
-                Text(trip.placeName).font(Theme.heavy(16))
-                Text(Strings.deleteTripWarning(lang))
-                    .font(Theme.regular(13))
-                    .foregroundStyle(Theme.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                if model.deleteFailed {
-                    ErrorBanner(message: Strings.deleteTripFailed(lang))
-                }
-                HStack(spacing: Theme.space1) {
-                    Button(Strings.cancelDelete(lang)) { model.confirmingDeleteId = nil }
-                        .buttonStyle(BauhausButtonStyle())
-                    Button(model.deletingTripId == trip.id
-                           ? Strings.deletingTrip(lang)
-                           : Strings.confirmDeleteTrip(lang)) {
-                        Task { await model.deleteSelected() }
-                    }
-                    .buttonStyle(BauhausButtonStyle(fill: Theme.red, tint: Theme.white))
-                }
-                .disabled(model.deletingTripId == trip.id)
+        VStack(alignment: .trailing, spacing: Theme.space1) {
+            if model.deleteFailed {
+                ErrorBanner(message: Strings.deleteTripFailed(lang))
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(Theme.space2)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.bg)
-            .overlay(alignment: .top) { Rule() }
-        } else if model.deletingTripId == nil {
-            Button(Strings.deleteTrip(lang)) { model.confirmingDeleteId = trip.id }
-                .font(Theme.bold(13))
+
+            if model.deletingTripId == trip.id {
+                HStack(spacing: Theme.space1) {
+                    ProgressView()
+                    Text(Strings.deletingTrip(lang))
+                        .font(Theme.bold(15))
+                }
+                .frame(minHeight: 44)
+            } else {
+                Button {
+                    model.confirmingDeleteId = trip.id
+                } label: {
+                    Label(Strings.deleteTrip(lang), systemImage: "trash")
+                        .font(Theme.bold(16))
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
                 .foregroundStyle(Theme.danger)
-                .padding(Theme.space1)
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .overlay(alignment: .top) { Rule(width: Theme.hairline) }
+            }
         }
+        .padding(.horizontal, Theme.space2)
+        .padding(.vertical, Theme.space1)
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .overlay(alignment: .top) { Rule(width: Theme.hairline) }
+    }
+
+    private var deleteConfirmation: Binding<Bool> {
+        Binding(
+            get: { model.confirmingDeleteId == trip.id },
+            set: { if !$0 { model.confirmingDeleteId = nil } }
+        )
     }
 }
 

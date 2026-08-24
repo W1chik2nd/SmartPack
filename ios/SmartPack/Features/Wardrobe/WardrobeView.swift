@@ -17,6 +17,7 @@ struct WardrobeView: View {
     @State private var loadError: String?
     @State private var filter: WardrobeFilter = .all
     @State private var cameraOpen = false
+    @State private var libraryOpen = false
     @State private var libraryItem: PhotosPickerItem?
     @State private var confirmingDelete: WardrobeItem?
 
@@ -62,6 +63,12 @@ struct WardrobeView: View {
             }
             .ignoresSafeArea()
         }
+        .photosPicker(
+            isPresented: $libraryOpen,
+            selection: $libraryItem,
+            matching: .images,
+            preferredItemEncoding: .compatible
+        )
         .onChange(of: libraryItem) {
             guard let libraryItem else { return }
             Task { await loadFromLibrary(libraryItem) }
@@ -85,7 +92,7 @@ struct WardrobeView: View {
             if UIImagePickerController.isSourceTypeAvailable(.camera) {
                 Button(Strings.wardrobeTakePhoto(lang)) { cameraOpen = true }
             }
-            PhotosPicker(Strings.wardrobeChoosePhoto(lang), selection: $libraryItem, matching: .images)
+            Button(Strings.wardrobeChoosePhoto(lang)) { libraryOpen = true }
         } label: {
             CameraGlyph()
                 .frame(width: 30, height: 30)
@@ -168,7 +175,7 @@ struct WardrobeView: View {
     }
 
     private func loadFromLibrary(_ selection: PhotosPickerItem) async {
-        libraryItem = nil
+        defer { libraryItem = nil }
         guard let data = try? await selection.loadTransferable(type: Data.self),
               let image = UIImage(data: data)
         else {

@@ -16,28 +16,44 @@ struct TripPlannerView: View {
     @State private var error: String?
 
     var body: some View {
-        PageScaffold {
-            VStack(alignment: .leading, spacing: 4) {
-                Eyebrow(text: "\(Strings.tripHello(lang)), \(app.user?.name ?? "")", color: Theme.textSecondary)
-                Text(Strings.tripGoingTo(lang))
-                    .font(Theme.heavy(32))
-                    .foregroundStyle(Theme.text)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+        GeometryReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: Theme.space3) {
+                    header
 
-            if let error {
-                ErrorBanner(message: error)
-            }
+                    if let error {
+                        ErrorBanner(message: error)
+                    }
 
-            if let scenarios {
-                deck(scenarios)
-            } else if error == nil {
-                Text(Strings.weatherLoading(lang))
-                    .font(Theme.bold(15))
-                    .foregroundStyle(Theme.textSecondary)
+                    if let scenarios {
+                        Spacer(minLength: Theme.space2)
+                        deck(scenarios)
+                        Spacer(minLength: Theme.space2)
+                    } else if error == nil {
+                        Text(Strings.weatherLoading(lang))
+                            .font(Theme.bold(15))
+                            .foregroundStyle(Theme.textSecondary)
+                    }
+                }
+                .padding(.horizontal, Theme.space2)
+                .padding(.top, Theme.space2)
+                .padding(.bottom, Theme.space5)
+                .frame(maxWidth: .infinity, minHeight: proxy.size.height, alignment: .topLeading)
             }
+            .background(Theme.bg)
+            .scrollDismissesKeyboard(.interactively)
         }
         .task { await load() }
+    }
+
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Eyebrow(text: "\(Strings.tripHello(lang)), \(app.user?.name ?? "")", color: Theme.textSecondary)
+            Text(Strings.tripGoingTo(lang))
+                .font(Theme.heavy(32))
+                .foregroundStyle(Theme.text)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 
     private func deck(_ items: [Scenario]) -> some View {
