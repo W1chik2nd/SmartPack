@@ -10,7 +10,7 @@ import {
 import { useLang } from "../i18n/useLang";
 
 type Props = { user: User; onBack: () => void; onSaved: (user: User) => void };
-type Avatar = "woman" | "man";
+type Avatar = "woman" | "man" | "neutral";
 type Draft = {
   name: string;
   gender: string;
@@ -26,17 +26,23 @@ type Draft = {
   travelHabitsOther: string;
 };
 
-function avatarForGender(gender: string | null): Avatar | null {
+function avatarForGender(gender: string | null): Avatar {
   if (gender === "male") return "man";
   if (gender === "female") return "woman";
-  return null;
+  return "neutral";
 }
 
 function AvatarArt({ variant }: { variant: Avatar }) {
   return (
     <img
       className="profile-avatar-image"
-      src={variant === "man" ? "/profile-male.jpg" : "/profile-female.jpg"}
+      src={
+        variant === "man"
+          ? "/profile-male.jpg"
+          : variant === "woman"
+            ? "/profile-female.jpg"
+            : "/profile-neutral.svg"
+      }
       alt=""
     />
   );
@@ -203,16 +209,7 @@ export default function Profile({ user, onBack, onSaved }: Props) {
           <fieldset className="avatar-picker">
             <legend>{t("profileAvatar")}</legend>
             <div className="avatar-stage">
-              {avatar ? (
-                <>
-                  <AvatarArt variant={avatar} />
-                  <span className="avatar-caption">
-                    {avatar === "man" ? t("profileMaleAvatar") : t("profileFemaleAvatar")}
-                  </span>
-                </>
-              ) : (
-                <span className="avatar-empty">{t("profileChoose")}</span>
-              )}
+              <AvatarArt variant={avatar} />
             </div>
           </fieldset>
 
@@ -223,7 +220,7 @@ export default function Profile({ user, onBack, onSaved }: Props) {
           <label className="profile-text-field">
             <span>{t("profileGender")}</span>
             <select required value={draft.gender} onChange={(event) => update("gender", event.target.value)}>
-              <option value="">{t("profileChoose")}</option>
+              <option value=""></option>
               {options("gender").map((option) => (
                 <option key={option.id} value={option.id}>{optionLabel(option)}</option>
               ))}
@@ -265,7 +262,7 @@ export default function Profile({ user, onBack, onSaved }: Props) {
             <label className="measurement-field body-type-field">
               <span>{t("profileBodyType")}</span>
               <select value={draft.bodyType} onChange={(event) => update("bodyType", event.target.value)}>
-                <option value="">{t("profileChoose")}</option>
+                <option value=""></option>
                 {options("bodyType").map((option) => (
                   <option key={option.id} value={option.id}>{optionLabel(option)}</option>
                 ))}
