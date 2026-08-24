@@ -69,6 +69,12 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
     try {
       const { places } = await searchPlaces(q, lang);
       setResults(places);
+      // 搜到就直接定位到最匹配的那个(第一条),地图立刻跳过去并打点,
+      // 不用再点一下列表。列表仍然留着,同名地点(如多个"北京")可以换选。
+      if (places.length > 0) {
+        setPlace(places[0]);
+        setSaved(false);
+      }
     } catch {
       setError(t("placeSearchFailed"));
       setResults(null);
@@ -77,10 +83,10 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
     }
   }
 
+  // 从列表里换选另一个地点:定位过去并收起列表。
   function choosePlace(p: Place) {
     setPlace(p);
     setResults(null);
-    setQuery(p.name);
     setSaved(false);
   }
 
@@ -170,7 +176,12 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
               )}
               {results.map((p) => (
                 <li key={p.id}>
-                  <button type="button" onClick={() => choosePlace(p)}>
+                  <button
+                    type="button"
+                    className={place?.id === p.id ? "is-selected" : ""}
+                    aria-pressed={place?.id === p.id}
+                    onClick={() => choosePlace(p)}
+                  >
                     <strong>{p.name}</strong>
                     {p.detail && <span>{p.detail}</span>}
                   </button>
@@ -224,7 +235,7 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
           type="button"
           className="tripsetup-save"
           onClick={handleSave}
-          disabled={saving || !place || !range}
+          disabled={saving}
         >
           {saving ? t("savingTrip") : t("saveTrip")}
         </button>

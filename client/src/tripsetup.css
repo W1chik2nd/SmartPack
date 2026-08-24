@@ -183,6 +183,12 @@
   background: var(--yellow);
 }
 
+/* 地图当前定位的那条:蓝色左边条标出,和 hover 的黄色区分开。 */
+.tripsetup-results button.is-selected {
+  border-left: 6px solid var(--blue);
+  padding-left: 6px;
+}
+
 .tripsetup-results strong {
   font-size: 15px;
   font-weight: var(--weight-heavy);
@@ -218,8 +224,9 @@
   cursor: pointer;
 }
 
+/* 保存中:仍是红色按钮,只减淡并去掉硬阴影,不变灰。 */
 .tripsetup-save:disabled {
-  cursor: not-allowed;
-  background: var(--text-secondary);
+  cursor: progress;
+  opacity: 0.6;
   box-shadow: none;
 }
