@@ -113,6 +113,7 @@ export function renderHome() {
       <Home
         user={{ id: "user-1", email: "anna@example.com", name: "Anna" }}
         onOpenTrips={() => {}}
+        onRetryTrip={() => {}}
         onOpenWardrobe={() => {}}
         onOpenItinerary={() => {}}
         onOpenPacking={() => {}}

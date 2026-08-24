@@ -24,6 +24,8 @@ type Props = {
   /** 从哪张场景卡片进来的(commute / travel / business / …)。 */
   scenario: string;
   onBack: () => void;
+  /** A failed dashboard plan whose values should seed this retry. */
+  retryPlan?: TripPlan | null;
   /** 保存成功后回主页;主页会显示这条新行程。 */
   onSaved: () => void;
 };
@@ -60,15 +62,35 @@ function elapsedLabel(seconds: number): string {
   return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
 }
 
-export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
+export default function TripSetup({
+  user,
+  scenario,
+  onBack,
+  retryPlan,
+  onSaved,
+}: Props) {
   const { lang, t } = useLang();
 
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(retryPlan?.placeName ?? "");
   const [results, setResults] = useState<Place[] | null>(null);
   const [searching, setSearching] = useState(false);
-  const [place, setPlace] = useState<Place | null>(null);
-  const [range, setRange] = useState<DateRange | null>(null);
-  const [agenda, setAgenda] = useState("");
+  const [place, setPlace] = useState<Place | null>(() =>
+    retryPlan
+      ? {
+          id: retryPlan.id,
+          name: retryPlan.placeName,
+          detail: retryPlan.placeDetail,
+          lat: retryPlan.lat,
+          lon: retryPlan.lon,
+        }
+      : null
+  );
+  const [range, setRange] = useState<DateRange | null>(() =>
+    retryPlan
+      ? { start: retryPlan.startDate, end: retryPlan.endDate }
+      : null
+  );
+  const [agenda, setAgenda] = useState(retryPlan?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [generation, setGeneration] = useState<GenerationProgress | null>(null);
@@ -160,16 +182,19 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
     setSaving(true);
     setError(null);
     try {
-      const { plan, estimate } = await generateTripPlan({
-        scenario,
-        placeName: place.name,
-        placeDetail: place.detail,
-        lat: place.lat,
-        lon: place.lon,
-        startDate: range.start,
-        endDate: range.end,
-        notes: agenda,
-      });
+      const { plan, estimate } = await generateTripPlan(
+        {
+          scenario,
+          placeName: place.name,
+          placeDetail: place.detail,
+          lat: place.lat,
+          lon: place.lon,
+          startDate: range.start,
+          endDate: range.end,
+          notes: agenda,
+        },
+        retryPlan?.id
+      );
       setElapsedSeconds(0);
       setGeneration({
         planId: plan.id,
