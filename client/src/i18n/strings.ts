@@ -106,9 +106,96 @@ export const STRINGS = {
 
   // city picker
   cityLabel: { en: "City", zh: "城市" },
+
+  // wardrobe
+  wardrobeTitle: { en: "Wardrobe Categories", zh: "服装品类列表" },
+  wardrobeAddPhoto: { en: "Add clothing by photo", zh: "拍照添加衣物" },
+  wardrobeMine: { en: "My wardrobe", zh: "我的衣柜" },
+  wardrobeEmpty: { en: "Your wardrobe is empty", zh: "衣柜还是空的" },
+  wardrobeEmptyHint: {
+    en: "Tap the camera in the top right to add your first item.",
+    zh: "点右上角相机添加第一件衣物",
+  },
+  wardrobeRecognizing: { en: "Recognizing…", zh: "识别中…" },
+  wardrobeLoadFailed: { en: "Could not load your wardrobe.", zh: "加载失败" },
+  wardrobeRecognizeFailed: { en: "Could not recognize the item.", zh: "识别失败" },
+  wardrobePhotoFailed: { en: "Could not process the photo.", zh: "图片处理失败" },
+  wardrobeDeleteFailed: { en: "Could not delete the item.", zh: "删除失败" },
+  wardrobeDelete: { en: "Delete", zh: "删除" },
+  wardrobeQrDialog: { en: "Scan with your phone to shoot", zh: "用手机扫码拍照" },
+  wardrobeQrAlt: { en: "QR code for phone photo upload", zh: "手机拍照上传的二维码" },
+  wardrobeQrText: {
+    en: "Scan to open the camera on your phone. Photos come back here automatically — no phone sign-in needed.",
+    zh: "手机扫码即打开相机,拍完自动传回这里,不用在手机上登录。",
+  },
+  wardrobeQrWaiting: { en: "Waiting for a photo…", zh: "等待手机拍照…" },
+  wardrobeQrNote: {
+    en: "The self-signed certificate triggers an \"unsafe\" warning on first visit — choose to continue.",
+    zh: "自签证书首次访问会提示“不安全”,选择继续访问即可。",
+  },
+  close: { en: "Close", zh: "关闭" },
+
+  // packing list
+  pkEyebrow: { en: "Minimal Luggage Plan", zh: "最小行李方案" },
+  pkVariety: { en: "More variety", zh: "丰富造型" },
+  pkLight: { en: "Pack light", zh: "精简出行" },
+  pkBalanced: { en: "Balanced", zh: "均衡" },
+  pkSliderLabel: {
+    en: "Packing preference: pack light to more variety",
+    zh: "打包偏好:精简出行 到 丰富造型",
+  },
+  pkListTitle: { en: "Packing List", zh: "打包清单" },
+  pkReuse: { en: "Times reused", zh: "复用次数" },
+  pkEssentials: { en: "Don't-forget Items", zh: "重要物品提醒" },
+  pkCore: { en: "Core Pieces", zh: "核心单品" },
+  pkCoreTag: { en: "Core piece", zh: "核心单品" },
+  pkPacked: { en: "Packed", zh: "已打包" },
+  pkUpdating: { en: "updating…", zh: "更新中…" },
+  pkLoadFailed: { en: "Failed to load plan.", zh: "无法加载方案。" },
+
+  // phone upload page
+  phoneTitle: { en: "SmartPack Photo Upload", zh: "SmartPack 拍照上传" },
+  phoneOpening: {
+    en: "Opening the camera… if nothing happens, tap the button below.",
+    zh: "正在调起相机…若没反应,点下面的按钮。",
+  },
+  phoneUploading: { en: "Uploading…", zh: "上传中…" },
+  phoneKeepGoing: {
+    en: "Shoot the next item if you like — each photo is recognized on your computer. Close the QR dialog there when you're done.",
+    zh: "可以接着拍下一件,电脑上会逐张识别。拍完在电脑上关掉二维码即可。",
+  },
+  phoneAnother: { en: "Take another", zh: "再拍一张" },
+  phoneTake: { en: "Take photo", zh: "拍照" },
+  phoneUploadFailed: { en: "Upload failed.", zh: "上传失败" },
 } as const;
 
 export type StringKey = keyof typeof STRINGS;
+
+// Sentences with a number in a different position per language need a
+// formatter rather than a lookup: word order is part of the translation.
+
+export function photosSentMessage(lang: Lang, count: number): string {
+  return lang === "zh"
+    ? `✓ 已传 ${count} 张到电脑`
+    : `✓ ${count} photo${count === 1 ? "" : "s"} sent to your computer`;
+}
+
+export function confirmDeleteMessage(lang: Lang, title: string): string {
+  return lang === "zh"
+    ? `确定删除「${title}」?`
+    : `Delete "${title}"?`;
+}
+
+export function unreachableHostMessage(lang: Lang, hostname: string): string {
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return lang === "zh"
+      ? "当前用 localhost 打开,手机连不到你的电脑。请改用终端里 Vite 打印的局域网地址(形如 https://192.168.x.x:5177 或 https://172.x.x.x:5177)重新打开本页,再点拍照。"
+      : "This page is open on localhost, which your phone cannot reach. Reopen it using the LAN address Vite prints in the terminal (like https://192.168.x.x:5177 or https://172.x.x.x:5177), then tap the camera again.";
+  }
+  return lang === "zh"
+    ? `当前地址 ${hostname} 是 VPN/代理的虚拟网卡,手机连不到。请改用真实的 WiFi 局域网地址(通常是 192.168.x.x 或 172.x.x.x)重新打开本页。也可以先关掉代理软件再看终端打印的地址。`
+    : `The current address ${hostname} belongs to a VPN/proxy virtual adapter, which your phone cannot reach. Reopen this page on your real WiFi LAN address (usually 192.168.x.x or 172.x.x.x), or turn the proxy off and use the address Vite prints in the terminal.`;
+}
 
 // Scenario labels come from the server by id; translate on the client so the
 // API stays language-neutral.

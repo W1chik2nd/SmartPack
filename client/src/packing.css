@@ -113,6 +113,32 @@
   min-width: 0;
 }
 
+/* Back to the dashboard — same flat block as the other sections */
+.pk-backbar {
+  margin-bottom: var(--space-2);
+}
+
+.pk-back {
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  background: var(--white);
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+
+.pk-back:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+.pk-back:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
 .pk-header {
   margin-bottom: var(--space-3);
 }

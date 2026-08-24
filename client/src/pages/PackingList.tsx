@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getPackingPlan, type PackingPlan } from "../api";
+import { useLang } from "../i18n/useLang";
 import PackingLayout from "./PackingListView";
 
 // The packing-list screen (sketch: 打包清单 + 造型/精简 slider + 重要物品提醒
@@ -17,9 +18,14 @@ function useDebounced<T>(value: T, ms: number): T {
   return debounced;
 }
 
-export default function PackingList() {
-  // 0 = 精简出行 (pack lightest) · 100 = 丰富造型 (most variety). The sketch draws
-  // the slider vertically with 丰富造型 on top, so the visual top is 100.
+type Props = {
+  onBack: () => void;
+};
+
+export default function PackingList({ onBack }: Props) {
+  const { t } = useLang();
+  // 0 = pack lightest · 100 = most variety. The sketch draws the slider
+  // vertically with "more variety" on top, so the visual top is 100.
   const [balance, setBalance] = useState(50);
   const debouncedBalance = useDebounced(balance, 250);
 
@@ -45,7 +51,7 @@ export default function PackingList() {
       })
       .catch((err) => {
         if (id !== reqId.current) return;
-        setError(err instanceof Error ? err.message : "Failed to load plan.");
+        setError(err instanceof Error ? err.message : t("pkLoadFailed"));
       })
       .finally(() => {
         if (id === reqId.current) setLoading(false);
@@ -78,6 +84,7 @@ export default function PackingList() {
       onToggle={toggle}
       totalItems={totalItems}
       packedCount={packedCount}
+      onBack={onBack}
     />
   );
 }
