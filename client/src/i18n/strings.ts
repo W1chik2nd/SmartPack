@@ -338,6 +338,8 @@ export const STRINGS = {
   expandOverview: { en: "Expand trip overview", zh: "展开总行程图" },
   pickDay: { en: "Pick a day", zh: "选择某一天" },
   dayStops: { en: "stops", zh: "个停靠点" },
+  dayLabel: { en: "Day", zh: "第" },
+  daysUnit: { en: "days", zh: "天" },
   dayWeather: { en: "Weather decision", zh: "天气决策" },
   dayOutfit: { en: "Wear", zh: "当日穿搭" },
   dayEquipment: { en: "Carry", zh: "随身装备" },

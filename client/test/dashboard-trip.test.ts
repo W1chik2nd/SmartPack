@@ -37,6 +37,16 @@ test("failed dashboard plans open the prefilled retry flow", () => {
   assert.match(app, /setScenario\(plan\.scenario\)/);
 });
 
+test("itinerary uses the selected language for day labels", () => {
+  const itinerary = readFileSync(new URL("../src/pages/Itinerary.tsx", import.meta.url), "utf8");
+  const spine = readFileSync(new URL("../src/components/TripSpine.tsx", import.meta.url), "utf8");
+  const dayPlan = readFileSync(new URL("../src/components/DayPlan.tsx", import.meta.url), "utf8");
+  assert.match(itinerary, /const dayWord = lang === "zh"/);
+  assert.match(spine, /const dayLabel = \(day:/);
+  assert.match(dayPlan, /const dayLabel = lang === "zh"/);
+  assert.match(itinerary, /\{trip\.days\.length\} × \{dayWord\}/);
+});
+
 test("one shell-level chat widget survives in-memory route changes", () => {
   assert.equal((app.match(/<ChatWidget/g) ?? []).length, 1);
   assert.match(app, /\{user && <ChatWidget onActions=\{handleAssistantActions\} \/>\}/);

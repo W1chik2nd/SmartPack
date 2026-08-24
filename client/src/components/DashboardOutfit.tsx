@@ -1,5 +1,6 @@
 import type { OutfitDay, OutfitPiece } from "../api";
 import OutfitPieceVisual from "./OutfitPieceVisual";
+import { useLang } from "../i18n/useLang";
 
 type Props = {
   day: OutfitDay | null;
@@ -17,8 +18,9 @@ function layers(pieces: OutfitPiece[]) {
   };
 }
 
-function description(piece: OutfitPiece): string {
-  return piece.detail ? `${piece.label}（${piece.detail}）` : piece.label;
+function description(piece: OutfitPiece, lang: "en" | "zh"): string {
+  const label = lang === "zh" ? piece.label : piece.labelEn || piece.label;
+  return piece.detail && lang === "zh" ? `${label}（${piece.detail}）` : label;
 }
 
 /** Compact dashboard illustration; never changes the dashboard grid dimensions. */
@@ -32,19 +34,24 @@ export default function DashboardOutfit({ day, placeName }: Props) {
     );
   }
 
+  const { lang } = useLang();
   const outfit = layers(day.pieces);
   const pieces = [outfit.inner, outfit.outer, outfit.bottom, outfit.shoes, outfit.accessory]
     .filter((piece): piece is OutfitPiece => Boolean(piece));
 
   return (
-    <span className="outfit-figure" aria-label={pieces.map(description).join("，")}>
+    <span className="outfit-figure" aria-label={pieces.map((piece) => description(piece, lang)).join("，")}>
       <span className="dashboard-outfit-stack">
         <span className="dashboard-outfit-torso">
           {outfit.inner && <OutfitPieceVisual piece={outfit.inner} compact />}
           {outfit.outer && (
             <span
               className="dashboard-outfit-outer"
-              aria-label={`${description(outfit.outer)}，打开拉链，露出里面的${outfit.inner ? description(outfit.inner) : "内搭"}`}
+              aria-label={
+                lang === "zh"
+                  ? `${description(outfit.outer, lang)}，打开拉链，露出里面的${outfit.inner ? description(outfit.inner, lang) : "内搭"}`
+                  : `${description(outfit.outer, lang)}, worn open over ${outfit.inner ? description(outfit.inner, lang) : "the inner layer"}`
+              }
             >
               <OutfitPieceVisual piece={outfit.outer} compact />
               <span className="dashboard-outfit-zip" aria-hidden="true" />
@@ -55,7 +62,7 @@ export default function DashboardOutfit({ day, placeName }: Props) {
         {outfit.shoes && <OutfitPieceVisual piece={outfit.shoes} compact />}
         {outfit.accessory && <OutfitPieceVisual piece={outfit.accessory} compact />}
       </span>
-      <span className="outfit-description">{pieces.map(description).join(" · ")}</span>
+      <span className="outfit-description">{pieces.map((piece) => description(piece, lang)).join(" · ")}</span>
     </span>
   );
 }

@@ -56,11 +56,12 @@ export default function DayPlan({ day }: Props) {
   const weather =
     lang === "zh" ? day.weatherSummary : day.weatherSummaryEn || day.weatherSummary;
   const risk = lang === "zh" ? day.weatherRisk : day.weatherRiskEn || day.weatherRisk;
+  const dayLabel = lang === "zh" ? `第${day.dayNumber}天` : `Day ${day.dayNumber}`;
 
   return (
     <section className="day-plan" aria-label={`Day ${day.dayNumber}`}>
       <header className="day-plan-head">
-        <h2 className="day-plan-title">Day {day.dayNumber}</h2>
+        <h2 className="day-plan-title">{dayLabel}</h2>
         <span className="day-plan-date">{day.dateLabel}</span>
         <span className="day-plan-summary">
           {summary} · {stops.length} {t("dayStops")}
