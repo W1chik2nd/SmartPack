@@ -129,13 +129,13 @@ function Shell() {
       if (action.type === "tripCreated") setRoute("home");
       if (action.type === "packingChanged") {
         const current = JSON.parse(
-          sessionStorage.getItem("smartpack_packing_checked") ?? "{}"
+          sessionStorage.getItem("wearroute_packing_checked") ?? "{}"
         ) as Record<string, boolean>;
         for (const id of action.checked ?? []) current[id] = true;
         for (const id of action.unchecked ?? []) current[id] = false;
-        sessionStorage.setItem("smartpack_packing_checked", JSON.stringify(current));
+        sessionStorage.setItem("wearroute_packing_checked", JSON.stringify(current));
         if (action.balance !== undefined) {
-          sessionStorage.setItem("smartpack_packing_balance", String(action.balance));
+          sessionStorage.setItem("wearroute_packing_balance", String(action.balance));
         }
         openLatestPackingPlan();
       }
@@ -188,7 +188,7 @@ function Shell() {
           className="nav-brand"
           onClick={() => setRoute(user ? "home" : "landing")}
         >
-          WearRoute
+          {t("brandName")}
         </button>
         <div className="nav-actions">
           {langToggle}

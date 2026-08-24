@@ -11,6 +11,7 @@ import {
   consumeImage,
   endUploadSession,
 } from "./upload-session.ts";
+import type { AsyncValue } from "./async-value.ts";
 
 type Ctx = {
   req: IncomingMessage;
@@ -19,7 +20,7 @@ type Ctx = {
   json: (res: ServerResponse, status: number, body: unknown) => void;
   readBody: (req: IncomingMessage, maxBytes?: number) => Promise<any>;
   /** 从 Authorization 头解析用户;未登录返回 null。 */
-  userFromHeader: () => { id: string } | null;
+  userFromHeader: () => AsyncValue<{ id: string } | null>;
 };
 
 /** 处理了就返回 true,让 app.ts 知道不用继续匹配后面的路由。 */
@@ -30,7 +31,7 @@ export async function handleUploadRoutes(ctx: Ctx): Promise<boolean> {
 
   // 电脑端(已登录)创建扫码上传会话,token 会被编进二维码。
   if (method === "POST" && path === "/api/upload-session") {
-    const user = userFromHeader();
+    const user = await userFromHeader();
     if (!user) {
       json(res, 401, { error: "Not signed in." });
       return true;
@@ -61,7 +62,7 @@ export async function handleUploadRoutes(ctx: Ctx): Promise<boolean> {
 
   // 电脑端轮询:照片到了就取回(取回即销毁会话)。
   if (method === "GET" && path === "/api/upload-session/photo") {
-    const user = userFromHeader();
+    const user = await userFromHeader();
     if (!user) {
       json(res, 401, { error: "Not signed in." });
       return true;
@@ -83,7 +84,7 @@ export async function handleUploadRoutes(ctx: Ctx): Promise<boolean> {
 
   // 电脑关闭二维码弹窗:显式结束会话,不必等 TTL 过期。
   if (method === "DELETE" && path === "/api/upload-session") {
-    const user = userFromHeader();
+    const user = await userFromHeader();
     if (!user) {
       json(res, 401, { error: "Not signed in." });
       return true;

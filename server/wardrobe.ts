@@ -11,6 +11,7 @@ import { randomUUID } from "node:crypto";
 import { writeFileSync, unlinkSync, mkdirSync } from "node:fs";
 import { join } from "node:path";
 import type { WardrobeItem } from "../shared/wardrobe-types.ts";
+import type { AsyncValue } from "./async-value.ts";
 
 export type { WardrobeItem } from "../shared/wardrobe-types.ts";
 
@@ -84,6 +85,18 @@ function toItem(r: Row): WardrobeItem {
 }
 
 export type WardrobeStore = {
+  list: (userId: string) => AsyncValue<WardrobeItem[]>;
+  add: (userId: string, item: NewItem) => AsyncValue<WardrobeItem>;
+  update: (userId: string, id: string, patch: ItemPatch) => AsyncValue<WardrobeItem | null>;
+  remove: (userId: string, id: string) => AsyncValue<boolean>;
+  photoPath?: (userId: string, id: string) => AsyncValue<string | null>;
+  photo?: (
+    userId: string,
+    id: string
+  ) => AsyncValue<{ data: Buffer; contentType: string } | null>;
+};
+
+export type SyncWardrobeStore = {
   list: (userId: string) => WardrobeItem[];
   add: (userId: string, item: NewItem) => WardrobeItem;
   update: (userId: string, id: string, patch: ItemPatch) => WardrobeItem | null;
@@ -94,7 +107,7 @@ export type WardrobeStore = {
 export function createWardrobeStore(
   db: DatabaseSync,
   photoDir: string
-): WardrobeStore {
+): SyncWardrobeStore {
   db.exec(`
     CREATE TABLE IF NOT EXISTS wardrobe_items (
       id          TEXT PRIMARY KEY,

@@ -17,7 +17,7 @@ let base: string;
 let dir: string;
 
 before(async () => {
-  dir = mkdtempSync(join(tmpdir(), "smartpack-test-"));
+  dir = mkdtempSync(join(tmpdir(), "wearroute-test-"));
   app = createApp(join(dir, "test.db"));
   server = createServer(app.handle);
   await new Promise<void>((r) => server.listen(0, () => r()));

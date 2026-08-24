@@ -16,7 +16,7 @@ test("authenticated translation route returns provider translations", async () =
   await new Promise<void>((resolve) => provider.listen(0, resolve));
   const providerAddress = provider.address();
   if (!providerAddress || typeof providerAddress === "string") throw new Error("provider unavailable");
-  const dir = mkdtempSync(join(tmpdir(), "smartpack-translate-"));
+  const dir = mkdtempSync(join(tmpdir(), "wearroute-translate-"));
   const app = createApp(join(dir, "test.db"));
   const server: Server = createServer(app.handle);
   await new Promise<void>((resolve) => server.listen(0, resolve));

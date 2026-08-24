@@ -9,6 +9,7 @@ import {
 } from "./itinerary-demo.ts";
 import { insertGeneratedItinerary } from "./itinerary-generation.ts";
 import type { BilingualItem, GeneratedTripPlan } from "./trip-agent-types.ts";
+import type { AsyncValue } from "./async-value.ts";
 
 /** 停靠点类型:景点 / 交通 / 餐饮 / 住宿。右侧时间轴按类型换图标。 */
 export type StopKind = "spot" | "transit" | "meal" | "hotel";
@@ -79,9 +80,25 @@ export type StopWithCity = TripStop & { city: string; cityEn: string };
 
 export type ItineraryStore = {
   /** 某用户的全部行程(含天与停靠点)。 */
+  list: (userId: string) => AsyncValue<Trip[]>;
+  get: (userId: string, tripId: string) => AsyncValue<Trip | null>;
+  /** 造一份演示行程并返回。UI 阶段用,接入 AI 生成后废弃。 */
+  seedDemoTrip: (userId: string, scenario: string) => AsyncValue<Trip>;
+  saveGenerated: (
+    userId: string,
+    sourcePlanId: string,
+    scenario: string,
+    generated: GeneratedTripPlan
+  ) => AsyncValue<Trip>;
+  /** 把查到的配图写回停靠点,下次不用再查供应商。 */
+  setStopPhoto: (userId: string, stopId: string, photo: PhotoPatch) => AsyncValue<void>;
+  /** 取停靠点(带用户校验、带所在城市),供配图路由用。 */
+  stop: (userId: string, stopId: string) => AsyncValue<StopWithCity | null>;
+};
+
+export type SyncItineraryStore = {
   list: (userId: string) => Trip[];
   get: (userId: string, tripId: string) => Trip | null;
-  /** 造一份演示行程并返回。UI 阶段用,接入 AI 生成后废弃。 */
   seedDemoTrip: (userId: string, scenario: string) => Trip;
   saveGenerated: (
     userId: string,
@@ -89,9 +106,7 @@ export type ItineraryStore = {
     scenario: string,
     generated: GeneratedTripPlan
   ) => Trip;
-  /** 把查到的配图写回停靠点,下次不用再查供应商。 */
   setStopPhoto: (userId: string, stopId: string, photo: PhotoPatch) => void;
-  /** 取停靠点(带用户校验、带所在城市),供配图路由用。 */
   stop: (userId: string, stopId: string) => StopWithCity | null;
 };
 
@@ -157,7 +172,7 @@ function toStop(r: StopRow): TripStop {
   };
 }
 
-export function createItineraryStore(db: DatabaseSync): ItineraryStore {
+export function createItineraryStore(db: DatabaseSync): SyncItineraryStore {
   db.exec(`
     CREATE TABLE IF NOT EXISTS trips (
       id            TEXT PRIMARY KEY,

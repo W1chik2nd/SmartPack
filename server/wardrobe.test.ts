@@ -12,7 +12,7 @@ const PHOTO =
   "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwcJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPDs0NDP/wAALCAABAAEBAREA/8QAFAABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFAEBAAAAAAAAAAAAAAAAAAAAAP/EABQRAQAAAAAAAAAAAAAAAAAAAAD/2gAMAwEAAhEDEQA/AJQA/9k=";
 
 function freshStore() {
-  const dir = mkdtempSync(join(tmpdir(), "smartpack-wardrobe-"));
+  const dir = mkdtempSync(join(tmpdir(), "wearroute-wardrobe-"));
   const db = new DatabaseSync(join(dir, "test.db"));
   // wardrobe 表有 user_id 外键指向 users,测试里需要这张表存在。
   db.exec(`CREATE TABLE users (id TEXT PRIMARY KEY);`);
@@ -120,4 +120,3 @@ test("remove deletes the row and its photo file", () => {
   // 重复删除应返回 false 而不是抛错。
   assert.equal(store.remove("u1", item.id), false);
 });
-

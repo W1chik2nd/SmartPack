@@ -21,7 +21,7 @@ export default function Landing({ onEnter }: Props) {
       <div className="landing-hero">
         <h1 className="landing-title">
           <span className="landing-logo" aria-hidden="true" />
-          WearRoute
+          {t("brandName")}
         </h1>
         <p className="landing-tagline">{t("landingTagline")}</p>
       </div>

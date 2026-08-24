@@ -23,7 +23,7 @@ WearRoute:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么�
 
 - 项目处于早期阶段,大部分是设计文档。
 - **当前重心:先做一版 web app,在 Mac 上本地跑起来。iOS 暂时搁置。**
-- `ios/SmartPack/` 下有几个 SwiftUI 界面(今日主页、衣橱列表)+ 假数据,**纯展示层,没有后端**。这是早期原型,暂不维护,不要在上面继续加功能。
+- `ios/WearRoute/` 下的 SwiftUI 原型(今日主页、衣橱列表)+ 假数据是**纯展示层,没有后端**。这是早期原型,暂不维护,不要在上面继续加功能。
 - 还**没有** web 前端、没有后端。这是接下来要搭的。
 - 目录里的 Swift 只做过 `-typecheck` 校验,没在模拟器跑过。
 
@@ -84,7 +84,7 @@ WearRoute:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么�
 - 前后端同为 TypeScript,类型尽量共享,减少上下文切换
 
 **iOS(已搁置):**
-- 原生 **SwiftUI**(原型在 `ios/SmartPack/`),当前阶段不动。
+- 原生 **SwiftUI**(原型目录为 `ios/WearRoute/`),当前阶段不动。
 
 **待定(要引入前先在对话里确认,不要擅自选型后大规模铺开):**
 - Node 侧的具体框架(Express / Fastify / NestJS 等)、ORM(如 Prisma)、前端组件库、LLM 供应商。
@@ -135,7 +135,7 @@ WearRoute:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么�
 对 iOS Swift 文件做类型检查(macOS 上,绕开 Xcode license 提示):
 
 ```bash
-cd ios/SmartPack
+cd ios/WearRoute
 DEV="/Applications/Xcode.app/Contents/Developer"
 SDK="$DEV/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"
 PLUGDIR="$DEV/Platforms/iPhoneOS.platform/Developer/usr/lib/swift/host/plugins"

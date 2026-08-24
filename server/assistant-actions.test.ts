@@ -68,9 +68,9 @@ test("plain provider text stays a recommendation with no side effects", () => {
   });
 });
 
-test("assistant actions add wardrobe items and valid trip plans", () => {
+test("assistant actions add wardrobe items and valid trip plans", async () => {
   const ctx = context();
-  const result = executeAssistantActions([
+  const result = await executeAssistantActions([
     { type: "addWardrobeItem", item: { title: "Black tee", category: "top" } },
     {
       type: "createTripPlan",
@@ -94,33 +94,33 @@ test("assistant actions add wardrobe items and valid trip plans", () => {
   assert.deepEqual(result.errors, []);
 });
 
-test("assistant can edit a known wardrobe item", () => {
+test("assistant can edit a known wardrobe item", async () => {
   const ctx = context();
   const parsed = parseAssistantEnvelope(JSON.stringify({
     reply: "Updating it.",
     actions: [{ type: "updateWardrobeItem", id: "item-1", patch: { title: "White tee" } }],
   }));
-  const result = executeAssistantActions(parsed.actions, ctx);
+  const result = await executeAssistantActions(parsed.actions, ctx);
   assert.deepEqual(result.errors, []);
   assert.deepEqual(result.actions, [{ type: "wardrobeChanged" }]);
 });
 
-test("assistant merges a requested profile change with existing required fields", () => {
+test("assistant merges a requested profile change with existing required fields", async () => {
   const ctx = context();
-  const result = executeAssistantActions([
+  const result = await executeAssistantActions([
     { type: "updateProfile", profile: { weightKg: 57 } },
   ], ctx);
   assert.deepEqual(result.errors, []);
   assert.deepEqual(result.actions, [{ type: "profileUpdated", user: { id: "user-1" } }]);
 });
 
-test("assistant can control packing checklist state", () => {
+test("assistant can control packing checklist state", async () => {
   const ctx = context();
   const parsed = parseAssistantEnvelope(JSON.stringify({
     reply: "Marking it packed.",
     actions: [{ type: "packingChecklist", checked: ["passport"], balance: 20 }],
   }));
-  const result = executeAssistantActions(parsed.actions, ctx);
+  const result = await executeAssistantActions(parsed.actions, ctx);
   assert.deepEqual(result.actions, [{
     type: "packingChanged",
     checked: ["passport"],
@@ -128,9 +128,9 @@ test("assistant can control packing checklist state", () => {
   }]);
 });
 
-test("assistant refuses invalid trip mutations", () => {
+test("assistant refuses invalid trip mutations", async () => {
   const ctx = context();
-  const result = executeAssistantActions([{
+  const result = await executeAssistantActions([{
     type: "createTripPlan",
     plan: {
       scenario: "unknown",

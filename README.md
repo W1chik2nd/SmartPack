@@ -1,4 +1,4 @@
-# WearRoute — An AI Scenario Wardrobe
+# WearRoute（行装）— An AI Scenario Wardrobe
 
 > Leave the itinerary to the weather. Leave the outfits and luggage to AI.
 
@@ -52,19 +52,19 @@ WearRoute integrates weather alerts, outfit recommendations, and packing lists i
 
 ## Getting Started (Development)
 
-The repository contains a working prototype of the authentication flow: sign-in and sign-up pages backed by a SQLite database, plus a placeholder home page.
+The repository contains the WearRoute web app, its Node API, and local SQLite / production PostgreSQL persistence.
 
 ### Structure
 
 ```
-server/   Zero-dependency auth API — Node + TypeScript + SQLite (node:sqlite)
-client/   React + TypeScript + Vite front end (Apple-inspired design)
+server/   Node + TypeScript API — SQLite locally, PostgreSQL on Neon
+client/   React + TypeScript + Vite front end
 ```
 
 ### Requirements
 
 - Node.js 22.6+ (uses the built-in `node:sqlite` module and type stripping)
-- npm (or pnpm) — the client is an npm workspace; the server has zero dependencies
+- npm — the client and server are npm workspaces
 
 ### Run
 
@@ -75,7 +75,7 @@ npm install   # first time only
 npm run dev   # server + client together; open http://localhost:5177
 ```
 
-The API server creates `server/data/smartpack.db` automatically on first start.
+The API server creates `server/data/wearroute.db` automatically for local development.
 
 ### AI assistant (optional)
 
@@ -107,6 +107,48 @@ pnpm dev
 
 Registered accounts are stored in SQLite (passwords hashed with scrypt), and sign-in validates against the database. The Vite dev server proxies `/api/*` to the API server.
 
+## Deploy to Render with Neon
+
+Deploy the repository as one Render Web Service. The Node process serves both the built React app and `/api/*`, so the browser uses the Render origin automatically and no public API key is embedded in the client.
+
+Use these Render settings:
+
+```text
+Runtime: Node
+Branch: main
+Build Command: npm ci && npm run build
+Start Command: npm start
+Health Check Path: /api/health
+```
+
+Set these server-only environment variables in Render:
+
+```text
+DATABASE_URL=<Neon pooled PostgreSQL connection string>
+DATABASE_SCHEMA=wearroute
+DATABASE_POOL_SIZE=5
+AI_API_KEY=<provider key>
+AI_BASE_URL=<OpenAI-compatible endpoint>
+AI_MODEL=<model name>
+TRIP_AGENT_MODEL=<optional model override>
+VISION_API_KEY=<vision provider key>
+VISION_BASE_URL=<vision endpoint>
+VISION_MODEL=<vision model>
+PHOTO_PROVIDER=<unsplash|pexels|openverse>
+UNSPLASH_ACCESS_KEY=<optional>
+PEXELS_API_KEY=<optional>
+```
+
+`DATABASE_SCHEMA=wearroute` keeps the application tables isolated when the Neon database is shared with another project. Only configure optional providers that are actually in use. Never set secrets as `VITE_*` variables.
+
+To migrate the existing local data once, use the same Neon connection in a shell without committing it:
+
+```sh
+DATABASE_URL='postgresql://…' npm run migrate:sqlite --workspace wearroute-server
+```
+
+The migration is idempotent and defaults to `server/data/wearroute.db`. Set `SQLITE_PATH` when importing a database from another location.
+
 ## Status
 
-This project is in the early design stage. The current implementation covers account registration and sign-in with a placeholder home page; the wardrobe, trip planning, and packing features are under design.
+This project is in active development. The web app currently covers accounts, profiles, wardrobes, trip generation, itinerary views, outfit rendering, and packing lists.

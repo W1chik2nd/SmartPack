@@ -8,6 +8,7 @@
 // 内部函数信任调用方。
 import { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
+import type { AsyncValue } from "./async-value.ts";
 
 /** 一条行程计划:去哪、什么时候、什么场景。 */
 export type TripPlan = {
@@ -44,6 +45,16 @@ export type NewTripPlan = Omit<
 > & { notes?: string };
 
 export type TripPlanStore = {
+  save: (userId: string, plan: NewTripPlan) => AsyncValue<TripPlan>;
+  get: (userId: string, planId: string) => AsyncValue<TripPlan | null>;
+  list: (userId: string) => AsyncValue<TripPlan[]>;
+  markGenerating: (userId: string, planId: string) => AsyncValue<void>;
+  markFailed: (userId: string, planId: string, error: string) => AsyncValue<void>;
+  attachItinerary: (userId: string, planId: string, itineraryId: string) => AsyncValue<void>;
+  remove: (userId: string, planId: string) => AsyncValue<boolean>;
+};
+
+export type SyncTripPlanStore = {
   save: (userId: string, plan: NewTripPlan) => TripPlan;
   get: (userId: string, planId: string) => TripPlan | null;
   list: (userId: string) => TripPlan[];
@@ -87,7 +98,7 @@ function toPlan(row: Row): TripPlan {
   };
 }
 
-export function createTripPlanStore(db: DatabaseSync): TripPlanStore {
+export function createTripPlanStore(db: DatabaseSync): SyncTripPlanStore {
   db.exec(`
     CREATE TABLE IF NOT EXISTS trip_plans (
       id           TEXT PRIMARY KEY,

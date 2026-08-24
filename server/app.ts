@@ -9,14 +9,14 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { DatabaseSync } from "node:sqlite";
 import { handleUploadRoutes } from "./upload-routes.ts";
-import { createWardrobeStore } from "./wardrobe.ts";
+import { createWardrobeStore, type WardrobeStore } from "./wardrobe.ts";
 import { handleWardrobeRoutes } from "./wardrobe-routes.ts";
-import { createTripPlanStore } from "./trip-plan.ts";
+import { createTripPlanStore, type TripPlanStore } from "./trip-plan.ts";
 import { handleTripPlanRoutes } from "./trip-plan-routes.ts";
 import { handleOutfitRoutes } from "./outfit-routes.ts";
-import { createItineraryStore } from "./itinerary.ts";
+import { createItineraryStore, type ItineraryStore } from "./itinerary.ts";
 import { handleItineraryRoutes } from "./itinerary-routes.ts";
-import { createPackingPlanStore } from "./packing-store.ts";
+import { createPackingPlanStore, type PackingPlanStore } from "./packing-store.ts";
 import { handleTripGenerationRoutes } from "./trip-generation-routes.ts";
 import { generateTrip, type GenerateTrip } from "./trip-agent.ts";
 import { handleAssistantRoutes } from "./assistant-routes.ts";
@@ -25,30 +25,77 @@ import { assistantDataContext } from "./assistant-context.ts";
 import { handleCatalogRoutes, SCENARIO_IDS } from "./catalog-routes.ts";
 import { dirname, join } from "node:path";
 import { buildGeneratedPackingPlan, buildPackingPlan } from "./packing.ts";
-import { createAccountService, publicUser } from "./account-routes.ts";
+import {
+  createAccountService,
+  publicUser,
+  type AccountService,
+} from "./account-routes.ts";
 import { analyzePersonalColor, visionConfigured } from "./vision.ts";
+import { createPostgresPool } from "./postgres.ts";
+import { createPostgresAccountService } from "./postgres-account.ts";
+import { createPostgresWardrobeStore } from "./postgres-wardrobe.ts";
+import { createPostgresTripPlanStore } from "./postgres-trip-plan.ts";
+import { createPostgresItineraryStore } from "./postgres-itinerary.ts";
+import { createPostgresPackingPlanStore } from "./postgres-packing-store.ts";
 
 export type App = {
   handle: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
-  close: () => void;
+  close: () => void | Promise<void>;
+};
+
+type AppDependencies = { generateTrip?: GenerateTrip };
+type AppServices = {
+  accounts: AccountService;
+  wardrobe: WardrobeStore;
+  tripPlans: TripPlanStore;
+  itinerary: ItineraryStore;
+  packingPlans: PackingPlanStore;
+  close: () => void | Promise<void>;
 };
 
 export function createApp(
   dbPath: string,
-  dependencies: { generateTrip?: GenerateTrip } = {}
+  dependencies: AppDependencies = {}
 ): App {
   const db = new DatabaseSync(dbPath);
-  const accounts = createAccountService(db);
+  return createAppWithServices(
+    {
+      accounts: createAccountService(db),
+      wardrobe: createWardrobeStore(db, join(dirname(dbPath), "photos")),
+      tripPlans: createTripPlanStore(db),
+      itinerary: createItineraryStore(db),
+      packingPlans: createPackingPlanStore(db),
+      close: () => db.close(),
+    },
+    dependencies
+  );
+}
 
-  // 照片存数据库同级的 photos/ 目录:测试用临时库时会自动隔离到临时目录。
-  const wardrobe = createWardrobeStore(db, join(dirname(dbPath), "photos"));
-  // 行程计划(目的地 + 日期区间)自带建表,见 trip-plan.ts。
-  const tripPlans = createTripPlanStore(db);
+export async function createPostgresApp(
+  connectionString: string,
+  dependencies: AppDependencies = {}
+): Promise<App> {
+  const pool = await createPostgresPool(connectionString);
+  return createAppWithServices(
+    {
+      accounts: createPostgresAccountService(pool),
+      wardrobe: createPostgresWardrobeStore(pool),
+      tripPlans: await createPostgresTripPlanStore(pool),
+      itinerary: createPostgresItineraryStore(pool),
+      packingPlans: createPostgresPackingPlanStore(pool),
+      close: () => pool.end(),
+    },
+    dependencies
+  );
+}
+
+function createAppWithServices(
+  services: AppServices,
+  dependencies: AppDependencies
+): App {
+  const { accounts, wardrobe, tripPlans, itinerary, packingPlans } = services;
   // 合法场景 id 来自 catalog-routes,保存行程时据此校验(场景目录只有一处)。
   const scenarioIds = SCENARIO_IDS;
-  // 行程规划:trips / trip_days / trip_stops 三张表,建表在 store 里。
-  const itinerary = createItineraryStore(db);
-  const packingPlans = createPackingPlanStore(db);
   const runTripAgent = dependencies.generateTrip ?? generateTrip;
 
   function json(res: ServerResponse, status: number, body: unknown): void {
@@ -87,6 +134,11 @@ export function createApp(
 
     if (req.method === "OPTIONS") {
       json(res, 204, {});
+      return;
+    }
+
+    if (req.method === "GET" && url.pathname === "/api/health") {
+      json(res, 200, { ok: true, service: "wearroute" });
       return;
     }
 
@@ -155,20 +207,21 @@ export function createApp(
         json,
         readBody,
         userFromHeader: () => accounts.userForRequest(req),
-        actionContext: () => {
-          const actor = accounts.userForRequest(req);
+        actionContext: async () => {
+          const actor = await accounts.userForRequest(req);
           if (!actor) return null;
+          const [wardrobeItems, plans] = await Promise.all([
+            wardrobe.list(actor.id),
+            tripPlans.list(actor.id),
+          ]);
           return {
             userId: actor.id,
             scenarioIds,
             wardrobe,
             tripPlans,
-            promptContext: assistantDataContext(
-              wardrobe.list(actor.id),
-              tripPlans.list(actor.id)
-            ),
-            currentProfile: () =>
-              publicUser(accounts.userForRequest(req) ?? actor),
+            promptContext: assistantDataContext(wardrobeItems, plans),
+            currentProfile: async () =>
+              publicUser((await accounts.userForRequest(req)) ?? actor),
             updateProfile: (values) => accounts.updateProfile(actor.id, values),
           };
         },
@@ -216,7 +269,7 @@ export function createApp(
     // Trust boundary (AGENTS.md §4): coerce and clamp here; buildPackingPlan
     // trusts its caller.
     if (req.method === "GET" && url.pathname === "/api/packing") {
-      const user = accounts.userForRequest(req);
+      const user = await accounts.userForRequest(req);
       if (!user) {
         json(res, 401, { error: "Not signed in." });
         return;
@@ -225,12 +278,12 @@ export function createApp(
       const raw = rawParam === null ? NaN : Number(rawParam);
       const balance = Number.isFinite(raw) ? raw : 50;
       const tripPlanId = url.searchParams.get("tripPlanId");
-      const generated = tripPlanId
+      const generated = await (tripPlanId
         ? packingPlans.get(user.id, tripPlanId)
         : packingPlans.latest(
             user.id,
             url.searchParams.get("scenario") ?? undefined
-          );
+          ));
       if (tripPlanId && !generated) {
         json(res, 404, { error: "Packing plan not found for this trip." });
         return;
@@ -331,6 +384,6 @@ export function createApp(
         }
         json(res, 500, { error: message });
       }),
-    close: () => db.close(),
+    close: services.close,
   };
 }

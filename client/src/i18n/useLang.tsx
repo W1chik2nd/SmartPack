@@ -10,7 +10,7 @@ import {
 } from "react";
 import { STRINGS, type Lang, type StringKey } from "./strings";
 
-const LANG_KEY = "smartpack_lang";
+const LANG_KEY = "wearroute_lang";
 
 type LangContextValue = {
   lang: Lang;
@@ -32,6 +32,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
   // where English captions need far more room than Chinese ones).
   useEffect(() => {
     document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+    document.title = STRINGS.brandName[lang];
   }, [lang]);
 
   function setLang(next: Lang) {

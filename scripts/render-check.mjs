@@ -137,24 +137,15 @@ function hitsIn(pts, box) {
   ).length;
 }
 
-console.log("=== 首页物品清单(真实渲染) ===");
+console.log("=== 首页空行程状态(真实渲染) ===");
 {
   const html = harness.renderHome();
-  if (!html.includes('class="checklist-bag"')) {
-    fail("dashboard: checklist bag image was not rendered");
-  }
-  if (!html.includes('src="/checklist-bag.png"')) {
-    fail("dashboard: checklist bag image points to the wrong asset");
-  }
-  if (html.includes('class="check-mark"')) {
-    fail("dashboard: old checklist placeholder is still rendered");
+  if (!html.includes('class="today-card today-empty-card"')) {
+    fail("dashboard: empty trip state was not rendered");
   }
   const cardSwitches = [...html.matchAll(/class="trip-card-switch /g)].length;
   if (cardSwitches !== 0) {
     fail(`dashboard: empty trip card should hide switch controls, got ${cardSwitches}`);
-  }
-  if (!html.includes("Destination Weather Today")) {
-    fail("dashboard: weather heading is not destination-specific");
   }
   const oneTrip = harness.renderTripSwitcher(1);
   const twoTrips = harness.renderTripSwitcher(2);
@@ -166,7 +157,7 @@ console.log("=== 首页物品清单(真实渲染) ===");
   if (twoTripSwitches !== 2) {
     fail(`dashboard: two trips should render both switch controls, got ${twoTripSwitches}`);
   }
-  console.log("  checklist, destination weather, and conditional trip controls rendered");
+  console.log("  empty trip state and conditional trip controls rendered");
 }
 
 console.log("\n=== 个人档案页(真实渲染) ===");
@@ -191,8 +182,8 @@ console.log("\n=== 个人档案页(真实渲染) ===");
   }
   for (const gender of ["non-binary", "undisclosed"]) {
     const other = harness.renderProfile(gender);
-    if (other.includes('class="profile-avatar-image"')) {
-      fail(`profile: ${gender} must not render a portrait`);
+    if (!other.includes('src="/profile-neutral.png"')) {
+      fail(`profile: ${gender} did not select the neutral portrait`);
     }
   }
   console.log(`  inputs ${inputs}  selects ${selects}  preferences ${sections}  portrait ${avatars}`);

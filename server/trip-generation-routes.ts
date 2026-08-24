@@ -10,6 +10,7 @@ import {
 } from "./trip-input.ts";
 import type { GenerateTrip, TripAgentInput } from "./trip-agent.ts";
 import type { WardrobeStore } from "./wardrobe.ts";
+import type { AsyncValue } from "./async-value.ts";
 
 type AgentUser = TripAgentInput["user"];
 
@@ -25,7 +26,7 @@ type Ctx = {
   generateTrip: GenerateTrip;
   json: (res: ServerResponse, status: number, body: unknown) => void;
   readBody: (req: IncomingMessage, maxBytes?: number) => Promise<any>;
-  userFromHeader: () => AgentUser | null;
+  userFromHeader: () => AsyncValue<AgentUser | null>;
 };
 
 /** Queue and persist one complete, linked WearRoute travel decision. */
@@ -35,14 +36,14 @@ export async function handleTripGenerationRoutes(ctx: Ctx): Promise<boolean> {
     return false;
   }
 
-  const user = ctx.userFromHeader();
+  const user = await ctx.userFromHeader();
   if (!user) {
     json(res, 401, { error: "Not signed in." });
     return true;
   }
   const body = await ctx.readBody(req);
   const parsed = parseTripInput(body, ctx.scenarioIds);
-  if (!parsed.ok) {
+  if (parsed.ok === false) {
     json(res, 400, { error: parsed.error });
     return true;
   }
@@ -55,7 +56,7 @@ export async function handleTripGenerationRoutes(ctx: Ctx): Promise<boolean> {
     return true;
   }
   if (typeof replaceFailedPlanId === "string") {
-    const failedPlan = ctx.tripPlans.get(user.id, replaceFailedPlanId);
+    const failedPlan = await ctx.tripPlans.get(user.id, replaceFailedPlanId);
     if (!failedPlan) {
       json(res, 404, { error: "Failed trip not found." });
       return true;
@@ -73,13 +74,13 @@ export async function handleTripGenerationRoutes(ctx: Ctx): Promise<boolean> {
     return true;
   }
 
-  const plan = ctx.tripPlans.save(user.id, parsed.plan);
-  ctx.tripPlans.markGenerating(user.id, plan.id);
+  const plan = await ctx.tripPlans.save(user.id, parsed.plan);
+  await ctx.tripPlans.markGenerating(user.id, plan.id);
   plan.generationStatus = "processing";
   if (typeof replaceFailedPlanId === "string") {
-    ctx.tripPlans.remove(user.id, replaceFailedPlanId);
+    await ctx.tripPlans.remove(user.id, replaceFailedPlanId);
   }
-  const wardrobe = ctx.wardrobe.list(user.id);
+  const wardrobe = await ctx.wardrobe.list(user.id);
 
   // Return before the model call starts. The saved plan and its status remain
   // visible across page changes; clients can poll the normal trip list.
@@ -94,23 +95,23 @@ export async function handleTripGenerationRoutes(ctx: Ctx): Promise<boolean> {
   setImmediate(() => {
     void ctx
       .generateTrip({ user, plan: parsed.plan, wardrobe })
-      .then((generated) => {
+      .then(async (generated) => {
         // The user may delete a processing trip while the model is running.
         // In that case discard the answer instead of recreating orphan data.
-        if (!ctx.tripPlans.get(user.id, plan.id)) return;
-        const itinerary = ctx.itinerary.saveGenerated(
+        if (!(await ctx.tripPlans.get(user.id, plan.id))) return;
+        const itinerary = await ctx.itinerary.saveGenerated(
           user.id,
           plan.id,
           plan.scenario,
           generated
         );
-        ctx.packingPlans.save(
+        await ctx.packingPlans.save(
           user.id,
           plan.id,
           tripDayCount(plan.startDate, plan.endDate),
           generated.packing
         );
-        ctx.tripPlans.attachItinerary(user.id, plan.id, itinerary.id);
+        await ctx.tripPlans.attachItinerary(user.id, plan.id, itinerary.id);
       })
       .catch((error: any) => {
         const message = String(
@@ -119,7 +120,7 @@ export async function handleTripGenerationRoutes(ctx: Ctx): Promise<boolean> {
           .replace(/\s+/g, " ")
           .trim()
           .slice(0, 500);
-        ctx.tripPlans.markFailed(user.id, plan.id, message);
+        void ctx.tripPlans.markFailed(user.id, plan.id, message);
       });
   });
   return true;

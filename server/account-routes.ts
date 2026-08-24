@@ -7,6 +7,7 @@ import {
   validateProfile,
   type ProfileValues,
 } from "./profile.ts";
+import type { AsyncValue } from "./async-value.ts";
 
 export type UserRow = {
   id: string;
@@ -42,13 +43,14 @@ export type AccountService = {
     json: Json,
     readBody: ReadBody
   ) => Promise<boolean>;
-  userForRequest: (req: IncomingMessage) => UserRow | null;
-  userForToken: (token: string | undefined) => UserRow | null;
-  updateProfile: (userId: string, values: ProfileValues) => PublicUser;
+  userForRequest: (req: IncomingMessage) => AsyncValue<UserRow | null>;
+  userForToken: (token: string | undefined) => AsyncValue<UserRow | null>;
+  updateProfile: (userId: string, values: ProfileValues) => AsyncValue<PublicUser>;
 };
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const hashPassword = (password: string, salt: string) => scryptSync(password, salt, 64);
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const hashPassword = (password: string, salt: string) =>
+  scryptSync(password, salt, 64);
 
 export function publicUser(u: UserRow) {
   return {
@@ -171,7 +173,7 @@ export function createAccountService(db: DatabaseSync): AccountService {
         return true;
       }
       const profile = validateProfile(body);
-      if (!profile.ok) {
+      if (profile.ok === false) {
         json(res, 400, { error: profile.error });
         return true;
       }
@@ -245,7 +247,7 @@ export function createAccountService(db: DatabaseSync): AccountService {
         return true;
       }
       const profile = validateProfile(await readBody(req));
-      if (!profile.ok) {
+      if (profile.ok === false) {
         json(res, 400, { error: profile.error });
         return true;
       }

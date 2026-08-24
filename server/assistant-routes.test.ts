@@ -26,7 +26,7 @@ async function withMockProvider(
   const address = provider.address();
   if (!address || typeof address === "string") throw new Error("no provider port");
 
-  const dir = mkdtempSync(join(tmpdir(), "smartpack-assistant-routes-"));
+  const dir = mkdtempSync(join(tmpdir(), "wearroute-assistant-routes-"));
   const app = createApp(join(dir, "test.db"));
   const server: Server = createServer(app.handle);
   await new Promise<void>((resolve) => server.listen(0, resolve));

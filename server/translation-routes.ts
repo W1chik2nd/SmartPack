@@ -1,6 +1,7 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { aiConfigured } from "./ai.ts";
 import { translateBatch, type TranslationLanguage } from "./translate.ts";
+import type { AsyncValue } from "./async-value.ts";
 
 type Ctx = {
   req: IncomingMessage;
@@ -8,14 +9,14 @@ type Ctx = {
   url: URL;
   json: (res: ServerResponse, status: number, body: unknown) => void;
   readBody: (req: IncomingMessage, maxBytes?: number) => Promise<any>;
-  userFromHeader: () => { id: string } | null;
+  userFromHeader: () => AsyncValue<{ id: string } | null>;
 };
 
 /** Authenticated fallback for database text that has no reliable second language. */
 export async function handleTranslationRoutes(ctx: Ctx): Promise<boolean> {
   const { req, res, url, json, readBody, userFromHeader } = ctx;
   if (req.method !== "POST" || url.pathname !== "/api/translate") return false;
-  if (!userFromHeader()) {
+  if (!(await userFromHeader())) {
     json(res, 401, { error: "Not signed in." });
     return true;
   }
