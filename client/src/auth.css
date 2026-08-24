@@ -297,8 +297,8 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 20px;
-  height: 20px;
+  width: 30px;
+  height: 30px;
   margin: 0;
   accent-color: var(--blue);
   transform: translate(-50%, -50%);
