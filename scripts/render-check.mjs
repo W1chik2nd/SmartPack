@@ -141,7 +141,7 @@ console.log("=== 首页物品清单(真实渲染) ===");
   if (!html.includes('class="checklist-bag"')) {
     fail("dashboard: checklist bag image was not rendered");
   }
-  if (!html.includes('src="/checklist-bag.jpg"')) {
+  if (!html.includes('src="/checklist-bag.png"')) {
     fail("dashboard: checklist bag image points to the wrong asset");
   }
   if (html.includes('class="check-mark"')) {
@@ -156,13 +156,13 @@ console.log("\n=== 个人档案页(真实渲染) ===");
   const inputs = [...html.matchAll(/<input/g)].length;
   const selects = [...html.matchAll(/<select/g)].length;
   const sections = [...html.matchAll(/<details/g)].length;
-  const avatars = [...html.matchAll(/aria-label="Choose portrait/g)].length;
+  const avatars = [...html.matchAll(/class="avatar-stage"/g)].length;
   if (inputs !== 6) fail(`profile: expected 6 text/measurement inputs, got ${inputs}`);
   if (selects !== 2) fail(`profile: expected 2 selects, got ${selects}`);
   if (sections !== 3) fail(`profile: expected 3 preference sections, got ${sections}`);
-  if (avatars !== 2) fail(`profile: expected 2 labelled avatars, got ${avatars}`);
+  if (avatars !== 1) fail(`profile: expected 1 gender portrait, got ${avatars}`);
   if (!html.includes("Anna")) fail("profile: user name was not prefilled");
-  console.log(`  inputs ${inputs}  selects ${selects}  preferences ${sections}  avatars ${avatars}`);
+  console.log(`  inputs ${inputs}  selects ${selects}  preferences ${sections}  portrait ${avatars}`);
 }
 
 console.log("\n=== 左栏 TripSpine(真实渲染) ===");
