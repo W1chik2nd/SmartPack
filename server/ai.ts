@@ -72,14 +72,15 @@ export function structuredResponseRequestBody(
   baseUrl: string,
   model: string
 ): Record<string, unknown> {
+  const normalizedModel = model.toLowerCase();
+  const isGpt5 = /^gpt-5(?:[.-]|$)/.test(normalizedModel);
+  const supportsReasoning = isGpt5 || /^o\d(?:[.-]|$)/.test(normalizedModel);
   const body: Record<string, unknown> = {
     model,
     instructions: options.instructions,
     input: JSON.stringify(options.input),
-    reasoning: { effort: "medium" },
     tools: [{ type: "web_search" }],
     text: {
-      verbosity: "medium",
       format: {
         type: "json_schema",
         name: "smartpack_trip_plan",
@@ -87,11 +88,21 @@ export function structuredResponseRequestBody(
         schema: options.schema,
       },
     },
-    // A 30-day bilingual itinerary can be large, and reasoning tokens share
-    // this budget. This stays below Terra's 128k output ceiling.
-    max_output_tokens: 64_000,
+    // GPT-4o mini supports at most 16,384 output tokens. GPT-5 itineraries can
+    // use the larger budget because reasoning tokens share this same limit.
+    max_output_tokens: /^gpt-4o(?:[.-]|$)/.test(normalizedModel)
+      ? 16_000
+      : 64_000,
     store: false,
   };
+
+  // OpenAI exposes reasoning controls only for GPT-5 and o-series models.
+  // Likewise, verbosity is a GPT-5 control; omitting unsupported optional
+  // parameters keeps Responses-compatible models such as gpt-4o-mini valid.
+  if (supportsReasoning) body.reasoning = { effort: "medium" };
+  if (isGpt5) {
+    (body.text as Record<string, unknown>).verbosity = "medium";
+  }
 
   try {
     const hostname = new URL(baseUrl).hostname.toLowerCase();
@@ -104,7 +115,7 @@ export function structuredResponseRequestBody(
   return body;
 }
 
-/** GPT-5.6 trip-planning call: reasoning + web grounding + strict JSON. */
+/** Model-aware trip-planning call with web grounding and strict JSON. */
 export async function structuredResponse<T>(
   options: StructuredResponseOptions
 ): Promise<T> {

@@ -7,6 +7,7 @@ import {
   type AssistantClientAction,
   type AssistantPage,
   type Credentials,
+  type TripPlan,
   type User,
 } from "./api";
 import { LangProvider, useLang } from "./i18n/useLang";
@@ -56,6 +57,7 @@ function Shell() {
   const [packingTripPlanId, setPackingTripPlanId] = useState<string | undefined>(
     undefined
   );
+  const [retryPlan, setRetryPlan] = useState<TripPlan | null>(null);
 
   useEffect(() => {
     // 手机上传页不需要登录态,跳过 me() 免得白等一次请求。
@@ -226,7 +228,16 @@ function Shell() {
       {route === "home" && user && (
         <Home
           user={user}
-          onOpenTrips={() => setRoute("trips")}
+          onOpenTrips={() => {
+            setRetryPlan(null);
+            setRoute("trips");
+          }}
+          onRetryTrip={(plan) => {
+            setRetryPlan(plan);
+            setScenario(plan.scenario);
+            setItineraryId(undefined);
+            setRoute("tripSetup");
+          }}
           onOpenWardrobe={() => setRoute("wardrobe")}
           onOpenItinerary={(id) => {
             setScenario("travel");
@@ -246,6 +257,7 @@ function Shell() {
           user={user}
           onBack={() => setRoute("home")}
           onPickScenario={(id) => {
+            setRetryPlan(null);
             setScenario(id);
             setItineraryId(undefined);
             setRoute("tripSetup");
@@ -256,8 +268,15 @@ function Shell() {
         <TripSetup
           user={user}
           scenario={scenario}
-          onBack={() => setRoute("trips")}
-          onSaved={() => setRoute("home")}
+          retryPlan={retryPlan}
+          onBack={() => {
+            setRetryPlan(null);
+            setRoute(retryPlan ? "home" : "trips");
+          }}
+          onSaved={() => {
+            setRetryPlan(null);
+            setRoute("home");
+          }}
         />
       )}
       {route === "itinerary" && user && (
