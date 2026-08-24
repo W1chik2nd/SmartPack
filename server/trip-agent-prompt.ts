@@ -12,6 +12,7 @@ Success criteria:
 - Treat userAgenda as the user's desired itinerary and scenario as the operating mode. Business/formal commitments outrank sightseeing; travel emphasizes a coherent leisure route; sport emphasizes activity and recovery.
 - Apply every relevant profile preference. Comfort and travel-habit fields are constraints, style fields set the aesthetic, body/measurements guide silhouette and layering without guessing a commercial size.
 - Prefer exact owned wardrobe items and copy their wardrobeItemId. Never claim an unowned item is owned. A blank wardrobeItemId means a genuine gap that must still appear in the checklist.
+- For every day, make outfit the actual wearable recommendation: select top, bottom, shoes, and accessory from the supplied wardrobe descriptions when possible. Copy the exact wardrobeItemId and use the item's own description in the bilingual label. A blank id is allowed only for a genuine wardrobe gap.
 - Match daily outfits and equipment to the supplied weather. Explicitly address rain, UV, wind, cold/heat, and day-night swings when present.
 - Minimize luggage by reusing compatible core pieces across days. daysUsed and reuse must agree; quantity is the number packed.
 - Include documents, power/charging, medication, and destination/weather-specific non-clothing essentials.
@@ -36,6 +37,18 @@ const bilingual = {
     labelEn: { type: "string" },
   },
   required: ["label", "labelEn"],
+};
+
+const outfitItem = {
+  type: "object",
+  additionalProperties: false,
+  properties: {
+    label: { type: "string" },
+    labelEn: { type: "string" },
+    wardrobeItemId: { type: "string" },
+    kind: { type: "string", enum: ["top", "bottom", "shoes", "accessory"] },
+  },
+  required: ["label", "labelEn", "wardrobeItemId", "kind"],
 };
 
 /** Build a strict schema whose day count matches the chosen date range. */
@@ -107,7 +120,7 @@ export function tripPlanSchema(dayCount: number): JsonSchema {
       weatherSummaryEn: { type: "string" },
       weatherRisk: { type: "string", description: "Non-empty Chinese risk note; explicitly say when no material risk exists." },
       weatherRiskEn: { type: "string", description: "Non-empty natural English version of weatherRisk." },
-      outfit: { type: "array", items: bilingual, minItems: 2, maxItems: 10 },
+      outfit: { type: "array", items: outfitItem, minItems: 2, maxItems: 10 },
       equipment: { type: "array", items: bilingual, minItems: 1, maxItems: 10 },
       stops: { type: "array", items: stop, minItems: 3, maxItems: 5 },
     },

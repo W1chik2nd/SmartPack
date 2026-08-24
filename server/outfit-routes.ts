@@ -9,6 +9,7 @@ type Ctx = {
   url: URL;
   wardrobe: WardrobeStore;
   tripPlans: TripPlanStore;
+  itinerary: import("./itinerary.ts").ItineraryStore;
   json: (res: ServerResponse, status: number, body: unknown) => void;
   userFromHeader: () => { id: string } | null;
 };
@@ -23,7 +24,21 @@ export async function handleOutfitRoutes(ctx: Ctx): Promise<boolean> {
     return true;
   }
   const latestTrip = ctx.tripPlans.list(user.id)[0] ?? null;
-  const plan = buildOutfitPlan(latestTrip, ctx.wardrobe.list(user.id));
+  const linkedItinerary = latestTrip?.itineraryId
+    ? ctx.itinerary.get(user.id, latestTrip.itineraryId)
+    : null;
+  const agentDays = linkedItinerary?.days.map((day) => ({
+    date: day.dateLabel,
+    place: day.city,
+    scene: linkedItinerary.scenario,
+    outfit: day.outfit,
+  }));
+  const plan = buildOutfitPlan(
+    latestTrip,
+    ctx.wardrobe.list(user.id),
+    new Date(),
+    agentDays
+  );
   ctx.json(ctx.res, 200, { plan });
   return true;
 }

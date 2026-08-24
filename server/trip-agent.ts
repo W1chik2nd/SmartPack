@@ -111,7 +111,33 @@ export function normalizeGeneratedTrip(
     throw new Error("AI trip planner returned the wrong travel dates.");
   }
 
-  const owned = new Set(wardrobe.map((item) => item.id));
+  const ownedItems = new Map(wardrobe.map((item) => [item.id, item]));
+  const owned = new Set(ownedItems.keys());
+  const packedWardrobeIds = new Set(
+    raw.packing.categories.flatMap((category) =>
+      category.items
+        .map((item) => item.wardrobeItemId)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+  for (const day of raw.days) {
+    day.outfit = day.outfit.map((item) => {
+      if (
+        !item.wardrobeItemId ||
+        !owned.has(item.wardrobeItemId) ||
+        !packedWardrobeIds.has(item.wardrobeItemId)
+      ) {
+        return { ...item, wardrobeItemId: "", hasPhoto: false };
+      }
+      const wardrobeItem = ownedItems.get(item.wardrobeItemId)!;
+      return {
+        ...item,
+        label: wardrobeItem.title,
+        labelEn: item.labelEn || wardrobeItem.title,
+        hasPhoto: wardrobeItem.hasPhoto,
+      };
+    });
+  }
   for (const category of raw.packing.categories) {
     for (const item of category.items) {
       item.daysUsed = [...new Set(item.daysUsed)]
