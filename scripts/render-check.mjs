@@ -135,7 +135,22 @@ function hitsIn(pts, box) {
   ).length;
 }
 
-console.log("=== 个人档案页(真实渲染) ===");
+console.log("=== 首页物品清单(真实渲染) ===");
+{
+  const html = harness.renderHome();
+  if (!html.includes('class="checklist-bag"')) {
+    fail("dashboard: checklist bag image was not rendered");
+  }
+  if (!html.includes('src="/checklist-bag.jpg"')) {
+    fail("dashboard: checklist bag image points to the wrong asset");
+  }
+  if (html.includes('class="check-mark"')) {
+    fail("dashboard: old checklist placeholder is still rendered");
+  }
+  console.log("  checklist bag image rendered");
+}
+
+console.log("\n=== 个人档案页(真实渲染) ===");
 {
   const html = harness.renderProfile();
   const inputs = [...html.matchAll(/<input/g)].length;
