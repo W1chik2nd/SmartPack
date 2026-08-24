@@ -245,36 +245,49 @@
   flex-direction: column;
 }
 
-/* Vertical timeline: line with stop dots */
-.itinerary-timeline {
+/* 已保存行程:目的地 + 场景标签 + 日期区间。几何色块,粗字,左对齐。 */
+.trip-summary {
   flex: 1;
-  margin: var(--space-2) auto 0;
-  width: 4px;
-  min-height: 120px;
-  background: var(--black);
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
 }
 
-.itinerary-timeline::before,
-.itinerary-timeline::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 3px solid var(--black);
+.trip-place {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  font-size: 20px;
+  font-weight: var(--weight-heavy);
+  line-height: 1.1;
+}
+
+.trip-scenario {
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  color: var(--black);
   background: var(--yellow);
+  border: 2px solid var(--black);
 }
 
-.itinerary-timeline::before {
-  top: 12%;
+.trip-dates {
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
 }
 
-.itinerary-timeline::after {
-  top: 45%;
-  background: var(--red);
+.trip-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  margin-top: var(--space-2);
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
 }
 
 /* ---------- nav tiles (right) ---------- */
@@ -346,9 +359,6 @@
   .today-itinerary {
     grid-column: 1 / -1;
     border-top: var(--border);
-  }
-  .itinerary-timeline {
-    min-height: 60px;
   }
   /* Stacked below the card, tiles size themselves again */
   .dash-nav {
