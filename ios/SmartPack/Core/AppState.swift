@@ -1,16 +1,22 @@
 import Foundation
 import SwiftUI
 
+/// The four persistent areas in the bottom dock. These are peer destinations,
+/// not entries in the detail navigation stack.
+enum PrimarySection: Hashable {
+    case today
+    case trips
+    case wardrobe
+    case profile
+}
+
 /// Screens reachable from the signed-in shell. The web client keeps these in
 /// one in-memory `route` state; on iOS they are pushed onto a NavigationStack
 /// so the system back gesture works.
 enum Route: Hashable {
-    case tripPlanner
     case tripSetup(scenario: String, retry: TripPlan?)
     case itinerary(tripId: String?, scenario: String?)
     case weather(tripPlanId: String)
-    case wardrobe
-    case profile
     case packing(tripPlanId: String)
     case outfit(tripPlanId: String?)
 }
@@ -33,6 +39,7 @@ enum AuthPhase: Equatable {
 final class AppState {
     var phase: AuthPhase = .booting
     var user: User?
+    var primarySection: PrimarySection = .today
     var path: [Route] = []
     /// Set when the assistant asks for a scenario-seeded trip setup.
     var pendingScenario: String?
@@ -59,6 +66,7 @@ final class AppState {
     func signedIn(_ response: AuthResponse) {
         TokenStore.token = response.token
         user = response.user
+        primarySection = .today
         path = []
         phase = .authed
     }
@@ -68,6 +76,7 @@ final class AppState {
         _ = try? await api.logout()
         TokenStore.token = nil
         user = nil
+        primarySection = .today
         path = []
         phase = .landing
     }
@@ -77,9 +86,11 @@ final class AppState {
     func push(_ route: Route) { path.append(route) }
     func popToRoot() { path.removeAll() }
 
-    /// Bottom navigation changes sections rather than stacking another copy
-    /// of a root page. Detail navigation inside that section still pushes.
-    func replaceRoot(with route: Route) { path = [route] }
+    /// A tab change replaces the root area and clears only its detail stack.
+    func selectPrimarySection(_ section: PrimarySection) {
+        primarySection = section
+        path.removeAll()
+    }
 
     /// Applies the actions the assistant returns with its reply.
     func apply(_ actions: [AssistantAction]) async {
@@ -101,14 +112,21 @@ final class AppState {
     }
 
     private func navigate(to page: AssistantPage, scenario: String?) async {
-        popToRoot()
         switch page {
-        case .home: break
-        case .trips: push(.tripPlanner)
-        case .tripSetup: push(.tripSetup(scenario: scenario ?? "travel", retry: nil))
-        case .itinerary: push(.itinerary(tripId: nil, scenario: scenario))
-        case .wardrobe: push(.wardrobe)
-        case .profile: push(.profile)
+        case .home:
+            selectPrimarySection(.today)
+        case .trips:
+            selectPrimarySection(.trips)
+        case .tripSetup:
+            selectPrimarySection(.trips)
+            push(.tripSetup(scenario: scenario ?? "travel", retry: nil))
+        case .itinerary:
+            selectPrimarySection(.trips)
+            push(.itinerary(tripId: nil, scenario: scenario))
+        case .wardrobe:
+            selectPrimarySection(.wardrobe)
+        case .profile:
+            selectPrimarySection(.profile)
         case .packing: await openLatestPacking()
         }
     }
@@ -116,13 +134,12 @@ final class AppState {
     /// The assistant refers to "the packing list" without an id; open the most
     /// recent generated trip's, matching the web client.
     private func openLatestPacking() async {
+        selectPrimarySection(.trips)
         guard let plans = try? await api.tripPlans().plans,
               let latest = plans.first(where: { $0.itineraryId != nil })
         else {
-            popToRoot()
             return
         }
-        popToRoot()
         push(.packing(tripPlanId: latest.id))
     }
 }

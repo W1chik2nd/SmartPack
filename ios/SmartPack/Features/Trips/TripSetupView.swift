@@ -86,7 +86,6 @@ struct TripSetupView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            BackRow(title: Strings.backToScenarios(lang))
             Eyebrow(
                 text: "\(Strings.scenarioLabel(scenario, lang)) · \(app.user?.name ?? "")",
                 color: Theme.textSecondary

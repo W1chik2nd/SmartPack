@@ -48,7 +48,7 @@ open ios/SmartPack.xcodeproj
 | --- | --- |
 | `client/src/theme.css` | `Theme/Theme.swift` |
 | `client/src/api.ts` | `Core/APIClient.swift` + `Core/Models.swift` + `Core/TravelModels.swift` |
-| `client/src/i18n/strings.ts` | `Core/Strings+App.swift` + `Core/Strings+Trip.swift` |
+| `client/src/i18n/strings.ts` | `Core/Strings+App.swift` + `Core/Strings+Trip.swift` + `Core/Strings+PersonalColor.swift` |
 | `client/src/App.tsx` | `Features/Shared/RootView.swift` + `Core/AppState.swift` |
 | `pages/*.tsx` | `Features/<模块>/*View.swift` |
 | `outfit*.css` 的 clip-path | `Features/Outfit/PixelShapes.swift` |
@@ -61,7 +61,8 @@ open ios/SmartPack.xcodeproj
 | --- | --- | --- |
 | 落地页 | 行李箱压在右下角，标题 56px | 单列：标题 → 行李箱 → 箭头按钮，拇指够得到 |
 | 今日卡片 | 三栏网格 | 竖向堆叠，粗黑分隔线保留，仍是一个整体卡片 |
-| 主导航 | 右侧磁贴栏 | 悬浮底栏：今天、行程、衣橱、我的、AI，内容自动避让安全区 |
+| 主导航 | 右侧磁贴栏 | 原生 Liquid Glass 悬浮底栏（iOS 26+；旧系统回退）：今天、行程、衣橱、我的、AI |
+| 页面层级 | 全站 Header + 页面内文字返回 | Header 仅首页展示；顶级 Tab 无返回，详情页使用系统 Back 与左缘滑动 |
 | 行程天气 | 三栏逐日卡片 | 单卡横滑分页，保留温度、降雨、UV 和风速 |
 | 场景选择 | 无限轮播 + 左右箭头 | 分页横滑（触屏本来就该滑，克隆循环和箭头去掉） |
 | 行程设置 | 左地图右日历 | 上下堆叠，各占满宽 |
@@ -70,6 +71,7 @@ open ios/SmartPack.xcodeproj
 | 穿搭总览 | 三栏 | 竖向：当日穿搭 → 行程信息 → 分日网格 |
 | 打包清单 | 左侧竖向滑杆 | 顶部整宽横向滑杆 |
 | 衣橱 | 扫码让手机拍照 | 直接调相机/相册（web 在手机浏览器下也是这条分支） |
+| 个人档案 | 头像与四季型照片分析弹层 | 头像完整等比显示；相册选图后调用同一 `/api/personal-color/analyze` |
 | 助手 | 悬浮面板 | sheet，跟随键盘 |
 
 ## 已知边界
@@ -96,4 +98,4 @@ DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer xcodebuild -projec
 ```
 
 **当前状态：BUILD SUCCEEDED，测试通过，零项目警告**，并已在 iPhone 17 Pro 模拟器
-（iOS 27.0）安装启动；首页浮动导航、穿搭紧凑布局与旧响应兼容均已验证。
+（iOS 27.0）安装启动；原生 Liquid Glass 导航、穿搭紧凑布局与旧响应兼容均已验证。

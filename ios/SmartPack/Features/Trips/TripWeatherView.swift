@@ -14,8 +14,6 @@ struct TripWeatherView: View {
 
     var body: some View {
         PageScaffold {
-            BackRow(title: Strings.backToHome(lang))
-
             if let data {
                 heading(data.trip)
                 summary(data)

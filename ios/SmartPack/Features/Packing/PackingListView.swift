@@ -21,8 +21,6 @@ struct PackingListView: View {
 
     var body: some View {
         PageScaffold {
-            BackRow(title: Strings.backToHome(lang))
-
             header
             balanceSlider
 

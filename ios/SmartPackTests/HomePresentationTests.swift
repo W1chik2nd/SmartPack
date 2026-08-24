@@ -53,6 +53,56 @@ final class HomePresentationTests: XCTestCase {
         XCTAssertEqual(response.forecast.days.first?.precipitationProbability, 75)
     }
 
+    func testScenarioArtworkUsesCatalogFilename() {
+        let scenario = Scenario(id: "business", label: "Business", image: "/scenarios/business.jpg")
+
+        XCTAssertEqual(ScenarioArtworkName.resolve(scenario), "scenario-business")
+    }
+
+    func testPersonalColorResponseDecodesSeasonRecommendation() throws {
+        let json = Data(#"{"analysis":"偏冷，适合高对比配色","season":"winter"}"#.utf8)
+
+        let response = try JSONDecoder().decode(PersonalColorResponse.self, from: json)
+
+        XCTAssertEqual(response.season, "winter")
+        XCTAssertFalse(response.analysis.isEmpty)
+    }
+
+    func testDockDragMapsHorizontalPositionToSections() {
+        XCTAssertEqual(DockSection.at(x: -20, width: 500), .today)
+        XCTAssertEqual(DockSection.at(x: 120, width: 500), .trips)
+        XCTAssertEqual(DockSection.at(x: 250, width: 500), .wardrobe)
+        XCTAssertEqual(DockSection.at(x: 375, width: 500), .profile)
+        XCTAssertEqual(DockSection.at(x: 520, width: 500), .assistant)
+    }
+
+    func testDockSliderPullsTowardStopsAndKeepsEdgeResistance() {
+        let rawPosition: CGFloat = 225
+        let magnetized = DockSliderGeometry.magnetized(x: rawPosition, width: 500)
+
+        XCTAssertGreaterThan(magnetized, rawPosition)
+        XCTAssertEqual(DockSliderGeometry.magnetized(x: 250, width: 500), 250)
+        XCTAssertGreaterThan(DockSliderGeometry.magnetized(x: -50, width: 500), 0)
+    }
+
+    func testDockSliderUsesDampedMomentumToPickReleaseStop() {
+        XCTAssertEqual(
+            DockSliderGeometry.projectedTarget(currentX: 145, predictedX: 390, width: 500),
+            .wardrobe
+        )
+    }
+
+    @MainActor
+    func testChangingPrimarySectionClearsOnlyTheDetailStack() {
+        let app = AppState()
+        app.push(.weather(tripPlanId: "trip-1"))
+
+        app.selectPrimarySection(.wardrobe)
+
+        XCTAssertEqual(app.primarySection, .wardrobe)
+        XCTAssertTrue(app.path.isEmpty)
+    }
+
     private func trip(
         id: String,
         scenario: String,

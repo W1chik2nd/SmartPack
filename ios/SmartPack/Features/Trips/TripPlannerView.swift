@@ -17,8 +17,6 @@ struct TripPlannerView: View {
 
     var body: some View {
         PageScaffold {
-            BackRow(title: Strings.backToHome(lang))
-
             VStack(alignment: .leading, spacing: 4) {
                 Eyebrow(text: "\(Strings.tripHello(lang)), \(app.user?.name ?? "")", color: Theme.textSecondary)
                 Text(Strings.tripGoingTo(lang))
@@ -52,7 +50,10 @@ struct TripPlannerView: View {
                         ScenarioCard(scenario: scenario)
                     }
                     .buttonStyle(.plain)
-                    .containerRelativeFrame(.horizontal, count: 4, span: 3, spacing: Theme.space2)
+                    // One readable card plus a deliberate peek of the next.
+                    // Two narrow cards made the photographs look like the
+                    // wrong assets because most of each focal area was cut.
+                    .containerRelativeFrame(.horizontal, count: 6, span: 5, spacing: Theme.space2)
                 }
             }
             .scrollTargetLayout()
@@ -84,10 +85,12 @@ private struct ScenarioCard: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            BundleImage(name: Self.bundleName(for: scenario))
-                .frame(height: 300)
-                .frame(maxWidth: .infinity)
-                .clipped()
+            GeometryReader { proxy in
+                BundleImage(name: ScenarioArtworkName.resolve(scenario))
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+            }
+            .frame(height: 280)
 
             Rule()
 
@@ -100,10 +103,13 @@ private struct ScenarioCard: View {
         }
         .bauhausCard()
     }
+}
 
-    /// The API returns the web path (`/scenarios/commute.jpg`); the same
-    /// artwork ships in the bundle flattened to `scenario-commute`.
-    private static func bundleName(for scenario: Scenario) -> String {
+/// Converts the web catalog path into the flattened bundle resource name.
+/// The API returns a web path (`/scenarios/commute.jpg`); the same artwork
+/// ships in the app bundle flattened to `scenario-commute`.
+enum ScenarioArtworkName {
+    static func resolve(_ scenario: Scenario) -> String {
         let file = (scenario.image as NSString).lastPathComponent
         let stem = (file as NSString).deletingPathExtension
         return stem.isEmpty ? "scenario-\(scenario.id)" : "scenario-\(stem)"

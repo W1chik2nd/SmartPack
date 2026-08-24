@@ -25,8 +25,6 @@ struct OutfitOverviewView: View {
 
     var body: some View {
         PageScaffold {
-            BackRow(title: Strings.backToHome(lang))
-
             if failed {
                 ErrorBanner(message: Strings.outfitLoadFailed(lang))
             } else if let plan, let day = activeDay {

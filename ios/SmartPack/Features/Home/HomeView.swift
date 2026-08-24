@@ -87,7 +87,7 @@ struct HomeView: View {
 
     private var emptyCard: some View {
         Button {
-            app.push(.tripPlanner)
+            app.selectPrimarySection(.trips)
         } label: {
             VStack(spacing: Theme.space1) {
                 Text("+")

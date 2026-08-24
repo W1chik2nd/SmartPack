@@ -77,6 +77,11 @@ struct ProfileFieldsResponse: Codable {
     let fields: [ProfileField]
 }
 
+struct PersonalColorResponse: Codable, Equatable {
+    let analysis: String
+    let season: String?
+}
+
 /// The questionnaire payload. Keyed by the field keys the server publishes,
 /// not typed field by field: a new question needs no client change.
 enum ProfileValue: Encodable {

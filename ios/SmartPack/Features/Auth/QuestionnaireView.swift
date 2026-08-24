@@ -18,6 +18,7 @@ struct QuestionnaireView: View {
     @State private var error: String?
     @State private var busy = false
     @State private var shakes = 0
+    @State private var colorGuideOpen = false
     /// The first tap on an incomplete form only warns; the second submits.
     @State private var warned = false
 
@@ -59,6 +60,11 @@ struct QuestionnaireView: View {
             .shake(shakes)
         }
         .task { await loadCatalog() }
+        .sheet(isPresented: $colorGuideOpen) {
+            PersonalColorGuideView { season in
+                answers.choices["seasonColorType"] = [season]
+            }
+        }
     }
 
     // MARK: - Form
@@ -107,17 +113,29 @@ struct QuestionnaireView: View {
 
     private func choiceGroup(_ spec: ProfileField) -> some View {
         let suffix = spec.required ? "" : " (\(Strings.optionalMark(lang)))"
-        return OptionGroupView(
-            legend: Strings.fieldLabel(spec.key, lang) + suffix,
-            options: spec.options ?? [],
-            selected: answers.selected(spec.key),
-            multiple: spec.kind == .multi,
-            hint: spec.kind == .multi ? Strings.pickMultiple(lang) : nil,
-            otherId: spec.otherId,
-            otherLabel: Strings.otherPlaceholder(lang),
-            otherValue: binding(spec.otherKey ?? "\(spec.key)__other")
-        ) { id in
-            answers.toggle(spec, id)
+        return VStack(alignment: .leading, spacing: Theme.space1) {
+            OptionGroupView(
+                legend: Strings.fieldLabel(spec.key, lang) + suffix,
+                options: spec.options ?? [],
+                selected: answers.selected(spec.key),
+                multiple: spec.kind == .multi,
+                hint: spec.kind == .multi ? Strings.pickMultiple(lang) : nil,
+                otherId: spec.otherId,
+                otherLabel: Strings.otherPlaceholder(lang),
+                otherValue: binding(spec.otherKey ?? "\(spec.key)__other")
+            ) { id in
+                answers.toggle(spec, id)
+            }
+
+            if spec.key == "seasonColorType" {
+                Button {
+                    colorGuideOpen = true
+                } label: {
+                    Label(Strings.personalColorHelp(lang), systemImage: "camera.viewfinder")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(BauhausButtonStyle(fill: Theme.yellow))
+            }
         }
     }
 

@@ -116,6 +116,10 @@ actor APIClient {
         try await send("/api/profile", method: "PUT", profile)
     }
 
+    func analyzePersonalColor(imageDataURL: String) async throws -> PersonalColorResponse {
+        try await send("/api/personal-color/analyze", method: "POST", ["image": imageDataURL])
+    }
+
     // MARK: - Catalog
 
     func scenarios() async throws -> ScenariosResponse {

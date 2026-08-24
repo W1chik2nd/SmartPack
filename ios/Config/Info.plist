@@ -55,6 +55,6 @@
 	<key>NSCameraUsageDescription</key>
 	<string>拍照识别衣物,把它加进你的电子衣橱。Used to photograph clothing so SmartPack can add it to your wardrobe.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>从相册选择衣物照片,加进你的电子衣橱。Used to pick clothing photos to add to your wardrobe.</string>
+	<string>从相册选择衣物照片或个人色彩分析照片。Used to pick clothing or personal-colour analysis photos.</string>
 </dict>
 </plist>

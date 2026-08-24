@@ -16,6 +16,8 @@ struct ProfileView: View {
     @State private var answers: ProfileAnswers?
     @State private var notice: Notice?
     @State private var expanded: Set<String> = []
+    @State private var colorGuideOpen = false
+    @State private var signingOut = false
 
     private enum Notice: Equatable { case saved, failed, options }
 
@@ -34,6 +36,7 @@ struct ProfileView: View {
     var body: some View {
         PageScaffold {
             header
+            accountControls
 
             if let fields, let answers {
                 identity(fields, answers)
@@ -46,13 +49,17 @@ struct ProfileView: View {
             }
         }
         .task { await load() }
+        .sheet(isPresented: $colorGuideOpen) {
+            PersonalColorGuideView { season in
+                answers?.choices["seasonColorType"] = [season]
+            }
+        }
     }
 
     // MARK: - Sections
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            BackRow(title: Strings.backToHome(lang))
             Eyebrow(text: "SmartPack / 03", color: Theme.textSecondary)
             Text(Strings.profileTitle(lang))
                 .font(Theme.heavy(30))
@@ -60,15 +67,45 @@ struct ProfileView: View {
         }
     }
 
+    private var accountControls: some View {
+        HStack(spacing: Theme.space2) {
+            LanguageToggle()
+            Spacer(minLength: Theme.space2)
+            Button {
+                signingOut = true
+                Task {
+                    await app.signOut()
+                    signingOut = false
+                }
+            } label: {
+                Text(Strings.navSignOut(lang))
+            }
+            .buttonStyle(BauhausButtonStyle(
+                fill: Theme.red,
+                tint: Theme.white,
+                padding: .init(top: 8, leading: 12, bottom: 8, trailing: 12),
+                fontSize: 12
+            ))
+            .disabled(signingOut)
+        }
+        .padding(Theme.space1)
+        .frame(maxWidth: .infinity)
+        .bauhausPanel(width: Theme.hairline)
+    }
+
     private func identity(_ fields: [ProfileField], _ answers: ProfileAnswers) -> some View {
         VStack(alignment: .leading, spacing: Theme.space2) {
             if let avatar = avatarName(answers) {
-                BundleImage(name: avatar)
-                    .frame(height: 190)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
-                    .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: Theme.borderWidth))
-                    .accessibilityLabel(Strings.profileAvatar(lang))
+                ZStack(alignment: .bottom) {
+                    Circle().fill(Theme.white)
+                    BundleImage(name: avatar, contentMode: .fit)
+                        .frame(width: 188, height: 198, alignment: .bottom)
+                }
+                .frame(width: 210, height: 210)
+                .clipShape(Circle())
+                .overlay(Circle().strokeBorder(Theme.black, lineWidth: Theme.borderWidth))
+                .frame(maxWidth: .infinity)
+                .accessibilityLabel(Strings.profileAvatar(lang))
             }
 
             VStack(alignment: .leading, spacing: 6) {
@@ -139,6 +176,14 @@ struct ProfileView: View {
                 ) { id in
                     answers.toggle(season, id)
                 }
+
+                Button {
+                    colorGuideOpen = true
+                } label: {
+                    Label(Strings.personalColorHelp(lang), systemImage: "camera.viewfinder")
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .buttonStyle(BauhausButtonStyle(fill: Theme.yellow))
             }
             .padding(Theme.space2)
             .frame(maxWidth: .infinity, alignment: .leading)

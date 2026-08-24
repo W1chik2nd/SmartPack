@@ -91,11 +91,12 @@ struct TodayCard: View {
         Button {
             app.push(.packing(tripPlanId: trip.id))
         } label: {
-            HStack(spacing: Theme.space2) {
+            HStack(alignment: .center, spacing: 12) {
                 CardHeading(text: Strings.checklist(lang))
                 ChecklistBagArt()
                     .frame(width: 64, height: 64)
-                Chevron()
+                    .frame(width: 126, alignment: .center)
+                Chevron().frame(width: 18)
             }
             .padding(Theme.space2)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -122,12 +123,12 @@ struct TodayCard: View {
                         .lineLimit(4)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                .frame(width: 118, alignment: .leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
                 DashboardOutfitFigure(day: model.todayOutfit, placeName: trip.placeName)
-                    .frame(maxWidth: .infinity)
+                    .frame(width: 126, alignment: .center)
 
-                Chevron()
+                Chevron().frame(width: 18)
             }
             .padding(Theme.space2)
             .frame(maxWidth: .infinity, minHeight: 170, alignment: .leading)
@@ -205,7 +206,7 @@ struct TodayCard: View {
         } else if let itineraryId = trip.itineraryId {
             app.push(.itinerary(tripId: itineraryId, scenario: trip.scenario))
         } else {
-            app.push(.tripPlanner)
+            app.selectPrimarySection(.trips)
         }
     }
 

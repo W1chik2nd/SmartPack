@@ -4,10 +4,9 @@ import SwiftUI
 /// and the thread of stops.
 ///
 /// Phone adaptation: the desktop version hangs stop cards on alternating sides
-/// of a central wavy line, which needs roughly 900pt. Here the thread runs
-/// down the left edge — nodes still alternate their offset so the line keeps
-/// its wave, and each node still ticks across to its card — and the cards take
-/// the full remaining width instead of half of it.
+/// of a central wavy line, which needs roughly 900pt. Here a single continuous
+/// rail runs down the left edge and every node ticks across to its card, keeping
+/// the relationship legible without spending the phone's width on decoration.
 struct DayPlanView: View {
     let day: TripDay
     @Environment(\.lang) private var lang
@@ -136,32 +135,25 @@ struct DayPlanView: View {
     }
 }
 
-/// One segment of the stop thread: the line through this row, the node at its
-/// centre, and the tick that reaches across to the card.
+/// One segment of the stop thread. Every row uses the same rail x-coordinate,
+/// so adjacent segments meet exactly even when their cards have different
+/// heights.
 private struct ThreadRail: View {
     let index: Int
     let isFirst: Bool
     let isLast: Bool
 
-    private var nodeX: CGFloat { index % 2 == 0 ? 0.62 : 0.38 }
-
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width
             let h = geo.size.height
-            let x = w * nodeX
+            let x = w * 0.38
             let midY = h / 2
 
             ZStack(alignment: .topLeading) {
-                // The line waves by meeting the neighbouring rows' node x.
                 Path { path in
-                    let previousX = isFirst ? x : w * (index % 2 == 0 ? 0.38 : 0.62)
-                    let nextX = isLast ? x : w * (index % 2 == 0 ? 0.38 : 0.62)
-                    path.move(to: CGPoint(x: previousX, y: 0))
-                    path.addQuadCurve(to: CGPoint(x: x, y: midY),
-                                      control: CGPoint(x: previousX, y: midY / 2))
-                    path.addQuadCurve(to: CGPoint(x: nextX, y: h),
-                                      control: CGPoint(x: nextX, y: midY + midY / 2))
+                    path.move(to: CGPoint(x: x, y: isFirst ? midY : 0))
+                    path.addLine(to: CGPoint(x: x, y: isLast ? midY : h))
                 }
                 .stroke(Theme.black, style: StrokeStyle(lineWidth: 4, lineCap: .round))
 

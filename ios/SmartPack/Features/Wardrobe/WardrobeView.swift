@@ -35,8 +35,6 @@ struct WardrobeView: View {
 
     var body: some View {
         PageScaffold {
-            BackRow(title: Strings.backToHome(lang))
-
             HStack(alignment: .top) {
                 Text(Strings.wardrobeTitle(lang))
                     .font(Theme.heavy(28))

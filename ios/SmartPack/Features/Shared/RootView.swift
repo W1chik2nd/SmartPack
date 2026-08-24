@@ -35,26 +35,25 @@ struct RootView: View {
     }
 }
 
-/// Everything behind sign-in: the top bar, pushed pages, and the thumb-ready
-/// bottom dock shared by every signed-in screen.
+/// Everything behind sign-in: four peer root areas, one detail stack, and the
+/// thumb-ready bottom dock shared by the signed-in experience.
 private struct SignedInShell: View {
     @Environment(AppState.self) private var app
+    @Environment(\.lang) private var lang
     @State private var chatOpen = false
 
     var body: some View {
         @Bindable var app = app
 
-        // The bar is a sibling above the stack, not a safe-area inset: an
-        // inset on NavigationStack does not reach the scroll views inside it,
-        // and every page's first card ends up half-hidden behind the bar.
-        VStack(spacing: 0) {
-            TopBar()
-            NavigationStack(path: $app.path) {
-                HomeView()
-                    .navigationDestination(for: Route.self) { route in
-                        destination(for: route)
-                    }
-            }
+        NavigationStack(path: $app.path) {
+            primaryContent
+                .navigationTitle(primaryTitle)
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(for: Route.self) { route in
+                    destination(for: route)
+                        .navigationBarTitleDisplayMode(.inline)
+                        .toolbar(.visible, for: .navigationBar)
+                }
         }
         .tint(Theme.blue)
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -68,20 +67,40 @@ private struct SignedInShell: View {
     }
 
     @ViewBuilder
+    private var primaryContent: some View {
+        switch app.primarySection {
+        case .today:
+            VStack(spacing: 0) {
+                HomeBrandBar()
+                HomeView()
+            }
+        case .trips:
+            TripPlannerView()
+        case .wardrobe:
+            WardrobeView()
+        case .profile:
+            ProfileView()
+        }
+    }
+
+    private var primaryTitle: String {
+        switch app.primarySection {
+        case .today: return Strings.navToday(lang)
+        case .trips: return Strings.navTrips(lang)
+        case .wardrobe: return Strings.navWardrobe(lang)
+        case .profile: return Strings.navProfile(lang)
+        }
+    }
+
+    @ViewBuilder
     private func destination(for route: Route) -> some View {
         switch route {
-        case .tripPlanner:
-            TripPlannerView()
         case .tripSetup(let scenario, let retry):
             TripSetupView(scenario: scenario, retryPlan: retry)
         case .itinerary(let tripId, let scenario):
             ItineraryView(tripId: tripId, scenario: scenario)
         case .weather(let tripPlanId):
             TripWeatherView(tripPlanId: tripPlanId)
-        case .wardrobe:
-            WardrobeView()
-        case .profile:
-            ProfileView()
         case .packing(let tripPlanId):
             PackingListView(tripPlanId: tripPlanId)
         case .outfit(let tripPlanId):
@@ -90,52 +109,26 @@ private struct SignedInShell: View {
     }
 }
 
-/// The fixed header from `styles.css` `.nav`: brand mark on the left, language
-/// toggle and sign-out on the right, one thick rule underneath. On a phone the
-/// user's name is dropped rather than truncated, exactly as the web's
-/// `max-width: 600px` rule does.
-struct TopBar: View {
-    @Environment(AppState.self) private var app
-    @Environment(\.lang) private var lang
-    @State private var signingOut = false
-
+/// Product identity belongs on Today; navigation and account actions use their
+/// standard iOS homes instead of repeating this web-style header on every page.
+struct HomeBrandBar: View {
     var body: some View {
-        HStack(spacing: Theme.space1) {
-            Button {
-                app.popToRoot()
-            } label: {
-                HStack(spacing: 10) {
-                    LogoMark()
-                        .frame(width: 30, height: 27)
-                    Text("SMARTPACK")
-                        .font(Theme.heavy(17))
-                        .tracking(-0.2)
-                        .foregroundStyle(Theme.text)
-                }
-            }
-            .accessibilityLabel("SmartPack")
-
-            Spacer(minLength: Theme.space1)
-
-            LanguageToggle()
-
-            Button {
-                signingOut = true
-                Task {
-                    await app.signOut()
-                    signingOut = false
-                }
-            } label: {
-                Text(Strings.navSignOut(lang))
-            }
-            .buttonStyle(BauhausButtonStyle(padding: .init(top: 6, leading: 10, bottom: 6, trailing: 10), fontSize: 12))
-            .disabled(signingOut)
+        HStack(spacing: 10) {
+            LogoMark()
+                .frame(width: 30, height: 27)
+            Text("SMARTPACK")
+                .font(Theme.heavy(17))
+                .tracking(-0.2)
+                .foregroundStyle(Theme.text)
+            Spacer(minLength: 0)
         }
         .padding(.horizontal, Theme.space2)
         .padding(.vertical, Theme.space1)
         .frame(maxWidth: .infinity)
         .background(Theme.bg)
         .overlay(alignment: .bottom) { Rule() }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("SmartPack")
     }
 }
 
@@ -156,26 +149,8 @@ struct LanguageToggle: View {
     }
 }
 
-/// A back row that reads as part of the page, not as a system chrome button —
-/// the web pages all open with the same `‹ Back to Home` control.
-struct BackRow: View {
-    let title: String
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        Button {
-            dismiss()
-        } label: {
-            Text("‹ \(title)")
-                .font(Theme.heavy(14))
-                .foregroundStyle(Theme.text)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityLabel(title)
-    }
-}
-
-/// Page scaffold: cyan ground, consistent gutters, hidden system nav bar.
+/// Page scaffold: cyan ground and consistent content gutters. Navigation chrome
+/// is owned by the surrounding NavigationStack.
 struct PageScaffold<Content: View>: View {
     var spacing: CGFloat = Theme.space3
     @ViewBuilder var content: () -> Content
@@ -192,7 +167,5 @@ struct PageScaffold<Content: View>: View {
         }
         .background(Theme.bg)
         .scrollDismissesKeyboard(.interactively)
-        .navigationBarBackButtonHidden(true)
-        .toolbar(.hidden, for: .navigationBar)
     }
 }

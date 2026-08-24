@@ -58,7 +58,6 @@ struct ItineraryView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            BackRow(title: Strings.backToHome(lang))
             Text(trip?.name(lang) ?? Strings.itineraryTitle(lang))
                 .font(Theme.heavy(30))
                 .foregroundStyle(Theme.text)
