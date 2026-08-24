@@ -27,7 +27,7 @@ const server = createServer(app.handle);
 server.on("error", (err: NodeJS.ErrnoException) => {
   if (err.code === "EADDRINUSE") {
     console.error(
-      `Port ${PORT} is already in use — another SmartPack server is likely still running.\n` +
+      `Port ${PORT} is already in use — another WearRoute server is likely still running.\n` +
         `Stop it with:  lsof -ti :${PORT} | xargs kill\n` +
         `…or start this one on another port:  PORT=4178 npm run dev`
     );
@@ -37,5 +37,5 @@ server.on("error", (err: NodeJS.ErrnoException) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`SmartPack auth server listening on http://localhost:${PORT}`);
+  console.log(`WearRoute auth server listening on http://localhost:${PORT}`);
 });

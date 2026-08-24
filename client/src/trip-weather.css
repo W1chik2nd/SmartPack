@@ -28,20 +28,12 @@
   margin-bottom: var(--space-3);
 }
 
-.trip-weather-heading p {
-  margin-top: var(--space-2);
-  font-size: 13px;
-  font-weight: var(--weight-heavy);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .trip-weather-heading h1 {
-  font-size: clamp(38px, 6vw, 76px);
-  line-height: 0.95;
+  margin-top: var(--space-2);
+  font-size: 40px;
+  line-height: 1.05;
   font-weight: var(--weight-heavy);
-  letter-spacing: -0.05em;
-  text-transform: uppercase;
+  letter-spacing: -0.015em;
 }
 
 .trip-weather-count {
@@ -194,6 +186,7 @@
   height: 96px;
   object-fit: contain;
   flex: 0 0 auto;
+  mix-blend-mode: multiply;
 }
 
 .trip-weather-card dl { display: grid; grid-template-columns: 1fr 1fr; }
@@ -233,7 +226,7 @@
 @media (max-width: 760px) {
   .trip-weather-page { padding: 76px var(--space-2) var(--space-3); }
   .trip-weather-heading { align-items: flex-start; }
-  .trip-weather-heading h1 { font-size: 42px; }
+  .trip-weather-heading h1 { font-size: 36px; }
   .trip-weather-count { min-width: 100px; }
   .trip-weather-count strong { font-size: 36px; }
   .trip-weather-summary { grid-template-columns: 1fr; }

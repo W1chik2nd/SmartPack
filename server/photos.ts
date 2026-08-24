@@ -92,7 +92,7 @@ async function searchOpenverse(query: string): Promise<Photo | null> {
     `https://api.openverse.org/v1/images/` +
     `?q=${encodeURIComponent(query)}&page_size=1&mature=false`;
   const res = await fetch(url, {
-    headers: { "User-Agent": "SmartPack/0.1 (dev)" },
+    headers: { "User-Agent": "WearRoute/0.1 (dev)" },
   });
   if (!res.ok) throw new Error(`openverse ${res.status}`);
 

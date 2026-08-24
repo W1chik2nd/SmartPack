@@ -1,0 +1,176 @@
+.dash-greeting {
+  position: relative;
+  overflow: hidden;
+  border: var(--border);
+  background: var(--white);
+  box-shadow: 6px 6px 0 var(--black);
+  padding: var(--space-2) var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.dash-greeting.is-day {
+  color: var(--black);
+  background: var(--white);
+}
+
+.dash-greeting.is-night {
+  color: var(--white);
+  background: var(--blue);
+}
+
+.dash-greeting h1 {
+  position: relative;
+  z-index: 2;
+  padding-right: 280px;
+  font-size: 28px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
+}
+
+.dash-sky-scene {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.dash-day-art {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: 250px;
+  height: 72px;
+  overflow: visible;
+  transform: translateY(-50%);
+}
+
+.dash-flower line {
+  stroke: var(--blue);
+  stroke-width: 4;
+}
+
+.dash-flower ellipse {
+  fill: var(--blue);
+}
+
+.dash-flower circle {
+  stroke: var(--black);
+  stroke-width: 2.5;
+}
+
+.dash-flower-red circle {
+  fill: var(--red);
+}
+
+.dash-flower-yellow circle {
+  fill: var(--yellow);
+}
+
+.dash-flower-red .dash-flower-core {
+  fill: var(--yellow);
+}
+
+.dash-flower-yellow .dash-flower-core {
+  fill: var(--red);
+}
+
+.dash-sun line {
+  stroke: var(--black);
+  stroke-width: 4;
+  stroke-linecap: square;
+}
+
+.dash-sun circle {
+  fill: var(--yellow);
+  stroke: var(--black);
+  stroke-width: 4;
+}
+
+.dash-night-stars {
+  position: absolute;
+  top: 50%;
+  right: 96px;
+  width: 112px;
+  height: 38px;
+  transform: translateY(-50%);
+}
+
+.dash-night-stars i {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  background: var(--white);
+  transform: rotate(45deg);
+}
+
+.dash-night-stars i:nth-child(1) {
+  top: 21px;
+  left: 8px;
+}
+
+.dash-night-stars i:nth-child(2) {
+  top: 5px;
+  left: 52px;
+  width: 4px;
+  height: 4px;
+  background: var(--yellow);
+}
+
+.dash-night-stars i:nth-child(3) {
+  top: 23px;
+  left: 96px;
+  width: 5px;
+  height: 5px;
+}
+
+.dash-moon {
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--yellow);
+  transform: translateY(-50%);
+}
+
+.dash-moon::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--blue);
+}
+
+.dash-greeting.is-day .dash-night-stars,
+.dash-greeting.is-day .dash-moon,
+.dash-greeting.is-night .dash-day-art {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .dash-greeting h1 {
+    padding-right: 72px;
+  }
+
+  .dash-day-art,
+  .dash-night-stars {
+    display: none;
+  }
+
+  .dash-greeting.is-day .dash-moon {
+    display: block;
+    background: var(--yellow);
+  }
+
+  .dash-greeting.is-day .dash-moon::after {
+    display: none;
+  }
+
+  .dash-moon {
+    right: var(--space-2);
+  }
+}

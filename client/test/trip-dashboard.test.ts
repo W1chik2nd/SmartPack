@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import {
   adjacentTripId,
   dashboardTrips,
+  isDashboardDaytime,
   tripAfterDeletionId,
+  weatherIconPath,
 } from "../src/lib/trip-dashboard.ts";
 import type { TripPlan } from "../src/travel-types.ts";
 
@@ -65,4 +67,30 @@ test("deleting a trip selects the following trip", () => {
   assert.equal(tripAfterDeletionId(trips, "b"), "c");
   assert.equal(tripAfterDeletionId(trips, "c"), "a");
   assert.equal(tripAfterDeletionId([trips[0]], "a"), null);
+});
+
+test("dashboard switches between day and night at the requested boundaries", () => {
+  assert.equal(isDashboardDaytime(5), false);
+  assert.equal(isDashboardDaytime(6), true);
+  assert.equal(isDashboardDaytime(17), true);
+  assert.equal(isDashboardDaytime(18), false);
+});
+
+test("dashboard weather conditions use the matching public icons", () => {
+  const expected = {
+    Clear: "clear",
+    "Partly cloudy": "partly-cloudy",
+    Overcast: "overcast",
+    Fog: "fog",
+    Drizzle: "drizzle",
+    Rain: "rain",
+    Snow: "snow",
+    Showers: "showers",
+    "Snow showers": "snow-showers",
+    Thunderstorm: "thunderstorm",
+  };
+  for (const [condition, file] of Object.entries(expected)) {
+    assert.equal(weatherIconPath(condition), `/weather/${file}.png`);
+  }
+  assert.equal(weatherIconPath("—"), "/weather/overcast.png");
 });

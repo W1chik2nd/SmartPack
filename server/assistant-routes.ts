@@ -1,4 +1,4 @@
-// SmartPack 助手路由:/api/chat。
+// WearRoute 助手路由:/api/chat。
 // 从 app.ts 拆出来是为了守住单文件 400 行上限(AGENTS.md §7)。
 //
 // 会话内才可用:system prompt 里嵌了用户的问卷画像,匿名聊天没有可个性化的

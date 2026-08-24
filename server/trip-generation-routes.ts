@@ -28,7 +28,7 @@ type Ctx = {
   userFromHeader: () => AgentUser | null;
 };
 
-/** Queue and persist one complete, linked SmartPack travel decision. */
+/** Queue and persist one complete, linked WearRoute travel decision. */
 export async function handleTripGenerationRoutes(ctx: Ctx): Promise<boolean> {
   const { req, res, url, json } = ctx;
   if (req.method !== "POST" || url.pathname !== "/api/trip-plans/generate") {
