@@ -10,7 +10,7 @@ import {
 import { useLang } from "../i18n/useLang";
 
 type Props = { user: User; onBack: () => void; onSaved: (user: User) => void };
-type Avatar = "woman" | "man" | "neutral";
+type Avatar = "woman" | "man";
 type Draft = {
   name: string;
   gender: string;
@@ -26,23 +26,17 @@ type Draft = {
   travelHabitsOther: string;
 };
 
-function avatarForGender(gender: string | null): Avatar {
+function avatarForGender(gender: string | null): Avatar | null {
   if (gender === "male") return "man";
   if (gender === "female") return "woman";
-  return "neutral";
+  return null;
 }
 
 function AvatarArt({ variant }: { variant: Avatar }) {
   return (
     <img
       className="profile-avatar-image"
-      src={
-        variant === "man"
-          ? "/profile-male.jpg"
-          : variant === "woman"
-            ? "/profile-female.jpg"
-            : "/profile-neutral.svg"
-      }
+      src={variant === "man" ? "/profile-male.jpg" : "/profile-female.jpg"}
       alt=""
     />
   );
@@ -209,7 +203,7 @@ export default function Profile({ user, onBack, onSaved }: Props) {
           <fieldset className="avatar-picker">
             <legend>{t("profileAvatar")}</legend>
             <div className="avatar-stage">
-              <AvatarArt variant={avatar} />
+              {avatar && <AvatarArt variant={avatar} />}
             </div>
           </fieldset>
 
@@ -274,7 +268,7 @@ export default function Profile({ user, onBack, onSaved }: Props) {
             <legend>{t("profileSeasonType")}</legend>
             <div>
               {options("seasonColorType").map((option) => (
-                <button key={option.id} type="button" aria-pressed={draft.seasonColorType === option.id} onClick={() => update("seasonColorType", option.id)}>
+                <button key={option.id} type="button" aria-pressed={draft.seasonColorType === option.id} onClick={() => update("seasonColorType", draft.seasonColorType === option.id ? "" : option.id)}>
                   {optionLabel(option)}
                 </button>
               ))}
