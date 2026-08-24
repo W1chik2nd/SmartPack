@@ -184,7 +184,7 @@ function Shell() {
           className="nav-brand"
           onClick={() => setRoute(user ? "home" : "landing")}
         >
-          SmartPack
+          WearRoute
         </button>
         <div className="nav-actions">
           {langToggle}

@@ -68,7 +68,7 @@ async function request<T>(
   } catch (err) {
     const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
     throw new Error(
-      `请求失败：无法连接 SmartPack 服务。${detail}（请求：${path}）。请确认后端已启动。`
+      `请求失败：无法连接 WearRoute 服务。${detail}（请求：${path}）。请确认后端已启动。`
     );
   }
   const body = await res.json().catch(() => ({}));

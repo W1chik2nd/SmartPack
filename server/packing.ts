@@ -1,4 +1,4 @@
-// SmartPack packing-plan generator.
+// WearRoute packing-plan generator.
 //
 // Architecture note (AGENTS.md §3): the entire packing plan is computed here
 // on the server. The client sends only the user's slider value and renders

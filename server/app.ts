@@ -1,4 +1,4 @@
-// SmartPack auth API.
+// WearRoute auth API.
 //
 // Architecture note (AGENTS.md §3): all auth logic lives here on the server.
 // Clients (web now, SwiftUI later) only call these endpoints and render the

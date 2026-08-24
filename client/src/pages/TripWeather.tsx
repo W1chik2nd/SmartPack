@@ -6,30 +6,18 @@ import {
 } from "../api";
 import { useLang } from "../i18n/useLang";
 import { WEATHER_CONDITION_LABELS } from "../i18n/dynamic-strings";
+import { weatherIconPath } from "../lib/trip-dashboard";
 
 type Props = {
   tripPlanId: string;
   onBack: () => void;
 };
 
-const WEATHER_ICONS: Record<string, string> = {
-  Clear: "/weather/clear.png",
-  "Partly cloudy": "/weather/partly-cloudy.png",
-  Overcast: "/weather/overcast.png",
-  Fog: "/weather/fog.png",
-  Drizzle: "/weather/drizzle.png",
-  Rain: "/weather/rain.png",
-  Snow: "/weather/snow.png",
-  Showers: "/weather/showers.png",
-  "Snow showers": "/weather/snow-showers.png",
-  Thunderstorm: "/weather/thunderstorm.png",
-};
-
 function WeatherMark({ condition }: { condition: string }) {
   return (
     <img
       className="trip-weather-mark"
-      src={WEATHER_ICONS[condition] ?? WEATHER_ICONS.Overcast}
+      src={weatherIconPath(condition)}
       alt=""
       aria-hidden="true"
     />
@@ -106,7 +94,6 @@ export default function TripWeather({ tripPlanId, onBack }: Props) {
           <button type="button" className="trip-weather-back" onClick={onBack}>
             ‹ {t("backToHome")}
           </button>
-          <p>{t("tripWeatherEyebrow")}</p>
           <h1>{t("tripWeatherTitle")}</h1>
         </div>
         <div className="trip-weather-count" aria-label={`${t("tripWeatherDays")}: ${trip.dayCount}`}>
