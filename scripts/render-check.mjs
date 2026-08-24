@@ -157,7 +157,7 @@ console.log("\n=== 个人档案页(真实渲染) ===");
   const selects = [...html.matchAll(/<select/g)].length;
   const sections = [...html.matchAll(/<details/g)].length;
   const avatars = [...html.matchAll(/class="avatar-stage"/g)].length;
-  if (inputs !== 6) fail(`profile: expected 6 text/measurement inputs, got ${inputs}`);
+  if (inputs !== 7) fail(`profile: expected 7 text/measurement inputs, got ${inputs}`);
   if (selects !== 2) fail(`profile: expected 2 selects, got ${selects}`);
   if (sections !== 3) fail(`profile: expected 3 preference sections, got ${sections}`);
   if (avatars !== 1) fail(`profile: expected 1 gender portrait, got ${avatars}`);

@@ -28,4 +28,3 @@ test("裤装、裙装、鞋履和配饰各自独立筛选", () => {
   assert.equal(filterWardrobeItems(items, "shoes")[0]?.id, "shoes");
   assert.equal(filterWardrobeItems(items, "accessories")[0]?.id, "scarf");
 });
-
