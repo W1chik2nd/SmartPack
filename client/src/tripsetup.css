@@ -3,7 +3,9 @@
 
 .tripsetup {
   min-height: 100vh;
-  padding: var(--space-3) var(--space-4) var(--space-4);
+  /* 顶部 88px 避开固定导航栏(56px)+ 余量,否则返回按钮被压在栏下。
+     与 .scenarios 页保持一致。 */
+  padding: 88px var(--space-4) var(--space-4);
   background: var(--bg);
   font-family: var(--font);
   color: var(--text);
