@@ -25,6 +25,8 @@ import {
 } from "./upload-session.ts";
 import { createWardrobeStore } from "./wardrobe.ts";
 import { handleWardrobeRoutes } from "./wardrobe-routes.ts";
+import { createTripPlanStore } from "./trip-plan.ts";
+import { handleTripPlanRoutes } from "./trip-plan-routes.ts";
 import { dirname, join } from "node:path";
 import { aiConfigured, chatCompletion, type ChatMessage } from "./ai.ts";
 import { buildSystemPrompt } from "./prompts.ts";
@@ -101,6 +103,9 @@ export function createApp(dbPath: string): App {
 
   // 照片存数据库同级的 photos/ 目录:测试用临时库时会自动隔离到临时目录。
   const wardrobe = createWardrobeStore(db, join(dirname(dbPath), "photos"));
+  // 行程计划(目的地 + 日期区间)自带建表,见 trip-plan.ts。
+  const tripPlans = createTripPlanStore(db);
+  const scenarioIds = new Set(SCENARIOS.map((s) => s.id) as readonly string[]);
 
   // Dev databases created before the questionnaire existed lack the profile
   // columns; CREATE TABLE IF NOT EXISTS won't add them, so patch in place.
@@ -462,6 +467,22 @@ export function createApp(dbPath: string): App {
         userFromHeader: () => userForToken(bearerToken(req)),
         userFromQuery: () =>
           userForToken(url.searchParams.get("token") ?? undefined),
+      })
+    ) {
+      return;
+    }
+
+    // 行程计划路由(地点搜索/保存/列表)拆到独立模块,见 trip-plan-routes.ts。
+    if (
+      await handleTripPlanRoutes({
+        req,
+        res,
+        url,
+        tripPlans,
+        scenarioIds,
+        json,
+        readBody,
+        userFromHeader: () => userForToken(bearerToken(req)),
       })
     ) {
       return;

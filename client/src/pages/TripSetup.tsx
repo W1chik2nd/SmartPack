@@ -1,0 +1,234 @@
+import { useState, type FormEvent } from "react";
+import {
+  searchPlaces,
+  saveTripPlan,
+  type Place,
+  type User,
+} from "../api";
+import MapView from "../components/MapView";
+import DateRangePicker, { type DateRange } from "../components/DateRangePicker";
+import ChatWidget from "../components/ChatWidget";
+import { useLang } from "../i18n/useLang";
+import { SCENARIO_LABELS } from "../i18n/strings";
+
+// 行程设置页(线框图 2):左边地图 + 下方搜索框,右边日历 + 下方日期条。
+// 从场景卡片点进来,带着 scenario id。
+//
+// 这一页只做展示和收集输入(AGENTS.md §3):地点搜索走 /api/places 由服务端
+// 代理第三方,保存走 /api/trip-plans 落库。前端不含任何业务规则。
+
+type Props = {
+  user: User;
+  /** 从哪张场景卡片进来的(commute / travel / business / …)。 */
+  scenario: string;
+  onBack: () => void;
+};
+
+/** 中英都按"年月日"读得通的日期显示。 */
+function formatDay(iso: string, lang: "en" | "zh"): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  if (lang === "zh") return `${y} 年 ${m} 月 ${d} 日`;
+  const date = new Date(y, m - 1, d);
+  return date.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/** 区间跨了几晚。同一天是 0,显示成"当天往返"。 */
+function nightsBetween(range: DateRange): number {
+  const start = new Date(`${range.start}T00:00:00Z`).getTime();
+  const end = new Date(`${range.end}T00:00:00Z`).getTime();
+  return Math.round((end - start) / 86_400_000);
+}
+
+export default function TripSetup({ user, scenario, onBack }: Props) {
+  const { lang, t } = useLang();
+
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState<Place[] | null>(null);
+  const [searching, setSearching] = useState(false);
+  const [place, setPlace] = useState<Place | null>(null);
+  const [range, setRange] = useState<DateRange | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  // 没选地点时地图停在一个能看出是世界地图的位置,而不是空白海面。
+  const center = place
+    ? { lat: place.lat, lon: place.lon }
+    : { lat: 30, lon: 20 };
+
+  async function handleSearch(e: FormEvent) {
+    e.preventDefault();
+    const q = query.trim();
+    if (!q) return;
+    setSearching(true);
+    setError(null);
+    try {
+      const { places } = await searchPlaces(q, lang);
+      setResults(places);
+    } catch {
+      setError(t("placeSearchFailed"));
+      setResults(null);
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  function choosePlace(p: Place) {
+    setPlace(p);
+    setResults(null);
+    setQuery(p.name);
+    setSaved(false);
+  }
+
+  async function handleSave() {
+    if (!place || !range) {
+      setError(t("needPlaceAndDates"));
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await saveTripPlan({
+        scenario,
+        placeName: place.name,
+        placeDetail: place.detail,
+        lat: place.lat,
+        lon: place.lon,
+        startDate: range.start,
+        endDate: range.end,
+      });
+      setSaved(true);
+    } catch (err: any) {
+      setError(err?.message ?? t("saveTripFailed"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const scenarioLabel = SCENARIO_LABELS[scenario]?.[lang] ?? scenario;
+  const nights = range ? nightsBetween(range) : 0;
+
+  return (
+    <div className="tripsetup">
+      <ChatWidget />
+
+      <header className="tripsetup-head">
+        <button type="button" className="tripsetup-back" onClick={onBack}>
+          ‹ {t("backToScenarios")}
+        </button>
+        <p className="tripsetup-eyebrow">
+          {scenarioLabel} · {user.name}
+        </p>
+        <h1 className="tripsetup-title">{t("tripSetupTitle")}</h1>
+      </header>
+
+      {error && (
+        <div className="error-banner" role="alert">
+          {error}
+        </div>
+      )}
+      {saved && (
+        <div className="success-banner" role="status">
+          {t("tripSaved")}
+        </div>
+      )}
+
+      <div className="tripsetup-grid">
+        {/* 左列:地图 + 搜索框 */}
+        <section className="tripsetup-col">
+          <div className="tripsetup-panel">
+            <MapView
+              center={center}
+              zoom={place ? 9 : 2}
+              marker={place}
+              label={t("mapLabel")}
+            />
+          </div>
+
+          <form className="tripsetup-bar" onSubmit={handleSearch}>
+            <input
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t("searchPlace")}
+              aria-label={t("searchPlace")}
+            />
+            <button type="submit" disabled={searching} aria-label={t("searchAction")}>
+              {searching ? "…" : "⌕"}
+            </button>
+          </form>
+
+          {/* 搜索结果:选中一条就定位地图并收起列表。 */}
+          {results && (
+            <ul className="tripsetup-results">
+              {results.length === 0 && (
+                <li className="tripsetup-empty">{t("noPlaces")}</li>
+              )}
+              {results.map((p) => (
+                <li key={p.id}>
+                  <button type="button" onClick={() => choosePlace(p)}>
+                    <strong>{p.name}</strong>
+                    {p.detail && <span>{p.detail}</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* 右列:日历 + 日期条 */}
+        <section className="tripsetup-col">
+          <div className="tripsetup-panel">
+            <DateRangePicker
+              value={range}
+              onChange={(r) => {
+                setRange(r);
+                setSaved(false);
+              }}
+            />
+          </div>
+
+          <div className="tripsetup-bar tripsetup-dates">
+            <button
+              type="button"
+              className="tripsetup-clear"
+              onClick={() => setRange(null)}
+              disabled={!range}
+              aria-label={t("clearDates")}
+            >
+              ✕
+            </button>
+            <p aria-live="polite">
+              {range ? (
+                <>
+                  {formatDay(range.start, lang)}
+                  {nights > 0 && <> — {formatDay(range.end, lang)}</>}
+                  <span className="tripsetup-nights">
+                    {nights > 0 ? `${nights} ${t("nights")}` : t("sameDay")}
+                  </span>
+                </>
+              ) : (
+                t("noDates")
+              )}
+            </p>
+          </div>
+        </section>
+      </div>
+
+      <div className="tripsetup-actions">
+        <button
+          type="button"
+          className="tripsetup-save"
+          onClick={handleSave}
+          disabled={saving || !place || !range}
+        >
+          {saving ? t("savingTrip") : t("saveTrip")}
+        </button>
+      </div>
+    </div>
+  );
+}
