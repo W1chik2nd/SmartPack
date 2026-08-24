@@ -6,6 +6,7 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { searchPlaces } from "./geocode.ts";
 import type { TripPlanStore } from "./trip-plan.ts";
+import { weatherForTrip } from "./weather.ts";
 import {
   estimateTripGeneration,
   parseTripInput,
@@ -35,6 +36,22 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
   const { req, res, url, tripPlans, scenarioIds, json, readBody } = ctx;
   const method = req.method;
   const path = url.pathname;
+
+  const weatherMatch = path.match(/^\/api\/trip-plans\/([^/]+)\/weather$/);
+  if (method === "GET" && weatherMatch) {
+    const user = ctx.userFromHeader();
+    if (!user) {
+      json(res, 401, { error: "Not signed in." });
+      return true;
+    }
+    const plan = tripPlans.get(user.id, weatherMatch[1]);
+    if (!plan) {
+      json(res, 404, { error: "Trip not found." });
+      return true;
+    }
+    json(res, 200, await weatherForTrip(plan));
+    return true;
+  }
 
   const itemMatch = path.match(/^\/api\/trip-plans\/([^/]+)$/);
   if (method === "GET" && itemMatch) {

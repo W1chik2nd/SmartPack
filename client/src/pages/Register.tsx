@@ -54,13 +54,7 @@ export default function Register({ onContinue, onSwitch }: Props) {
   }
 
   return (
-    <div className="auth-page">
-      {/* Left visual panel; hidden on mobile (auth.css). Decorative only,
-          so the image carries no alt text for screen readers. */}
-      <div className="auth-visual" aria-hidden="true">
-        <img src="/auth-visual.jpeg" alt="" />
-      </div>
-
+    <div className="auth-page scenic-auth-page register-page">
       <div className="auth-panel">
         <div className="auth-headline">
           <p className="auth-step">{t("step1")}</p>

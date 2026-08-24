@@ -3,7 +3,11 @@
 // core trade-off directly (US 6.1–6.3, 7.1).
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildPackingPlan } from "./packing.ts";
+import {
+  buildGeneratedPackingPlan,
+  buildPackingPlan,
+  type StoredGeneratedPacking,
+} from "./packing.ts";
 
 // Every human-readable field ships both languages so the client can render the
 // plan in whichever language the user picked. `label` stays Chinese for
@@ -70,4 +74,51 @@ test("core pieces are the most-reused items, capped at four, sorted desc", () =>
   for (let i = 1; i < plan.corePieces.length; i++) {
     assert.ok(plan.corePieces[i - 1].reuse >= plan.corePieces[i].reuse);
   }
+});
+
+// 装备类(充电宝、转换插头之类)压根不来自衣橱,空的 wardrobeItemId 只
+// 说明它不是衣服。之前客户端拿 `wardrobeItemId === ""` 当缺口判据,导致
+// 每一条装备都挂着「衣橱缺口」红标。判据现在由服务端给。
+function gearFixture(): StoredGeneratedPacking {
+  const item = (id: string, wardrobeItemId: string) => ({
+    id,
+    label: id,
+    labelEn: id,
+    reuse: 1,
+    quantity: 1,
+    daysUsed: [1],
+    wardrobeItemId,
+    priority: "core" as const,
+  });
+  return {
+    summary: "s",
+    summaryEn: "s",
+    categories: [
+      {
+        id: "tops",
+        title: "上衣",
+        titleEn: "Tops",
+        items: [item("owned-tee", "w-1"), item("missing-shirt", "")],
+      },
+      {
+        id: "equipment",
+        title: "装备",
+        titleEn: "Equipment",
+        items: [item("power-bank", ""), item("uk-adapter", "")],
+      },
+    ],
+    essentials: [],
+  };
+}
+
+test("gear never counts as a wardrobe gap, missing clothes still do", () => {
+  const plan = buildGeneratedPackingPlan(gearFixture(), 50, 2);
+  const byId = new Map(
+    plan.categories.flatMap((c) => c.items).map((i) => [i.id, i])
+  );
+
+  assert.equal(byId.get("power-bank")?.wardrobeGap, false);
+  assert.equal(byId.get("uk-adapter")?.wardrobeGap, false);
+  assert.equal(byId.get("missing-shirt")?.wardrobeGap, true);
+  assert.equal(byId.get("owned-tee")?.wardrobeGap, false);
 });

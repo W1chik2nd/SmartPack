@@ -93,7 +93,7 @@ function Checklist({
                   />
                   <span className="pk-row-label">
                     {nextItemLabel()}
-                    {(item.quantity || item.daysUsed || item.wardrobeItemId === "") && (
+                    {(item.quantity || item.daysUsed || item.wardrobeGap) && (
                       <span className="pk-row-meta">
                         {item.quantity && item.quantity > 1 && (
                           <span>{t("pkQuantity")} ×{item.quantity}</span>
@@ -101,7 +101,7 @@ function Checklist({
                         {item.daysUsed && (
                           <span>{t("pkDays")} {item.daysUsed.join(" / ")}</span>
                         )}
-                        {item.wardrobeItemId === "" && (
+                        {item.wardrobeGap && (
                           <span className="pk-gap">{t("pkWardrobeGap")}</span>
                         )}
                       </span>
