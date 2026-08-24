@@ -318,10 +318,10 @@ export function stopPhoto(
 /** balance: 0 = pack lightest, 100 = most outfit variety (US 6.3). */
 export function getPackingPlan(
   balance: number,
-  scenario = "travel"
+  tripPlanId: string
 ): Promise<{ plan: PackingPlan }> {
   return request<{ plan: PackingPlan }>(
-    `/api/packing?balance=${encodeURIComponent(balance)}&scenario=${encodeURIComponent(scenario)}`
+    `/api/packing?balance=${encodeURIComponent(balance)}&tripPlanId=${encodeURIComponent(tripPlanId)}`
   );
 }
 
@@ -346,13 +346,30 @@ export function saveTripPlan(plan: NewTripPlan): Promise<{ plan: TripPlan }> {
 }
 
 /** Queue the analytical agent; generation continues on the server. */
+export type TripGenerationEstimate = {
+  minSeconds: number;
+  maxSeconds: number;
+};
+
 export function generateTripPlan(
   plan: NewTripPlan
-): Promise<{ plan: TripPlan }> {
-  return request<{ plan: TripPlan }>("/api/trip-plans/generate", {
-    method: "POST",
-    body: JSON.stringify(plan),
-  });
+): Promise<{ plan: TripPlan; estimate: TripGenerationEstimate }> {
+  return request<{ plan: TripPlan; estimate: TripGenerationEstimate }>(
+    "/api/trip-plans/generate",
+    {
+      method: "POST",
+      body: JSON.stringify(plan),
+    }
+  );
+}
+
+/** Poll one queued plan without reloading the full dashboard. */
+export function getTripPlan(
+  id: string
+): Promise<{ plan: TripPlan; estimate: TripGenerationEstimate }> {
+  return request<{ plan: TripPlan; estimate: TripGenerationEstimate }>(
+    `/api/trip-plans/${encodeURIComponent(id)}`
+  );
 }
 
 export function listTripPlans(): Promise<{ plans: TripPlan[] }> {

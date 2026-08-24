@@ -19,10 +19,11 @@ function useDebounced<T>(value: T, ms: number): T {
 }
 
 type Props = {
+  tripPlanId: string;
   onBack: () => void;
 };
 
-export default function PackingList({ onBack }: Props) {
+export default function PackingList({ tripPlanId, onBack }: Props) {
   const { t } = useLang();
   // 0 = pack lightest · 100 = most variety. The sketch draws the slider
   // vertically with "more variety" on top, so the visual top is 100.
@@ -43,7 +44,7 @@ export default function PackingList({ onBack }: Props) {
   useEffect(() => {
     const id = ++reqId.current;
     setLoading(true);
-    getPackingPlan(debouncedBalance)
+    getPackingPlan(debouncedBalance, tripPlanId)
       .then(({ plan }) => {
         if (id !== reqId.current) return;
         setPlan(plan);
@@ -56,7 +57,7 @@ export default function PackingList({ onBack }: Props) {
       .finally(() => {
         if (id === reqId.current) setLoading(false);
       });
-  }, [debouncedBalance]);
+  }, [debouncedBalance, tripPlanId]);
 
   const totalItems = useMemo(
     () =>

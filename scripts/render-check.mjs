@@ -147,13 +147,24 @@ console.log("=== 首页物品清单(真实渲染) ===");
   if (html.includes('class="check-mark"')) {
     fail("dashboard: old checklist placeholder is still rendered");
   }
-  if (!html.includes('class="trip-switcher"')) {
-    fail("dashboard: destination trip switcher was not rendered");
+  const cardSwitches = [...html.matchAll(/class="trip-card-switch /g)].length;
+  if (cardSwitches !== 0) {
+    fail(`dashboard: empty trip card should hide switch controls, got ${cardSwitches}`);
   }
   if (!html.includes("Destination Weather Today")) {
     fail("dashboard: weather heading is not destination-specific");
   }
-  console.log("  checklist bag, destination switcher, and destination weather rendered");
+  const oneTrip = harness.renderTripSwitcher(1);
+  const twoTrips = harness.renderTripSwitcher(2);
+  const oneTripSwitches = [...oneTrip.matchAll(/class="trip-card-switch /g)].length;
+  const twoTripSwitches = [...twoTrips.matchAll(/class="trip-card-switch /g)].length;
+  if (oneTripSwitches !== 0) {
+    fail(`dashboard: single trip should hide switch controls, got ${oneTripSwitches}`);
+  }
+  if (twoTripSwitches !== 2) {
+    fail(`dashboard: two trips should render both switch controls, got ${twoTripSwitches}`);
+  }
+  console.log("  checklist, destination weather, and conditional trip controls rendered");
 }
 
 console.log("\n=== 个人档案页(真实渲染) ===");

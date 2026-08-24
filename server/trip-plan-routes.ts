@@ -6,8 +6,17 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { searchPlaces } from "./geocode.ts";
 import type { TripPlanStore } from "./trip-plan.ts";
-import { parseTripInput } from "./trip-input.ts";
-export { isIsoDate, tripDayCount, MAX_TRIP_DAYS } from "./trip-input.ts";
+import {
+  estimateTripGeneration,
+  parseTripInput,
+  tripDayCount,
+} from "./trip-input.ts";
+export {
+  estimateTripGeneration,
+  isIsoDate,
+  tripDayCount,
+  MAX_TRIP_DAYS,
+} from "./trip-input.ts";
 
 type Ctx = {
   req: IncomingMessage;
@@ -27,14 +36,34 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
   const method = req.method;
   const path = url.pathname;
 
-  const deleteMatch = path.match(/^\/api\/trip-plans\/([^/]+)$/);
-  if (method === "DELETE" && deleteMatch) {
+  const itemMatch = path.match(/^\/api\/trip-plans\/([^/]+)$/);
+  if (method === "GET" && itemMatch) {
     const user = ctx.userFromHeader();
     if (!user) {
       json(res, 401, { error: "Not signed in." });
       return true;
     }
-    if (!tripPlans.remove(user.id, deleteMatch[1])) {
+    const plan = tripPlans.get(user.id, itemMatch[1]);
+    if (!plan) {
+      json(res, 404, { error: "Trip not found." });
+      return true;
+    }
+    json(res, 200, {
+      plan,
+      estimate: estimateTripGeneration(
+        tripDayCount(plan.startDate, plan.endDate)
+      ),
+    });
+    return true;
+  }
+
+  if (method === "DELETE" && itemMatch) {
+    const user = ctx.userFromHeader();
+    if (!user) {
+      json(res, 401, { error: "Not signed in." });
+      return true;
+    }
+    if (!tripPlans.remove(user.id, itemMatch[1])) {
       json(res, 404, { error: "Trip not found." });
       return true;
     }

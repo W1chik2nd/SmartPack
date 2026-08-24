@@ -18,7 +18,7 @@ type Props = {
   onOpenTrips: () => void;
   onOpenWardrobe: () => void;
   onOpenItinerary: (itineraryId: string) => void;
-  onOpenPacking: () => void;
+  onOpenPacking: (tripPlanId: string) => void;
   onOpenProfile: () => void;
 };
 
@@ -47,12 +47,17 @@ export default function Home({
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [deletingTripId, setDeletingTripId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState(false);
+  const [switchDirection, setSwitchDirection] = useState<-1 | 1>(1);
   const deletedTripIds = useRef(new Set<string>());
   const travelTrips = dashboardTrips(trips ?? []);
   const selectedTrip =
     travelTrips.find((trip) => trip.id === selectedTripId) ??
     travelTrips[0] ??
     null;
+  const selectedTripIndex = Math.max(
+    0,
+    travelTrips.findIndex((trip) => trip.id === selectedTrip?.id)
+  );
 
   // Live clock: half-minute ticks keep date, time, and greeting current.
   useEffect(() => {
@@ -143,6 +148,12 @@ export default function Home({
     }
   }
 
+  function selectTrip(id: string, direction: -1 | 1) {
+    setSwitchDirection(direction);
+    setWx(null);
+    setSelectedTripId(id);
+  }
+
   const locale = lang === "zh" ? "zh-CN" : "en-GB";
   const dateLong = now.toLocaleDateString(locale, {
     weekday: "long",
@@ -188,16 +199,32 @@ export default function Home({
 
       <div className="dash-layout">
         {/* Left: today card, laid out after the wireframe */}
-        <section className="today-card" aria-label="Today">
+        <div className="today-card-shell">
+          <TripSwitcher
+            trips={travelTrips}
+            selectedId={selectedTrip?.id ?? null}
+            onSelect={selectTrip}
+          />
+          <section
+            key={selectedTrip?.id ?? "empty-trip"}
+            className={`today-card trip-card-enter-${switchDirection === 1 ? "right" : "left"}`}
+            aria-label="Today"
+          >
           <div className="today-header">
             <button className="today-dates" onClick={TODO_LINKS.dates}>
               {t("upcoming")} · {dateLong} <span aria-hidden="true">›</span>
             </button>
-            <TripSwitcher
-              trips={travelTrips}
-              selectedId={selectedTrip?.id ?? null}
-              onSelect={setSelectedTripId}
-            />
+            <div className="trip-switch-copy" aria-live="polite">
+              <span>{t("destination")}</span>
+              <strong title={selectedTrip?.placeName}>
+                {selectedTrip?.placeName ?? t("noDestination")}
+              </strong>
+              {travelTrips.length > 0 && (
+                <small>
+                  {selectedTripIndex + 1}/{travelTrips.length}
+                </small>
+              )}
+            </div>
           </div>
 
           <div className="today-body">
@@ -221,7 +248,11 @@ export default function Home({
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
 
-              <button className="today-checklist" onClick={onOpenPacking}>
+              <button
+                className="today-checklist"
+                onClick={() => selectedTrip && onOpenPacking(selectedTrip.id)}
+                disabled={!selectedTrip?.itineraryId}
+              >
                 <h2>{t("checklist")}</h2>
                 <img
                   className="checklist-bag"
@@ -331,7 +362,8 @@ export default function Home({
               )}
             </div>
           </div>
-        </section>
+          </section>
+        </div>
 
         {/* Right: primary navigation tiles */}
         <nav className="dash-nav" aria-label="Sections">

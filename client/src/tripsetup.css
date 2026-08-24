@@ -80,6 +80,34 @@
   font-weight: var(--weight-bold);
 }
 
+.tripsetup-queued p + p {
+  margin-top: 5px;
+}
+
+.tripsetup-queued.is-completed {
+  background: var(--bg);
+}
+
+.tripsetup-queued.is-failed {
+  color: var(--white);
+  background: var(--red);
+}
+
+.tripsetup-estimate {
+  display: inline-block;
+  padding: 3px 8px;
+  color: var(--white);
+  background: var(--blue);
+  border: 2px solid var(--black);
+}
+
+.tripsetup-elapsed time {
+  margin-left: 5px;
+  font-size: 18px;
+  font-weight: var(--weight-heavy);
+  font-variant-numeric: tabular-nums;
+}
+
 .tripsetup-queued > span {
   display: grid;
   place-items: center;
@@ -329,6 +357,19 @@
   cursor: progress;
   opacity: 0.6;
   box-shadow: none;
+}
+
+.tripsetup-home {
+  padding: 12px var(--space-3);
+  font: inherit;
+  font-size: 14px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  color: var(--black);
+  background: var(--white);
+  border: var(--border);
+  box-shadow: 4px 4px 0 var(--black);
+  cursor: pointer;
 }
 
 @media (max-width: 700px) {

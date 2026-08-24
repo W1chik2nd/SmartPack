@@ -7,7 +7,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { createTripPlanStore } from "./trip-plan.ts";
-import { isIsoDate, tripDayCount, MAX_TRIP_DAYS } from "./trip-plan-routes.ts";
+import {
+  estimateTripGeneration,
+  isIsoDate,
+  tripDayCount,
+  MAX_TRIP_DAYS,
+} from "./trip-plan-routes.ts";
 import { normalizePlaces } from "./geocode.ts";
 
 /** 一个带 users 表的临时库 —— trip_plans.user_id 有外键指过去。 */
@@ -109,6 +114,21 @@ test("tripDayCount 含首尾计天数,30 天上限的边界", () => {
   // 跨月边界也要对(4 月 30 天)。
   assert.equal(tripDayCount("2026-04-15", "2026-05-14"), 30);
   assert.equal(MAX_TRIP_DAYS, 30);
+});
+
+test("生成预计时间随行程复杂度分档", () => {
+  assert.deepEqual(estimateTripGeneration(1), {
+    minSeconds: 180,
+    maxSeconds: 480,
+  });
+  assert.deepEqual(estimateTripGeneration(7), {
+    minSeconds: 300,
+    maxSeconds: 720,
+  });
+  assert.deepEqual(estimateTripGeneration(30), {
+    minSeconds: 720,
+    maxSeconds: 1_800,
+  });
 });
 
 test("normalizePlaces 提取名称、补充信息和坐标", () => {

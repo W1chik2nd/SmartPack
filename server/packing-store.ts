@@ -16,6 +16,7 @@ export type PackingPlanStore = {
     tripDays: number,
     packing: GeneratedPacking
   ) => GeneratedPackingRecord;
+  get: (userId: string, tripPlanId: string) => GeneratedPackingRecord | null;
   latest: (userId: string, scenario?: string) => GeneratedPackingRecord | null;
 };
 
@@ -73,6 +74,19 @@ export function createPackingPlanStore(db: DatabaseSync): PackingPlanStore {
          VALUES (?, ?, ?, ?)`
       ).run(tripPlanId, userId, tripDays, JSON.stringify(plan));
       return { tripPlanId, tripDays, packing: plan };
+    },
+
+    get(userId, tripPlanId) {
+      const row = db
+        .prepare(
+          `SELECT trip_plan_id, trip_days, plan_json
+             FROM generated_packing_plans
+            WHERE user_id = ? AND trip_plan_id = ?`
+        )
+        .get(userId, tripPlanId) as
+        | { trip_plan_id: string; trip_days: number; plan_json: string }
+        | undefined;
+      return row ? toRecord(row) : null;
     },
 
     latest(userId, scenario) {

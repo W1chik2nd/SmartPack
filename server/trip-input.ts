@@ -10,11 +10,29 @@ export function isIsoDate(value: unknown): value is string {
 
 export const MAX_TRIP_DAYS = 30;
 
+export type TripGenerationEstimate = {
+  minSeconds: number;
+  maxSeconds: number;
+};
+
 export function tripDayCount(start: string, end: string): number {
   const ms =
     new Date(`${end}T00:00:00Z`).getTime() -
     new Date(`${start}T00:00:00Z`).getTime();
   return Math.round(ms / 86_400_000) + 1;
+}
+
+/**
+ * A transparent planning window, not a fake countdown. Longer trips require
+ * more grounded stops, weather decisions, outfits, and packing rows.
+ */
+export function estimateTripGeneration(
+  dayCount: number
+): TripGenerationEstimate {
+  if (dayCount <= 3) return { minSeconds: 180, maxSeconds: 480 };
+  if (dayCount <= 7) return { minSeconds: 300, maxSeconds: 720 };
+  if (dayCount <= 14) return { minSeconds: 480, maxSeconds: 1_200 };
+  return { minSeconds: 720, maxSeconds: 1_800 };
 }
 
 export type ParsedTrip =

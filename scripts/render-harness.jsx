@@ -10,6 +10,7 @@ import TripSpine from "../client/src/components/TripSpine";
 import DayPlan from "../client/src/components/DayPlan";
 import Profile from "../client/src/pages/Profile";
 import Home from "../client/src/pages";
+import TripSwitcher from "../client/src/components/TripSwitcher";
 
 /** 造一趟 days 天、每天 stopsPerDay 个停靠点的假行程。 */
 function makeTrip(days, stopsPerDay) {
@@ -116,6 +117,33 @@ export function renderHome() {
         onOpenItinerary={() => {}}
         onOpenPacking={() => {}}
         onOpenProfile={() => {}}
+      />
+    </LangProvider>
+  );
+}
+
+export function renderTripSwitcher(count) {
+  const trips = Array.from({ length: count }, (_, index) => ({
+    id: `plan-${index + 1}`,
+    scenario: "travel",
+    placeName: index === 0 ? "Paris" : "Kyoto",
+    placeDetail: "",
+    lat: 0,
+    lon: 0,
+    startDate: "2026-08-26",
+    endDate: "2026-08-31",
+    notes: "",
+    itineraryId: null,
+    generationStatus: "completed",
+    generationError: null,
+    createdAt: "2026-08-24 10:00:00",
+  }));
+  return renderToStaticMarkup(
+    <LangProvider>
+      <TripSwitcher
+        trips={trips}
+        selectedId={trips[0]?.id ?? null}
+        onSelect={() => {}}
       />
     </LangProvider>
   );
