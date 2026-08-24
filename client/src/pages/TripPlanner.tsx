@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { scenarios, type Scenario, type User } from "../api";
-import ChatWidget from "../components/ChatWidget";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/strings";
 
@@ -9,8 +8,6 @@ type Props = {
   onBack: () => void;
   /** 选好场景后进入行程设置页(地图 + 日历),带上场景 id。 */
   onPickScenario: (scenario: string) => void;
-  /** 选好场景后进入行程计划页,带上场景 id。 */
-  onPlanTrip: (scenario: string) => void;
 };
 
 /**
@@ -28,7 +25,6 @@ export default function TripPlanner({
   user,
   onBack,
   onPickScenario,
-  onPlanTrip,
 }: Props) {
   const { lang, t } = useLang();
   const [items, setItems] = useState<Scenario[] | null>(null);
@@ -160,8 +156,6 @@ export default function TripPlanner({
 
   return (
     <div className="scenarios">
-      <ChatWidget />
-
       <header className="scenarios-head">
         <button type="button" className="scenarios-back" onClick={onBack}>
           ‹ {t("backToHome")}
@@ -209,7 +203,7 @@ export default function TripPlanner({
         </button>
       </div>
 
-      {/* 选中场景后才出现:两个入口 —— 设目的地和日期(地图+日历)/ 规划行程。 */}
+      {/* 先给齐地点、日期和安排,再由 Agent 生成可执行方案。 */}
       {selected && (
         <div className="scenarios-actions">
           <button
@@ -218,13 +212,6 @@ export default function TripPlanner({
             onClick={() => onPickScenario(selected)}
           >
             {t("continueToSetup")} ›
-          </button>
-          <button
-            type="button"
-            className="scenarios-continue"
-            onClick={() => onPlanTrip(selected)}
-          >
-            {t("continueToItinerary")} ›
           </button>
         </div>
       )}

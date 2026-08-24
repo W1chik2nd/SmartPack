@@ -42,8 +42,10 @@ await build({
   absWorkingDir: root,
   // react-dom/server 是 CJS,里面 require("stream")。打进 ESM 产物会在
   // 运行时炸 "Dynamic require of stream is not supported",所以让 Node
-  // 自己去 require 它们。CSS import 在 SSR 里没有意义,一并排除。
-  external: ["react", "react-dom", "react-dom/server", "*.css"],
+  // 自己去 require 它们。SSR 不需要 CSS;用 empty loader 消化所有组件
+  // 的相对 CSS import,避免 external import 被搬到仓库根目录后路径失效。
+  external: ["react", "react-dom", "react-dom/server"],
+  loader: { ".css": "empty" },
   logLevel: "silent",
 });
 
@@ -147,7 +149,24 @@ console.log("=== 首页物品清单(真实渲染) ===");
   if (html.includes('class="check-mark"')) {
     fail("dashboard: old checklist placeholder is still rendered");
   }
-  console.log("  checklist bag image rendered");
+  const cardSwitches = [...html.matchAll(/class="trip-card-switch /g)].length;
+  if (cardSwitches !== 0) {
+    fail(`dashboard: empty trip card should hide switch controls, got ${cardSwitches}`);
+  }
+  if (!html.includes("Destination Weather Today")) {
+    fail("dashboard: weather heading is not destination-specific");
+  }
+  const oneTrip = harness.renderTripSwitcher(1);
+  const twoTrips = harness.renderTripSwitcher(2);
+  const oneTripSwitches = [...oneTrip.matchAll(/class="trip-card-switch /g)].length;
+  const twoTripSwitches = [...twoTrips.matchAll(/class="trip-card-switch /g)].length;
+  if (oneTripSwitches !== 0) {
+    fail(`dashboard: single trip should hide switch controls, got ${oneTripSwitches}`);
+  }
+  if (twoTripSwitches !== 2) {
+    fail(`dashboard: two trips should render both switch controls, got ${twoTripSwitches}`);
+  }
+  console.log("  checklist, destination weather, and conditional trip controls rendered");
 }
 
 console.log("\n=== 个人档案页(真实渲染) ===");
@@ -246,6 +265,10 @@ for (const stops of [1, 3, 4, 5, 8]) {
   const vb = viewBoxOf(html);
   const circles = circlesOf(html);
   const cards = [...html.matchAll(/class="stop-card side-(left|right)"/g)].map((m) => m[1]);
+
+  if (!html.includes('class="day-decisions"')) fail(`${stops} stops: decision panel missing`);
+  if (!html.includes("Waterproof jacket")) fail(`${stops} stops: outfit recommendation missing`);
+  if (!html.includes("Compact umbrella")) fail(`${stops} stops: equipment recommendation missing`);
 
   if (!vb) { fail(`${stops} stops: no viewBox`); continue; }
   if (vb.h !== stops * ROW_H) fail(`${stops} stops: spine height ${vb.h} != ${stops * ROW_H}`);

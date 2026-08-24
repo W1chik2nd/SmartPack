@@ -1,0 +1,195 @@
+/* 参考图采用白色内部与黑色像素线稿，三原色只标记结构细节。 */
+.dress-piece-accessory {
+  width: 62px;
+  height: 52px;
+}
+
+.accessory-bag::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  bottom: 0;
+  width: 84%;
+  height: 68%;
+  background: var(--white);
+  box-shadow: inset 0 6px 0 var(--black), inset 0 12px 0 var(--detail-color);
+}
+
+.accessory-bag::after {
+  content: "";
+  position: absolute;
+  left: 28%;
+  top: 0;
+  width: 44%;
+  height: 44%;
+  border: 6px solid var(--black);
+  border-bottom: 0;
+}
+
+.accessory-hat {
+  background: var(--white);
+  clip-path: polygon(
+    32% 0, 68% 0, 68% 8%, 76% 8%, 76% 16%, 84% 16%,
+    84% 24%, 92% 24%, 92% 40%, 100% 40%, 100% 56%,
+    72% 56%, 72% 64%, 28% 64%, 28% 56%, 0 56%, 0 40%,
+    8% 40%, 8% 24%, 16% 24%, 16% 16%, 24% 16%,
+    24% 8%, 32% 8%
+  );
+}
+
+.accessory-hat::after {
+  content: "";
+  position: absolute;
+  left: 20%;
+  top: 42%;
+  width: 60%;
+  height: 10%;
+  background: var(--detail-color);
+}
+
+.accessory-glasses::before,
+.accessory-glasses::after {
+  content: "";
+  position: absolute;
+  top: 24%;
+  width: 34%;
+  height: 42%;
+  border: 6px solid var(--black);
+  background: var(--white);
+}
+
+.accessory-glasses::before {
+  left: 2%;
+  box-shadow: 20px 1px 0 -16px var(--detail-color);
+}
+.accessory-glasses::after { right: 2%; }
+
+.accessory-scarf {
+  background: var(--white);
+  clip-path: polygon(
+    12% 0, 88% 0, 88% 48%, 72% 48%, 72% 100%,
+    52% 100%, 52% 56%, 40% 56%, 40% 88%, 20% 88%,
+    20% 48%, 12% 48%
+  );
+}
+
+.accessory-scarf::after {
+  content: "";
+  position: absolute;
+  left: 12%;
+  top: 30%;
+  width: 76%;
+  height: 8%;
+  background: var(--detail-color);
+}
+
+.accessory-watch::before {
+  content: "";
+  position: absolute;
+  left: 36%;
+  top: 0;
+  width: 28%;
+  height: 100%;
+  background: var(--white);
+}
+
+.accessory-watch::after {
+  content: "";
+  position: absolute;
+  left: 22%;
+  top: 26%;
+  width: 56%;
+  height: 48%;
+  border: 5px solid var(--black);
+  background: var(--white);
+  box-shadow: inset 10px 8px 0 -8px var(--detail-color);
+}
+
+.accessory-necklace::before {
+  content: "";
+  position: absolute;
+  left: 16%;
+  top: 0;
+  width: 68%;
+  height: 72%;
+  border: 6px solid var(--black);
+  border-top: 0;
+  clip-path: polygon(0 0, 20% 0, 20% 58%, 36% 58%, 36% 82%, 64% 82%, 64% 58%, 80% 58%, 80% 0, 100% 0, 100% 64%, 80% 64%, 80% 84%, 64% 84%, 64% 100%, 36% 100%, 36% 84%, 20% 84%, 20% 64%, 0 64%);
+}
+
+.accessory-necklace::after {
+  content: "";
+  position: absolute;
+  left: 40%;
+  bottom: 0;
+  width: 20%;
+  height: 24%;
+  background: var(--detail-color);
+  border: 3px solid var(--black);
+}
+
+.dress-mini-stack {
+  position: relative;
+  flex-direction: row;
+  gap: 12px;
+}
+
+.dress-mini-clothes {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.dress-piece-accessory.is-compact {
+  --pixel-outline: 1px;
+  width: 34px;
+  height: 30px;
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+}
+
+.dress-featured-accessory {
+  position: absolute;
+  right: 24px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  max-width: 110px;
+}
+
+.dress-featured-accessory figcaption {
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.dress-piece-photo.is-accessory-photo {
+  width: 62px;
+  height: 52px;
+}
+
+.dress-piece-photo.is-accessory-photo img {
+  transform: scale(1.3, 1.45);
+}
+
+.dress-piece-photo.is-accessory-photo.is-compact {
+  width: 34px;
+  height: 30px;
+}
+
+.dress-piece-photo.is-accessory-photo.is-compact img {
+  transform: scale(0.7083, 0.8333);
+}
+
+.dress-piece-accessory.is-compact.accessory-bag::after,
+.dress-piece-accessory.is-compact.accessory-glasses::before,
+.dress-piece-accessory.is-compact.accessory-glasses::after,
+.dress-piece-accessory.is-compact.accessory-watch::after,
+.dress-piece-accessory.is-compact.accessory-necklace::before {
+  border-width: 3px;
+}

@@ -1,13 +1,15 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import {
+  generateTripPlan,
+  getTripPlan,
   searchPlaces,
-  saveTripPlan,
   type Place,
+  type TripGenerationEstimate,
+  type TripPlan,
   type User,
 } from "../api";
 import MapView from "../components/MapView";
 import DateRangePicker, { type DateRange } from "../components/DateRangePicker";
-import ChatWidget from "../components/ChatWidget";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/strings";
 
@@ -45,6 +47,19 @@ function nightsBetween(range: DateRange): number {
   return Math.round((end - start) / 86_400_000);
 }
 
+type GenerationProgress = {
+  planId: string;
+  status: TripPlan["generationStatus"];
+  estimate: TripGenerationEstimate;
+  error: string | null;
+};
+
+function elapsedLabel(seconds: number): string {
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(remainder).padStart(2, "0")}`;
+}
+
 export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   const { lang, t } = useLang();
 
@@ -53,14 +68,59 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   const [searching, setSearching] = useState(false);
   const [place, setPlace] = useState<Place | null>(null);
   const [range, setRange] = useState<DateRange | null>(null);
+  const [agenda, setAgenda] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [generation, setGeneration] = useState<GenerationProgress | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   // 没选地点时地图停在一个能看出是世界地图的位置,而不是空白海面。
   const center = place
     ? { lat: place.lat, lon: place.lon }
     : { lat: 30, lon: 20 };
+
+  const isGenerating =
+    generation?.status === "pending" || generation?.status === "processing";
+
+  useEffect(() => {
+    if (!isGenerating) return;
+    const timer = window.setInterval(
+      () => setElapsedSeconds((seconds) => seconds + 1),
+      1_000
+    );
+    return () => window.clearInterval(timer);
+  }, [isGenerating]);
+
+  useEffect(() => {
+    if (!generation || !isGenerating) return;
+    const planId = generation.planId;
+    let active = true;
+    let timer: number;
+
+    async function poll() {
+      try {
+        const { plan, estimate } = await getTripPlan(planId);
+        if (!active) return;
+        setGeneration({
+          planId,
+          status: plan.generationStatus,
+          estimate,
+          error: plan.generationError,
+        });
+        if (plan.generationStatus === "pending" || plan.generationStatus === "processing") {
+          timer = window.setTimeout(poll, 2_500);
+        }
+      } catch {
+        if (active) timer = window.setTimeout(poll, 4_000);
+      }
+    }
+
+    timer = window.setTimeout(poll, 2_500);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [generation?.planId, isGenerating]);
 
   async function handleSearch(e: FormEvent) {
     e.preventDefault();
@@ -75,7 +135,6 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
       // 不用再点一下列表。列表仍然留着,同名地点(如多个"北京")可以换选。
       if (places.length > 0) {
         setPlace(places[0]);
-        setSaved(false);
       }
     } catch (err: any) {
       // 透出后端的真实原因(未登录 / 上游 502 / 校验),而不是一律"搜索失败",
@@ -91,7 +150,6 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   function choosePlace(p: Place) {
     setPlace(p);
     setResults(null);
-    setSaved(false);
   }
 
   async function handleSave() {
@@ -102,7 +160,7 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
     setSaving(true);
     setError(null);
     try {
-      await saveTripPlan({
+      const { plan, estimate } = await generateTripPlan({
         scenario,
         placeName: place.name,
         placeDetail: place.detail,
@@ -110,10 +168,15 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
         lon: place.lon,
         startDate: range.start,
         endDate: range.end,
+        notes: agenda,
       });
-      setSaved(true);
-      // 落库成功后回主页,主页会拉取并显示这条新行程。
-      onSaved();
+      setElapsedSeconds(0);
+      setGeneration({
+        planId: plan.id,
+        status: plan.generationStatus,
+        estimate,
+        error: plan.generationError,
+      });
       return;
     } catch (err: any) {
       setError(err?.message ?? t("saveTripFailed"));
@@ -127,8 +190,6 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
 
   return (
     <div className="tripsetup">
-      <ChatWidget />
-
       <header className="tripsetup-head">
         <button type="button" className="tripsetup-back" onClick={onBack}>
           ‹ {t("backToScenarios")}
@@ -144,12 +205,6 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
           {error}
         </div>
       )}
-      {saved && (
-        <div className="success-banner" role="status">
-          {t("tripSaved")}
-        </div>
-      )}
-
       <div className="tripsetup-grid">
         {/* 左列:地图 + 搜索框 */}
         <section className="tripsetup-col">
@@ -205,7 +260,6 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
               value={range}
               onChange={(r) => {
                 setRange(r);
-                setSaved(false);
               }}
             />
           </div>
@@ -237,15 +291,89 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
         </section>
       </div>
 
+      <section className="tripsetup-agenda">
+        <div>
+          <p className="tripsetup-agenda-kicker">{t("tripAgendaKicker")}</p>
+          <h2>{t("tripAgendaTitle")}</h2>
+          <p>{t("tripAgendaHint")}</p>
+        </div>
+        <textarea
+          value={agenda}
+          onChange={(event) => setAgenda(event.target.value)}
+          maxLength={1200}
+          placeholder={t("tripAgendaPlaceholder")}
+          aria-label={t("tripAgendaTitle")}
+        />
+      </section>
+
+      {generation && (
+        <div
+          className={`tripsetup-queued is-${generation.status}`}
+          role={generation.status === "failed" ? "alert" : "status"}
+          aria-live="polite"
+        >
+          <div>
+            <strong>
+              {isGenerating
+                ? t("tripQueuedTitle")
+                : generation.status === "completed"
+                  ? t("tripReadyTitle")
+                  : t("tripGenerationFailedHome")}
+            </strong>
+            {isGenerating ? (
+              <>
+                <p className="tripsetup-estimate">
+                  {t("tripEstimateLabel")} · {Math.ceil(generation.estimate.minSeconds / 60)}–
+                  {Math.ceil(generation.estimate.maxSeconds / 60)} {t("tripMinutesShort")}
+                </p>
+                <p>
+                  {elapsedSeconds > generation.estimate.maxSeconds
+                    ? t("tripEstimateExceeded")
+                    : t("tripEstimateHint")}
+                </p>
+                <p className="tripsetup-elapsed">
+                  {t("tripElapsedLabel")} <time>{elapsedLabel(elapsedSeconds)}</time>
+                </p>
+              </>
+            ) : generation.status === "completed" ? (
+              <p>{t("tripReadyMessage")}</p>
+            ) : (
+              <p>{generation.error ?? t("saveTripFailed")}</p>
+            )}
+          </div>
+          <span className="tripsetup-status-mark" aria-hidden="true">
+            {isGenerating ? "AI" : generation.status === "completed" ? "✓" : "!"}
+          </span>
+        </div>
+      )}
+
       <div className="tripsetup-actions">
         <button
           type="button"
           className="tripsetup-save"
-          onClick={handleSave}
-          disabled={saving}
+          onClick={generation ? onSaved : handleSave}
+          disabled={saving || isGenerating}
         >
-          {saving ? t("savingTrip") : t("saveTrip")}
+          {isGenerating
+            ? t("tripQueuedButton")
+            : generation?.status === "completed"
+              ? t("tripViewPlan")
+              : generation?.status === "failed"
+                ? t("backToHome")
+                : saving
+              ? t("generatingTrip")
+              : t("generateTrip")}
         </button>
+        {isGenerating && (
+          <button type="button" className="tripsetup-home" onClick={onSaved}>
+            {t("backToHome")}
+          </button>
+        )}
+        {!generation && (
+          <p className="tripsetup-agent-note" aria-live="polite">
+            {saving ? t("tripAgentWorking") : t("tripAgentNote")}
+          </p>
+        )}
       </div>
     </div>
   );

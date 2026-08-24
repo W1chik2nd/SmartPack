@@ -1,0 +1,100 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { buildOutfitPlan } from "./outfit-plan.ts";
+import type { TripPlan } from "./trip-plan.ts";
+import type { WardrobeItem } from "./wardrobe.ts";
+
+const trip: TripPlan = {
+  id: "trip-1",
+  scenario: "business",
+  placeName: "上海市",
+  placeDetail: "中国",
+  lat: 31.23,
+  lon: 121.47,
+  startDate: "2026-08-25",
+  endDate: "2026-08-28",
+  createdAt: "2026-08-24T00:00:00Z",
+};
+
+const wardrobe: WardrobeItem[] = [
+  {
+    id: "shirt-1",
+    title: "蓝色衬衫",
+    category: "上衣",
+    subtype: "衬衫",
+    count: 1,
+    colors: ["蓝色"],
+    fit: "",
+    material: "",
+    seasons: [],
+    styleTags: [],
+    details: "",
+    hasPhoto: true,
+    createdAt: "2026-08-20T00:00:00Z",
+  },
+  {
+    id: "glasses-1",
+    title: "红色太阳镜",
+    category: "配饰",
+    subtype: "眼镜",
+    count: 1,
+    colors: ["红色"],
+    fit: "",
+    material: "",
+    seasons: [],
+    styleTags: [],
+    details: "",
+    hasPhoto: false,
+    createdAt: "2026-08-21T00:00:00Z",
+  },
+];
+
+test("trip outfit plan covers every trip day and preserves trip context", () => {
+  const plan = buildOutfitPlan(trip, wardrobe);
+  assert.equal(plan.days.length, 4);
+  assert.equal(plan.destination, "上海市");
+  assert.equal(plan.scenario, "business");
+  assert.equal(plan.days[3].date, "2026-08-28");
+});
+
+test("real wardrobe items are used without pretending suggested gaps are owned", () => {
+  const plan = buildOutfitPlan(trip, wardrobe);
+  const [top, bottom, accessory, shoes] = plan.days[0].pieces;
+  assert.equal(top.wardrobeItemId, "shirt-1");
+  assert.equal(top.hasPhoto, true);
+  assert.equal(top.garmentStyle, "shirt");
+  assert.equal(bottom.wardrobeItemId, null);
+  assert.equal(shoes.wardrobeItemId, null);
+  assert.equal(accessory.wardrobeItemId, "glasses-1");
+  assert.equal(accessory.kind, "accessory");
+  assert.equal(accessory.accessoryStyle, "glasses");
+  assert.equal(plan.usesWardrobe, true);
+});
+
+test("jewellery keeps a recognisable accessory style", () => {
+  const watch: WardrobeItem[] = [
+    {
+      ...wardrobe[1],
+      id: "watch-1",
+      title: "方形腕表",
+      subtype: "手表",
+    },
+  ];
+  const plan = buildOutfitPlan(null, watch, new Date("2026-08-24T08:00:00Z"));
+  const accessory = plan.days[0].pieces.find((item) => item.kind === "accessory");
+
+  assert.equal(accessory?.accessoryStyle, "watch");
+  assert.equal(accessory?.wardrobeItemId, "watch-1");
+});
+
+test("without a trip the plan becomes a one-day commute suggestion", () => {
+  const plan = buildOutfitPlan(null, [], new Date("2026-08-24T12:00:00Z"));
+  assert.equal(plan.startDate, "2026-08-24");
+  assert.equal(plan.endDate, "2026-08-24");
+  assert.equal(plan.scenario, "commute");
+  assert.equal(plan.days.length, 1);
+  assert.equal(plan.days[0].pieces.length, 4);
+  assert.equal(plan.days[0].pieces[2].accessoryStyle, "bag");
+  assert.equal(plan.days[0].pieces[0].garmentStyle, "tee");
+  assert.equal(plan.usesWardrobe, false);
+});

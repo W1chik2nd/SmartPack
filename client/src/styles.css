@@ -7,14 +7,19 @@
 @import "./chat.css";
 @import "./components/PersonalColorGuide.css";
 @import "./dashboard.css";
+@import "./trip-switcher.css";
 @import "./profile.css";
 @import "./scenarios.css";
 @import "./packing.css";
+@import "./packing-meta.css";
 @import "./map.css";
 @import "./calendar.css";
 @import "./tripsetup.css";
 @import "./itinerary.css";
 @import "./day-plan.css";
+@import "./outfit.css";
+@import "./outfit-garments.css";
+@import "./outfit-accessories.css";
 
 * {
   margin: 0;

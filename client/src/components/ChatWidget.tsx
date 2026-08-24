@@ -1,5 +1,9 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { chat, type ChatMessage } from "../api";
+import {
+  chat,
+  type AssistantClientAction,
+  type ChatMessage,
+} from "../api";
 import { useLang } from "../i18n/useLang";
 
 // A sentinel marks the greeting: it is presentation only (rendered from the
@@ -12,7 +16,11 @@ const GREETING_ID = "__greeting__";
  * Kept independent of any page so it can be mounted wherever the
  * assistant should be available.
  */
-export default function ChatWidget() {
+type Props = {
+  onActions: (actions: AssistantClientAction[]) => void;
+};
+
+export default function ChatWidget({ onActions }: Props) {
   const { t } = useLang();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -41,8 +49,9 @@ export default function ChatWidget() {
     setMessages(history);
     setBusy(true);
     try {
-      const { reply } = await chat(history);
+      const { reply, actions = [] } = await chat(history);
       setMessages([...history, { role: "assistant", content: reply }]);
+      onActions(actions);
     } catch (err) {
       setError(err instanceof Error ? err.message : t("chatUnavailable"));
     } finally {
