@@ -14,7 +14,8 @@ test("today outfit tile opens the outfit overview route", () => {
   assert.match(home, /type="button"\s+className="today-outfit"/);
   assert.match(home, /onClick=\{\(\) => onOpenOutfit\(selectedTrip\.id\)\}/);
   assert.match(home, /getOutfitPlan\(selectedTrip\.id\)/);
-  assert.match(app, /onOpenOutfit=\{\(tripPlanId\) =>/);
+  assert.match(app, /const openOutfit = \(tripPlanId\?: string\)/);
+  assert.match(app, /onOpenOutfit=\{openOutfit\}/);
   assert.match(app, /route === "outfit"/);
   assert.match(app, /tripPlanId=\{outfitTripPlanId\}/);
   assert.match(dashboardCss, /\.today-outfit \{[\s\S]*background: var\(--white\) !important;/);
