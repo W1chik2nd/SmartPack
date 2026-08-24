@@ -168,24 +168,6 @@
   text-align: center;
 }
 
-.dress-piece-photo.is-accessory-photo {
-  width: 62px;
-  height: 52px;
-}
-
-.dress-piece-photo.is-accessory-photo img {
-  transform: scale(1.3, 1.45);
-}
-
-.dress-piece-photo.is-accessory-photo.is-compact {
-  width: 34px;
-  height: 30px;
-}
-
-.dress-piece-photo.is-accessory-photo.is-compact img {
-  transform: scale(0.7083, 0.8333);
-}
-
 .dress-piece-accessory.is-compact.accessory-bag::after,
 .dress-piece-accessory.is-compact.accessory-glasses::before,
 .dress-piece-accessory.is-compact.accessory-glasses::after,

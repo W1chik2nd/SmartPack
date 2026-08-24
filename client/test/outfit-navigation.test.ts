@@ -9,6 +9,7 @@ const outfit = readFileSync(new URL("../src/pages/OutfitOverview.tsx", import.me
 const outfitCss = readFileSync(new URL("../src/outfit.css", import.meta.url), "utf8");
 const garmentCss = readFileSync(new URL("../src/outfit-garments.css", import.meta.url), "utf8");
 const accessoryCss = readFileSync(new URL("../src/outfit-accessories.css", import.meta.url), "utf8");
+const outfitTypes = readFileSync(new URL("../../shared/outfit-types.ts", import.meta.url), "utf8");
 
 test("today outfit tile opens the outfit overview route", () => {
   assert.match(home, /type="button"\s+className="today-outfit"/);
@@ -21,9 +22,11 @@ test("today outfit tile opens the outfit overview route", () => {
   assert.match(dashboardCss, /\.today-outfit \{[\s\S]*background: var\(--white\) !important;/);
 });
 
-test("generated garments and wardrobe photos share the pixel-art treatment", () => {
+test("outfit pieces always render from descriptions instead of wardrobe photos", () => {
   const visual = readFileSync(new URL("../src/components/OutfitPieceVisual.tsx", import.meta.url), "utf8");
-  assert.doesNotMatch(visual, /wardrobePhotoUrl|<img/);
+  assert.doesNotMatch(visual, /hasPhoto|wardrobePhotoUrl|<img/);
+  assert.doesNotMatch(outfitTypes, /hasPhoto/);
+  assert.doesNotMatch(`${outfitCss}\n${accessoryCss}`, /dress-piece-photo|is-accessory-photo/);
   assert.match(visual, /pixel-garment dress-piece-\$\{piece\.kind\}/);
   assert.match(outfitCss, /image-rendering: pixelated/);
   assert.match(outfitCss, /background: var\(--bg\)/);

@@ -77,7 +77,6 @@ function piece(
     material: null,
     detail: "",
     wardrobeItemId: null,
-    hasPhoto: false,
   };
 }
 
@@ -169,7 +168,6 @@ function fromWardrobe(item: WardrobeItem, kind: OutfitPieceKind): Candidate {
     material: materialOf(item),
     detail: item.details,
     wardrobeItemId: item.id,
-    hasPhoto: item.hasPhoto,
   };
 }
 
