@@ -10,6 +10,7 @@ import TripPlanner from "./pages/TripPlanner";
 import Wardrobe from "./pages/Wardrobe";
 import PhoneUpload from "./pages/PhoneUpload";
 import PackingList from "./pages/PackingList";
+import TripSetup from "./pages/TripSetup";
 
 type Route =
   | "landing"
@@ -18,6 +19,7 @@ type Route =
   | "questionnaire"
   | "home"
   | "trips"
+  | "tripSetup"
   | "wardrobe"
   | "packing";
 
@@ -32,6 +34,8 @@ function Shell() {
   // nothing is persisted anywhere until /api/register succeeds.
   const [pendingCreds, setPendingCreds] = useState<Credentials | null>(null);
   const [booting, setBooting] = useState(true);
+  // 从场景卡片带过来的出行目的,行程设置页要用它标题和落库。
+  const [scenario, setScenario] = useState<string | null>(null);
 
   useEffect(() => {
     // 手机上传页不需要登录态,跳过 me() 免得白等一次请求。
@@ -158,7 +162,21 @@ function Shell() {
         />
       )}
       {route === "trips" && user && (
-        <TripPlanner user={user} onBack={() => setRoute("home")} />
+        <TripPlanner
+          user={user}
+          onBack={() => setRoute("home")}
+          onPickScenario={(id) => {
+            setScenario(id);
+            setRoute("tripSetup");
+          }}
+        />
+      )}
+      {route === "tripSetup" && user && scenario && (
+        <TripSetup
+          user={user}
+          scenario={scenario}
+          onBack={() => setRoute("trips")}
+        />
       )}
       {route === "wardrobe" && user && (
         <Wardrobe onBack={() => setRoute("home")} />
