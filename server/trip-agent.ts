@@ -14,6 +14,22 @@ export type TripAgentInput = {
 
 export type GenerateTrip = (input: TripAgentInput) => Promise<GeneratedTripPlan>;
 
+/** `wardrobeItemId` may be blank to mark a genuine wardrobe gap. */
+function hasBlankRequiredText(value: unknown, key = ""): boolean {
+  if (typeof value === "string") {
+    return key !== "wardrobeItemId" && value.trim().length === 0;
+  }
+  if (Array.isArray(value)) {
+    return value.some((item) => hasBlankRequiredText(item));
+  }
+  if (value && typeof value === "object") {
+    return Object.entries(value).some(([childKey, child]) =>
+      hasBlankRequiredText(child, childKey)
+    );
+  }
+  return false;
+}
+
 /** Inclusive ISO date sequence; the route already validated both endpoints. */
 export function tripDates(start: string, end: string): string[] {
   const result: string[] = [];
@@ -37,6 +53,9 @@ export function normalizeGeneratedTrip(
 ): GeneratedTripPlan {
   if (!raw || !Array.isArray(raw.days) || !raw.packing?.categories) {
     throw new Error("AI trip planner returned an incomplete plan.");
+  }
+  if (hasBlankRequiredText(raw)) {
+    throw new Error("AI trip planner returned an empty required text field.");
   }
   if (
     raw.days.length !== dates.length ||
