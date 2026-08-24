@@ -59,7 +59,7 @@ function labelLine(
   return `- ${heading}: ${labels.join(", ")}`;
 }
 
-export function buildSystemPrompt(profile: ProfileForPrompt): string {
+export function buildProfileFacts(profile: ProfileForPrompt): string {
   const stylePrefs = parseList(profile.style_prefs);
   const styleLine =
     stylePrefs.length > 0
@@ -74,7 +74,7 @@ export function buildSystemPrompt(profile: ProfileForPrompt): string {
     profile.hip_cm != null ? `hip ${profile.hip_cm} cm` : null,
   ].filter(Boolean);
 
-  const facts = [
+  return [
     `- Name: ${profile.name}`,
     // "Prefer not to say" is passed through rather than dropped: it tells the
     // assistant to stay neutral on cut and sizing instead of guessing.
@@ -102,6 +102,10 @@ export function buildSystemPrompt(profile: ProfileForPrompt): string {
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+export function buildSystemPrompt(profile: ProfileForPrompt): string {
+  const facts = buildProfileFacts(profile);
 
   return `You are the SmartPack Assistant, the AI inside SmartPack — an AI scenario wardrobe and packing app. SmartPack's promise: "No thinking required, nothing packed wrong."
 

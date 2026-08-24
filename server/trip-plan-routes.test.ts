@@ -73,15 +73,32 @@ function save(body: unknown, withAuth = true) {
   return req("/api/trip-plans", { method: "POST", body: JSON.stringify(body) }, withAuth);
 }
 
-test("三个接口都要登录态", async () => {
+test("行程接口都要登录态", async () => {
   // /api/places 也要:它代我们向第三方发请求,开放给匿名等于做公开代理。
   for (const res of [
     await req("/api/places?q=kyoto", {}, false),
     await req("/api/trip-plans", {}, false),
     await save(KYOTO, false),
+    await req("/api/trip-plans/missing", {}, false),
+    await req("/api/trip-plans/missing", { method: "DELETE" }, false),
   ]) {
     assert.equal(res.status, 401);
   }
+});
+
+test("删除本人行程后列表不再返回", async () => {
+  const created = await (await save({ ...KYOTO, placeName: "待删除行程" })).json();
+  const removed = await req(`/api/trip-plans/${created.plan.id}`, {
+    method: "DELETE",
+  });
+  assert.equal(removed.status, 200);
+
+  const list = await (await req("/api/trip-plans")).json();
+  assert.ok(!list.plans.some((plan: any) => plan.id === created.plan.id));
+  assert.equal(
+    (await req(`/api/trip-plans/${created.plan.id}`, { method: "DELETE" })).status,
+    404
+  );
 });
 
 test("保存后能取回,字段原样往返", async () => {
@@ -92,6 +109,10 @@ test("保存后能取回,字段原样往返", async () => {
   assert.equal(plan.placeName, "京都市");
   assert.equal(plan.lat, 35.0116);
   assert.equal(plan.startDate, "2026-04-01");
+
+  const item = await (await req(`/api/trip-plans/${plan.id}`)).json();
+  assert.equal(item.plan.id, plan.id);
+  assert.deepEqual(item.estimate, { minSeconds: 300, maxSeconds: 720 });
 
   const list = await (await req("/api/trip-plans")).json();
   assert.ok(
@@ -222,4 +243,15 @@ test("行程只能看到自己的", async () => {
     })
   ).json();
   assert.equal(theirs.plans.length, 0, "新用户不该看到别人的行程");
+
+  const forbiddenDelete = await fetch(
+    `${base}/api/trip-plans/${mine.plans[0].id}`,
+    {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${otherToken}` },
+    }
+  );
+  assert.equal(forbiddenDelete.status, 404);
+  const stillMine = await (await req("/api/trip-plans")).json();
+  assert.ok(stillMine.plans.some((plan: any) => plan.id === mine.plans[0].id));
 });

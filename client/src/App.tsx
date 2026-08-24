@@ -3,6 +3,7 @@ import {
   me,
   setToken,
   logout,
+  listTripPlans,
   type AssistantClientAction,
   type AssistantPage,
   type Credentials,
@@ -51,6 +52,10 @@ function Shell() {
   const [booting, setBooting] = useState(true);
   // 从场景卡片带过来的出行目的:行程设置页(地图+日历)和行程计划页都用它。
   const [scenario, setScenario] = useState<string | undefined>(undefined);
+  const [itineraryId, setItineraryId] = useState<string | undefined>(undefined);
+  const [packingTripPlanId, setPackingTripPlanId] = useState<string | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     // 手机上传页不需要登录态,跳过 me() 免得白等一次请求。
@@ -89,12 +94,25 @@ function Shell() {
     packing: "packing",
   };
 
+  function openLatestPackingPlan() {
+    void listTripPlans().then(({ plans }) => {
+      const latest = plans.find((plan) => Boolean(plan.itineraryId));
+      if (!latest) {
+        setRoute("home");
+        return;
+      }
+      setPackingTripPlanId(latest.id);
+      setRoute("packing");
+    });
+  }
+
   function handleAssistantActions(actions: AssistantClientAction[]) {
     for (const action of actions) {
       if (action.type === "profileUpdated") setUser(action.user);
       if (action.type === "navigate") {
         if (action.scenario) setScenario(action.scenario);
-        setRoute(assistantRoutes[action.page]);
+        if (action.page === "packing") openLatestPackingPlan();
+        else setRoute(assistantRoutes[action.page]);
       }
       if (action.type === "tripCreated") setRoute("home");
       if (action.type === "packingChanged") {
@@ -107,7 +125,7 @@ function Shell() {
         if (action.balance !== undefined) {
           sessionStorage.setItem("smartpack_packing_balance", String(action.balance));
         }
-        setRoute("packing");
+        openLatestPackingPlan();
       }
     }
   }
@@ -210,8 +228,15 @@ function Shell() {
           user={user}
           onOpenTrips={() => setRoute("trips")}
           onOpenWardrobe={() => setRoute("wardrobe")}
-          onOpenItinerary={() => setRoute("itinerary")}
-          onOpenPacking={() => setRoute("packing")}
+          onOpenItinerary={(id) => {
+            setScenario("travel");
+            setItineraryId(id);
+            setRoute("itinerary");
+          }}
+          onOpenPacking={(tripPlanId) => {
+            setPackingTripPlanId(tripPlanId);
+            setRoute("packing");
+          }}
           onOpenProfile={() => setRoute("profile")}
           onOpenOutfit={() => setRoute("outfit")}
         />
@@ -222,11 +247,8 @@ function Shell() {
           onBack={() => setRoute("home")}
           onPickScenario={(id) => {
             setScenario(id);
+            setItineraryId(undefined);
             setRoute("tripSetup");
-          }}
-          onPlanTrip={(id) => {
-            setScenario(id);
-            setRoute("itinerary");
           }}
         />
       )}
@@ -242,6 +264,7 @@ function Shell() {
         <Itinerary
           user={user}
           scenario={scenario}
+          tripId={itineraryId}
           onBack={() => setRoute("home")}
         />
       )}
@@ -255,8 +278,11 @@ function Shell() {
           onSaved={(updated) => setUser(updated)}
         />
       )}
-      {route === "packing" && user && (
-        <PackingList onBack={() => setRoute("home")} />
+      {route === "packing" && user && packingTripPlanId && (
+        <PackingList
+          tripPlanId={packingTripPlanId}
+          onBack={() => setRoute("home")}
+        />
       )}
       {route === "outfit" && user && (
         <OutfitOverview onBack={() => setRoute("home")} />
