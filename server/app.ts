@@ -14,6 +14,7 @@ import { createWardrobeStore } from "./wardrobe.ts";
 import { handleWardrobeRoutes } from "./wardrobe-routes.ts";
 import { createTripPlanStore } from "./trip-plan.ts";
 import { handleTripPlanRoutes } from "./trip-plan-routes.ts";
+import { handleOutfitRoutes } from "./outfit-routes.ts";
 import { createItineraryStore } from "./itinerary.ts";
 import { handleItineraryRoutes } from "./itinerary-routes.ts";
 import { handleAssistantRoutes } from "./assistant-routes.ts";
@@ -451,6 +452,21 @@ export function createApp(dbPath: string): App {
       const raw = rawParam === null ? NaN : Number(rawParam);
       const balance = Number.isFinite(raw) ? raw : 50;
       json(res, 200, { plan: buildPackingPlan(balance) });
+      return;
+    }
+
+    // 穿搭方案由后端整合行程与衣橱，客户端只展示结果。
+    if (
+      await handleOutfitRoutes({
+        req,
+        res,
+        url,
+        wardrobe,
+        tripPlans,
+        json,
+        userFromHeader: () => userForToken(bearerToken(req)),
+      })
+    ) {
       return;
     }
 

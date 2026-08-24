@@ -1,0 +1,400 @@
+/* 行程穿搭总览：按手绘稿分为信息、主穿搭、分日总览三栏。 */
+.dress-page {
+  min-height: 100vh;
+  padding: 80px var(--space-4) var(--space-4);
+  animation: fadeIn 0.3s ease both;
+}
+
+.dress-state {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  font-size: 18px;
+  font-weight: var(--weight-bold);
+}
+
+.dress-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.dress-head h1 {
+  margin-top: var(--space-1);
+  font-size: clamp(30px, 4vw, 52px);
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.03em;
+}
+
+.dress-back {
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: var(--weight-heavy);
+  cursor: pointer;
+}
+
+.dress-back:hover { text-decoration: underline; }
+.dress-back:focus-visible,
+.dress-page button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+
+.dress-day-badge {
+  padding: 8px 12px;
+  border: var(--border);
+  background: var(--yellow);
+  font-weight: var(--weight-heavy);
+}
+
+.dress-layout {
+  display: grid;
+  grid-template-columns: minmax(250px, 0.9fr) minmax(340px, 1.2fr) minmax(290px, 1fr);
+  min-height: 690px;
+  border: var(--border);
+  background: var(--white);
+  box-shadow: 8px 8px 0 var(--black);
+}
+
+.dress-context,
+.dress-featured { border-right: var(--border); }
+
+.dress-destination { padding: var(--space-3); border-bottom: var(--border); }
+.dress-destination > span,
+.dress-destination dt {
+  font-size: 12px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.dress-destination > strong { display: block; margin-top: 5px; font-size: 30px; }
+.dress-destination > small { display: block; margin-top: 2px; color: var(--text-secondary); font-weight: var(--weight-bold); }
+.dress-destination dl { margin-top: var(--space-3); display: grid; gap: var(--space-2); }
+.dress-destination dl div { display: grid; grid-template-columns: 68px 1fr; gap: var(--space-1); align-items: baseline; }
+.dress-destination dd { font-weight: var(--weight-heavy); }
+
+.dress-weather {
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-bottom: var(--border);
+}
+.dress-weather-mark { width: 48px; height: 48px; border: var(--border); border-radius: 50%; background: var(--yellow); flex: 0 0 auto; }
+.dress-weather strong { display: block; font-size: 25px; }
+.dress-weather small { display: block; font-weight: var(--weight-bold); color: var(--text-secondary); }
+
+.dress-itinerary h2,
+.dress-days > h2 { padding: var(--space-2); font-size: 22px; font-weight: var(--weight-heavy); border-bottom: var(--border); }
+.dress-table-head,
+.dress-table-body button { display: grid; grid-template-columns: 0.85fr 1fr 1fr; }
+.dress-table-head { background: var(--blue); color: var(--white); }
+.dress-table-head span { padding: 7px 8px; font-size: 11px; font-weight: var(--weight-heavy); text-transform: uppercase; }
+.dress-table-body button {
+  width: 100%;
+  border: none;
+  border-bottom: 2px solid var(--black);
+  background: var(--white);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.dress-table-body button:hover,
+.dress-table-body button.is-active { background: var(--yellow); }
+.dress-table-body button span { min-width: 0; padding: 9px 8px; font-size: 12px; font-weight: var(--weight-bold); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.dress-featured { display: flex; flex-direction: column; min-width: 0; }
+.dress-featured > header { padding: var(--space-3); border-bottom: var(--border); }
+.dress-featured > header p { font-size: 13px; font-weight: var(--weight-heavy); text-transform: uppercase; }
+.dress-featured > header h2 { margin-top: 4px; font-size: 28px; }
+.dress-outfit-stage { position: relative; flex: 1; display: flex; align-items: center; justify-content: center; padding: var(--space-3) 62px; background: var(--bg); }
+.dress-stack { width: min(100%, 300px); display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.dress-stack figure { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.dress-stack figcaption { margin-top: 5px; font-size: 12px; font-weight: var(--weight-bold); color: var(--text-secondary); text-align: center; }
+
+.dress-switch {
+  position: absolute;
+  top: 45%;
+  width: 42px;
+  height: 56px;
+  border: var(--border);
+  background: var(--white);
+  font: inherit;
+  font-size: 36px;
+  font-weight: var(--weight-heavy);
+  line-height: 1;
+  cursor: pointer;
+}
+.dress-switch:hover { background: var(--yellow); }
+.dress-switch.prev { left: var(--space-2); }
+.dress-switch.next { right: var(--space-2); }
+
+.dress-note { padding: 12px var(--space-3); border-top: var(--border); background: var(--bg); font-size: 12px; font-weight: var(--weight-bold); }
+
+/* 首页卡片的像素套装。形状样式放在穿搭文件中，避免 dashboard.css
+   超过项目规定的 400 行上限。 */
+.outfit-shirt {
+  width: clamp(132px, 16vh, 190px);
+  aspect-ratio: 11 / 8;
+  height: auto;
+  position: relative;
+  background: var(--white);
+  clip-path: polygon(
+    32% 0, 68% 0, 68% 4%, 72% 4%, 72% 8%, 76% 8%,
+    76% 12%, 80% 12%, 80% 16%, 84% 16%, 84% 20%,
+    88% 20%, 88% 24%, 92% 24%, 92% 28%, 96% 28%,
+    96% 32%, 100% 32%, 100% 48%, 96% 48%, 96% 52%,
+    92% 52%, 92% 56%, 88% 56%, 88% 60%, 84% 60%,
+    84% 52%, 80% 52%, 80% 100%, 20% 100%, 20% 52%,
+    16% 52%, 16% 60%, 12% 60%, 12% 56%, 8% 56%,
+    8% 52%, 4% 52%, 4% 48%, 0 48%, 0 32%, 4% 32%,
+    4% 28%, 8% 28%, 8% 24%, 12% 24%, 12% 20%,
+    16% 20%, 16% 16%, 20% 16%, 20% 12%, 24% 12%,
+    24% 8%, 28% 8%, 28% 4%, 32% 4%
+  );
+  filter: drop-shadow(3px 0 0 var(--black)) drop-shadow(-3px 0 0 var(--black)) drop-shadow(0 3px 0 var(--black)) drop-shadow(0 -3px 0 var(--black));
+}
+
+.outfit-shirt::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 44%;
+  width: 12%;
+  height: 8%;
+  background: var(--bg);
+  box-shadow: 0 8px 0 var(--red);
+}
+
+.outfit-trousers {
+  width: clamp(74px, 9vh, 106px);
+  aspect-ratio: 74 / 110;
+  height: auto;
+  position: relative;
+  background: var(--white);
+  clip-path: polygon(
+    0 0, 100% 0, 100% 100%, 58% 100%, 58% 64%,
+    54% 64%, 54% 56%, 46% 56%, 46% 64%, 42% 64%,
+    42% 100%, 0 100%
+  );
+  filter: drop-shadow(3px 0 0 var(--black)) drop-shadow(-3px 0 0 var(--black)) drop-shadow(0 3px 0 var(--black)) drop-shadow(0 -3px 0 var(--black));
+}
+
+.outfit-trousers::before {
+  content: "";
+  position: absolute;
+  top: 12%;
+  left: 8%;
+  width: 84%;
+  height: 5%;
+  background: var(--blue);
+}
+
+/* 衣物统一用 8-bit 轮廓：所有转角只走水平/垂直台阶，零模糊描边。
+   白色主体配黑线稿，--detail-color 仅用于保留单品的颜色识别。 */
+.dress-piece {
+  --piece-color: var(--blue);
+  --detail-color: var(--blue);
+  --pixel-outline: 3px;
+  position: relative;
+  display: block;
+  flex: 0 0 auto;
+  background: transparent;
+  image-rendering: pixelated;
+}
+
+.dress-piece:not(.dress-piece-photo) {
+  filter:
+    drop-shadow(var(--pixel-outline) 0 0 var(--black))
+    drop-shadow(calc(var(--pixel-outline) * -1) 0 0 var(--black))
+    drop-shadow(0 var(--pixel-outline) 0 var(--black))
+    drop-shadow(0 calc(var(--pixel-outline) * -1) 0 var(--black));
+}
+
+.dress-piece-top {
+  width: 176px;
+  height: 126px;
+  background: var(--white);
+  clip-path: polygon(
+    32% 0, 68% 0, 68% 4%, 72% 4%, 72% 8%, 76% 8%,
+    76% 12%, 80% 12%, 80% 16%, 84% 16%, 84% 20%,
+    88% 20%, 88% 24%, 92% 24%, 92% 28%, 96% 28%,
+    96% 32%, 100% 32%, 100% 48%, 96% 48%, 96% 52%,
+    92% 52%, 92% 56%, 88% 56%, 88% 60%, 84% 60%,
+    84% 52%, 80% 52%, 80% 100%, 20% 100%, 20% 52%,
+    16% 52%, 16% 60%, 12% 60%, 12% 56%, 8% 56%,
+    8% 52%, 4% 52%, 4% 48%, 0 48%, 0 32%, 4% 32%,
+    4% 28%, 8% 28%, 8% 24%, 12% 24%, 12% 20%,
+    16% 20%, 16% 16%, 20% 16%, 20% 12%, 24% 12%,
+    24% 8%, 28% 8%, 28% 4%, 32% 4%
+  );
+}
+
+/* 参考像素线稿：白色衣身、黑色轮廓，原本的颜色只留作结构点缀。 */
+.dress-piece-top::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 44%;
+  width: 12%;
+  height: 8%;
+  background: var(--bg);
+}
+
+.dress-piece-top::after {
+  content: "";
+  position: absolute;
+  right: 30%;
+  bottom: 25%;
+  width: 12%;
+  height: 14%;
+  border: 3px solid var(--black);
+  border-top: 5px solid var(--detail-color);
+  background: var(--white);
+}
+
+.dress-piece-bottom {
+  width: 118px;
+  height: 156px;
+  background: var(--white);
+  clip-path: polygon(
+    0 0, 100% 0, 100% 100%, 58% 100%, 58% 64%,
+    54% 64%, 54% 56%, 46% 56%, 46% 64%, 42% 64%,
+    42% 100%, 0 100%
+  );
+}
+
+.dress-piece-bottom::before {
+  content: "";
+  position: absolute;
+  top: 12%;
+  left: 8%;
+  width: 84%;
+  height: 5%;
+  background: var(--detail-color);
+}
+
+.dress-piece-shoes {
+  width: 152px;
+  height: 72px;
+}
+
+/* 每只鞋单独描边，后鞋退到左上、前鞋压在右下，形成四分之三侧面。 */
+.dress-piece.dress-piece-shoes:not(.dress-piece-photo) {
+  filter: none;
+}
+
+.dress-piece-shoes::before,
+.dress-piece-shoes::after {
+  content: "";
+  position: absolute;
+  background: var(--white);
+  filter:
+    drop-shadow(var(--pixel-outline) 0 0 var(--black))
+    drop-shadow(calc(var(--pixel-outline) * -1) 0 0 var(--black))
+    drop-shadow(0 var(--pixel-outline) 0 var(--black))
+    drop-shadow(0 calc(var(--pixel-outline) * -1) 0 var(--black));
+  clip-path: polygon(
+    24% 0, 66% 0, 66% 8%, 76% 8%, 76% 18%,
+    84% 18%, 84% 34%, 92% 34%, 92% 48%, 100% 48%,
+    100% 82%, 92% 82%, 92% 90%, 78% 90%, 78% 96%,
+    20% 96%, 20% 90%, 10% 90%, 10% 82%, 2% 82%,
+    2% 52%, 8% 52%, 8% 36%, 14% 36%, 14% 18%,
+    24% 18%
+  );
+}
+
+.dress-piece-shoes::before {
+  z-index: 1;
+  top: 2px;
+  left: 4px;
+  width: 82px;
+  height: 56px;
+}
+
+.dress-piece-shoes::after {
+  z-index: 2;
+  right: 3px;
+  bottom: 1px;
+  width: 94px;
+  height: 64px;
+}
+
+/* 上传照片先缩到低分辨率再放大，浏览器用 nearest-neighbour 形成真实像素格。 */
+.dress-piece-photo {
+  width: 176px;
+  height: 126px;
+  display: grid;
+  place-items: center;
+  border: 4px solid var(--black);
+  background: var(--bg);
+  overflow: hidden;
+}
+.dress-piece-photo img {
+  width: 48px;
+  height: 36px;
+  object-fit: cover;
+  background: var(--bg);
+  image-rendering: pixelated;
+  transform: scale(3.6667, 3.5);
+}
+
+.tone-red { --piece-color: var(--red); --detail-color: var(--red); }
+.tone-yellow { --piece-color: var(--yellow); --detail-color: var(--yellow); }
+.tone-blue { --piece-color: var(--blue); --detail-color: var(--blue); }
+.tone-black { --piece-color: var(--black); --detail-color: var(--black); }
+.tone-white { --piece-color: var(--white); --detail-color: var(--black); }
+
+.dress-days { min-width: 0; }
+.dress-day-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dress-day-grid button {
+  min-height: 188px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 10px;
+  border: none;
+  border-right: 2px solid var(--black);
+  border-bottom: 2px solid var(--black);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.dress-day-grid button:nth-child(2n) { border-right: none; }
+.dress-day-grid button:hover,
+.dress-day-grid button.is-active { background: var(--bg); box-shadow: inset 0 0 0 5px var(--yellow); }
+.dress-card-title { font-size: 20px; font-weight: var(--weight-heavy); text-align: left; }
+.dress-card-date { margin-top: auto; font-size: 11px; font-weight: var(--weight-heavy); text-align: right; }
+.dress-mini-stack { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+.dress-piece.is-compact { --pixel-outline: 2px; }
+.dress-piece-top.is-compact { width: 72px; height: 52px; }
+.dress-piece-bottom.is-compact { width: 44px; height: 58px; }
+.dress-piece-shoes.is-compact { width: 72px; height: 36px; }
+.dress-piece-shoes.is-compact::before { top: 1px; left: 2px; width: 39px; height: 28px; }
+.dress-piece-shoes.is-compact::after { right: 2px; bottom: 1px; width: 45px; height: 32px; }
+.dress-piece-photo.is-compact { width: 72px; height: 54px; border-width: 2px; }
+.dress-piece-photo.is-compact img { transform: scale(1.5); }
+
+@media (max-width: 1050px) {
+  .dress-layout { grid-template-columns: minmax(240px, 0.8fr) 1.2fr; }
+  .dress-featured { border-right: none; }
+  .dress-days { grid-column: 1 / -1; border-top: var(--border); }
+  .dress-day-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .dress-day-grid button:nth-child(2n) { border-right: 2px solid var(--black); }
+  .dress-day-grid button:nth-child(4n) { border-right: none; }
+}
+
+@media (max-width: 700px) {
+  .dress-page { padding: 72px var(--space-2) var(--space-3); }
+  .dress-head { align-items: flex-start; }
+  .dress-day-badge { font-size: 12px; }
+  .dress-layout { display: flex; flex-direction: column; }
+  .dress-context,
+  .dress-featured { border-right: none; border-bottom: var(--border); }
+  .dress-day-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dress-day-grid button:nth-child(4n) { border-right: 2px solid var(--black); }
+  .dress-day-grid button:nth-child(2n) { border-right: none; }
+}
