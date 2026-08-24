@@ -49,7 +49,6 @@ export type OutfitPiece = {
   material: OutfitMaterial | null;
   detail: string;
   wardrobeItemId: string | null;
-  hasPhoto: boolean;
 };
 
 export type OutfitDay = {

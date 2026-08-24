@@ -57,11 +57,13 @@ test("trip outfit plan covers every trip day and preserves trip context", () => 
   assert.equal(plan.days[3].date, "2026-08-28");
 });
 
-test("real wardrobe items are used without pretending suggested gaps are owned", () => {
+test("real wardrobe items use descriptions without exposing their photos", () => {
   const plan = buildOutfitPlan(trip, wardrobe);
   const [top, bottom, accessory, shoes] = plan.days[0].pieces;
   assert.equal(top.wardrobeItemId, "shirt-1");
-  assert.equal(top.hasPhoto, true);
+  assert.equal(top.label, "蓝色衬衫");
+  assert.equal(top.tone, "blue");
+  assert.equal("hasPhoto" in top, false);
   assert.equal(top.garmentStyle, "shirt");
   assert.equal(bottom.wardrobeItemId, null);
   assert.equal(shoes.wardrobeItemId, null);
