@@ -1,4 +1,4 @@
-import pg, { type PoolClient } from "pg";
+import pg, { type PoolClient, type PoolConfig } from "pg";
 
 const { Pool } = pg;
 
@@ -43,19 +43,33 @@ export async function createPostgresPool(
   connectionString: string
 ): Promise<PostgresPool> {
   const schema = process.env.DATABASE_SCHEMA ?? "wearroute";
+  const pool = new Pool(postgresPoolConfig(connectionString, schema));
+  await pool.query(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
+  await initializePostgresSchema(pool);
+  return pool;
+}
+
+export function postgresPoolConfig(
+  connectionString: string,
+  schema: string
+): PoolConfig {
   if (!/^[a-z_][a-z0-9_]*$/.test(schema)) {
     throw new Error("DATABASE_SCHEMA must be a lowercase PostgreSQL identifier.");
   }
-  const pool = new Pool({
+  return {
     connectionString,
     max: Number(process.env.DATABASE_POOL_SIZE ?? 5),
     idleTimeoutMillis: 30_000,
     connectionTimeoutMillis: 15_000,
-    options: `-c search_path=${schema},public`,
-  });
-  await pool.query(`CREATE SCHEMA IF NOT EXISTS ${schema}`);
-  await initializePostgresSchema(pool);
-  return pool;
+    // Neon pooler rejects search_path in PostgreSQL's startup packet. Its
+    // awaited connection hook runs the equivalent SQL before the client is
+    // handed to any store, so every pooled connection uses our isolated schema.
+    onConnect: async (client) => {
+      await client.query(`SELECT set_config('search_path', $1, false)`, [
+        `${schema},public`,
+      ]);
+    },
+  };
 }
 
 async function initializePostgresSchema(pool: PostgresPool): Promise<void> {
