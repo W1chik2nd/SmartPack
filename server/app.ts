@@ -17,7 +17,9 @@ import { handleItineraryRoutes } from "./itinerary-routes.ts";
 import { handleAssistantRoutes } from "./assistant-routes.ts";
 import { handleCatalogRoutes } from "./catalog-routes.ts";
 import { dirname, join } from "node:path";
-
+// ai / prompts / weather 的 import 已随路由拆分挪进 assistant-routes.ts
+// 和 catalog-routes.ts,这里只留 packing 还在本文件处理的那一个。
+import { buildPackingPlan } from "./packing.ts";
 // Password hashing (AGENTS.md §5): passwords require a password-specific KDF,
 // not a general-purpose hash like SHA256. We use scrypt because it is a
 // memory-hard password KDF that ships with Node — bcrypt/argon2 would add a
@@ -320,6 +322,24 @@ export function createApp(dbPath: string): App {
         userFromHeader: () => userForToken(bearerToken(req)),
       })
     ) {
+      return;
+    }
+
+    // Packing plan. Session-gated because the plan is personal (and will draw
+    // on the user's wardrobe + itinerary once those exist). `balance` is the
+    // one query knob: 0 = pack lightest, 100 = most outfit variety (US 6.3).
+    // Trust boundary (AGENTS.md §4): coerce and clamp here; buildPackingPlan
+    // trusts its caller.
+    if (req.method === "GET" && url.pathname === "/api/packing") {
+      const user = userForToken(bearerToken(req));
+      if (!user) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      const rawParam = url.searchParams.get("balance");
+      const raw = rawParam === null ? NaN : Number(rawParam);
+      const balance = Number.isFinite(raw) ? raw : 50;
+      json(res, 200, { plan: buildPackingPlan(balance) });
       return;
     }
 
