@@ -4,6 +4,7 @@
 import {
   createContext,
   useContext,
+  useEffect,
   useState,
   type ReactNode,
 } from "react";
@@ -25,6 +26,13 @@ function storedLang(): Lang {
 
 export function LangProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>(storedLang);
+
+  // Mirror the choice onto <html lang>: assistive tech needs it, and CSS can
+  // then size language-sensitive layout (e.g. the vertical packing slider,
+  // where English captions need far more room than Chinese ones).
+  useEffect(() => {
+    document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  }, [lang]);
 
   function setLang(next: Lang) {
     localStorage.setItem(LANG_KEY, next);

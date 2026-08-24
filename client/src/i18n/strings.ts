@@ -53,10 +53,32 @@ export const STRINGS = {
     zh: "SmartPack 会为你量身定制每套穿搭。完成问卷即注册成功。",
   },
   name: { en: "Name", zh: "姓名" },
+  gender: { en: "Gender", zh: "性别" },
   age: { en: "Age", zh: "年龄" },
   heightCm: { en: "Height (cm)", zh: "身高 (cm)" },
   weightKg: { en: "Weight (kg)", zh: "体重 (kg)" },
-  preferredStyle: { en: "Preferred style", zh: "喜欢的穿搭风格" },
+  bustCm: { en: "Bust (cm)", zh: "胸围 (cm)" },
+  waistCm: { en: "Waist (cm)", zh: "腰围 (cm)" },
+  hipCm: { en: "Hip (cm)", zh: "臀围 (cm)" },
+  bodyType: { en: "Body type", zh: "身材类型" },
+  seasonColorType: { en: "Seasonal color type", zh: "四季型人" },
+  stylePrefs: { en: "Style preferences", zh: "风格偏好" },
+  wearFeel: { en: "How clothes should feel", zh: "穿着体感" },
+  travelHabits: { en: "Travel & packing habits", zh: "出行与打包习惯" },
+  optionalMark: { en: "optional", zh: "非必填" },
+  optionalSection: { en: "Optional — sharpens your recommendations", zh: "非必填 —— 让推荐更贴合你" },
+  requiredSection: { en: "Required", zh: "必填" },
+  pickMultiple: { en: "Pick any that apply", zh: "可多选" },
+  otherPlaceholder: { en: "Tell us in your own words", zh: "请自己填写" },
+  optionsLoadError: { en: "Could not load the questionnaire options.", zh: "无法加载问卷选项。" },
+  requiredMissing: {
+    en: "Please answer every required question.",
+    zh: "请填写所有必填项。",
+  },
+  incompleteWarning: {
+    en: "Some answers are missing — recommendations may be less personalized. Tap again to continue anyway.",
+    zh: "信息不完善,推荐可能不够个性化。再点一次可继续提交。",
+  },
   finishCreate: { en: "Finish & Create Account", zh: "完成并创建账号" },
   creating: { en: "Creating Account…", zh: "正在创建账号…" },
   backToAccount: { en: "Back to account details.", zh: "返回账号信息。" },
@@ -79,6 +101,41 @@ export const STRINGS = {
   digitalWardrobe: { en: "Digital Wardrobe", zh: "电子衣橱" },
   tripPlanner: { en: "Trip Planner", zh: "行程计划" },
   myProfile: { en: "My Profile", zh: "个人档案" },
+  profileTitle: { en: "Personal Profile", zh: "个人档案" },
+  profileAvatar: { en: "Profile portrait", zh: "档案头像" },
+  profileMaleAvatar: { en: "Male profile portrait", zh: "男性头像" },
+  profileFemaleAvatar: { en: "Female profile portrait", zh: "女性头像" },
+  profileSaved: { en: "Profile saved.", zh: "个人资料已保存。" },
+  profileSaveFailed: { en: "Could not save profile.", zh: "个人资料保存失败。" },
+  profileNickname: { en: "Nickname", zh: "昵称" },
+  profileGender: { en: "Gender", zh: "性别" },
+  profileWoman: { en: "Woman", zh: "女" },
+  profileMan: { en: "Man", zh: "男" },
+  profileOther: { en: "Other", zh: "其他" },
+  profilePrivate: { en: "Prefer not to say", zh: "暂不填写" },
+  profileMeasurements: { en: "Measurements", zh: "身体档案" },
+  profileMeasurementsHint: {
+    en: "Age, height, and weight are required. Extra measurements improve fit and layering decisions.",
+    zh: "年龄、身高和体重为必填；补充尺寸可提升版型与叠穿判断。",
+  },
+  profileAge: { en: "Age", zh: "年龄" },
+  profileHeight: { en: "Height", zh: "身高" },
+  profileWeight: { en: "Weight", zh: "体重" },
+  profileBust: { en: "Bust", zh: "胸围" },
+  profileWaist: { en: "Waist", zh: "腰围" },
+  profileHip: { en: "Hip", zh: "臀围" },
+  profileBodyType: { en: "Body type", zh: "身材类型" },
+  profileChoose: { en: "Choose", zh: "请选择" },
+  profileStraight: { en: "Straight", zh: "直筒型" },
+  profileTriangle: { en: "Triangle", zh: "梨型" },
+  profileInverted: { en: "Inverted triangle", zh: "倒三角型" },
+  profileHourglass: { en: "Hourglass", zh: "沙漏型" },
+  profileSeasonType: { en: "Best season", zh: "四季型人" },
+  profileStylePreferences: { en: "Style preferences", zh: "风格偏好" },
+  profileWearFeel: { en: "How clothes should feel", zh: "穿着体感" },
+  profileTravelHabits: { en: "Travel & packing habits", zh: "出行与打包习惯" },
+  profileFinish: { en: "Save profile", zh: "保存资料" },
+  profileRequired: { en: "Required", zh: "必填" },
   dashFooter: {
     en: "SmartPack — an AI scenario wardrobe. Sections open detailed pages as they are built.",
     zh: "SmartPack —— AI 场景衣橱。各板块的详细页面将陆续上线。",
@@ -134,9 +191,152 @@ export const STRINGS = {
 
   // city picker
   cityLabel: { en: "City", zh: "城市" },
+
+  // wardrobe
+  wardrobeTitle: { en: "Wardrobe Categories", zh: "服装品类列表" },
+  wardrobeAddPhoto: { en: "Add clothing by photo", zh: "拍照添加衣物" },
+  wardrobeMine: { en: "My wardrobe", zh: "我的衣柜" },
+  wardrobeEmpty: { en: "Your wardrobe is empty", zh: "衣柜还是空的" },
+  wardrobeEmptyHint: {
+    en: "Tap the camera in the top right to add your first item.",
+    zh: "点右上角相机添加第一件衣物",
+  },
+  wardrobeRecognizing: { en: "Recognizing…", zh: "识别中…" },
+  wardrobeLoadFailed: { en: "Could not load your wardrobe.", zh: "加载失败" },
+  wardrobeRecognizeFailed: { en: "Could not recognize the item.", zh: "识别失败" },
+  wardrobePhotoFailed: { en: "Could not process the photo.", zh: "图片处理失败" },
+  wardrobeDeleteFailed: { en: "Could not delete the item.", zh: "删除失败" },
+  wardrobeDelete: { en: "Delete", zh: "删除" },
+  wardrobeFilter: { en: "Filter", zh: "筛选" },
+  wardrobeFilterAria: {
+    en: "Filter by clothing category",
+    zh: "按衣服品类筛选",
+  },
+  wardrobeFilterAll: { en: "All categories", zh: "全部品类" },
+  wardrobeFilterTops: { en: "Tops", zh: "上装" },
+  wardrobeFilterPants: { en: "Pants", zh: "裤装" },
+  wardrobeFilterSkirts: { en: "Skirts", zh: "裙装" },
+  wardrobeFilterShoes: { en: "Shoes", zh: "鞋履" },
+  wardrobeFilterAccessories: { en: "Accessories", zh: "配饰" },
+  wardrobeShowAll: { en: "Show all items", zh: "查看全部衣物" },
+  wardrobeQrDialog: { en: "Scan with your phone to shoot", zh: "用手机扫码拍照" },
+  wardrobeQrAlt: { en: "QR code for phone photo upload", zh: "手机拍照上传的二维码" },
+  wardrobeQrText: {
+    en: "Scan to open the camera on your phone. Photos come back here automatically — no phone sign-in needed.",
+    zh: "手机扫码即打开相机,拍完自动传回这里,不用在手机上登录。",
+  },
+  wardrobeQrWaiting: { en: "Waiting for a photo…", zh: "等待手机拍照…" },
+  wardrobeQrNote: {
+    en: "The self-signed certificate triggers an \"unsafe\" warning on first visit — choose to continue.",
+    zh: "自签证书首次访问会提示“不安全”,选择继续访问即可。",
+  },
+  close: { en: "Close", zh: "关闭" },
+
+  // packing list
+  pkEyebrow: { en: "Minimal Luggage Plan", zh: "最小行李方案" },
+  pkVariety: { en: "More variety", zh: "丰富造型" },
+  pkLight: { en: "Pack light", zh: "精简出行" },
+  pkBalanced: { en: "Balanced", zh: "均衡" },
+  pkSliderLabel: {
+    en: "Packing preference: pack light to more variety",
+    zh: "打包偏好:精简出行 到 丰富造型",
+  },
+  pkListTitle: { en: "Packing List", zh: "打包清单" },
+  pkReuse: { en: "Times reused", zh: "复用次数" },
+  pkEssentials: { en: "Don't-forget Items", zh: "重要物品提醒" },
+  pkCore: { en: "Core Pieces", zh: "核心单品" },
+  pkCoreTag: { en: "Core piece", zh: "核心单品" },
+  pkPacked: { en: "Packed", zh: "已打包" },
+  pkUpdating: { en: "updating…", zh: "更新中…" },
+  pkLoadFailed: { en: "Failed to load plan.", zh: "无法加载方案。" },
+
+  // phone upload page
+  phoneTitle: { en: "SmartPack Photo Upload", zh: "SmartPack 拍照上传" },
+  phoneOpening: {
+    en: "Opening the camera… if nothing happens, tap the button below.",
+    zh: "正在调起相机…若没反应,点下面的按钮。",
+  },
+  phoneUploading: { en: "Uploading…", zh: "上传中…" },
+  phoneKeepGoing: {
+    en: "Shoot the next item if you like — each photo is recognized on your computer. Close the QR dialog there when you're done.",
+    zh: "可以接着拍下一件,电脑上会逐张识别。拍完在电脑上关掉二维码即可。",
+  },
+  phoneAnother: { en: "Take another", zh: "再拍一张" },
+  phoneTake: { en: "Take photo", zh: "拍照" },
+  phoneUploadFailed: { en: "Upload failed.", zh: "上传失败" },
+
+  // itinerary (left: whole-trip map, right: one day's plan)
+  itineraryTitle: { en: "Itinerary", zh: "行程计划" },
+  tripOverview: { en: "Trip Overview", zh: "总行程图" },
+  departs: { en: "Departs", zh: "出发" },
+  itineraryLoading: { en: "Loading itinerary…", zh: "正在加载行程…" },
+  itineraryError: { en: "Could not load the itinerary.", zh: "无法加载行程。" },
+  itineraryEmpty: { en: "No itinerary yet.", zh: "还没有行程。" },
+  collapseOverview: { en: "Collapse trip overview", zh: "收起总行程图" },
+  expandOverview: { en: "Expand trip overview", zh: "展开总行程图" },
+  pickDay: { en: "Pick a day", zh: "选择某一天" },
+  dayStops: { en: "stops", zh: "个停靠点" },
+  stopSpot: { en: "Sight", zh: "景点" },
+  stopTransit: { en: "Transit", zh: "交通" },
+  stopMeal: { en: "Meal", zh: "餐饮" },
+  stopHotel: { en: "Stay", zh: "住宿" },
+  photoPending: { en: "Finding a photo…", zh: "正在找配图…" },
+  photoNone: { en: "No photo", zh: "暂无配图" },
+  photoSource: { en: "Photos", zh: "图片来源" },
+  continueToItinerary: { en: "Plan this trip", zh: "规划这趟行程" },
+  continueToSetup: { en: "Set destination & dates", zh: "选目的地和日期" },
 } as const;
 
 export type StringKey = keyof typeof STRINGS;
+
+// Sentences with a number in a different position per language need a
+// formatter rather than a lookup: word order is part of the translation.
+
+export function wardrobeFilterCountMessage(
+  lang: Lang,
+  visibleCount: number,
+  totalCount: number
+): string {
+  return lang === "zh"
+    ? `${visibleCount} / ${totalCount} 款`
+    : `${visibleCount} of ${totalCount} items`;
+}
+
+export function wardrobeFilterRegionLabel(lang: Lang, filter: string): string {
+  return lang === "zh"
+    ? `我的衣柜，当前筛选：${filter}`
+    : `My wardrobe, current filter: ${filter}`;
+}
+
+export function wardrobeNoFilteredItemsMessage(
+  lang: Lang,
+  filter: string
+): string {
+  return lang === "zh" ? `还没有${filter}` : `No ${filter.toLowerCase()} yet`;
+}
+
+export function photosSentMessage(lang: Lang, count: number): string {
+  return lang === "zh"
+    ? `✓ 已传 ${count} 张到电脑`
+    : `✓ ${count} photo${count === 1 ? "" : "s"} sent to your computer`;
+}
+
+export function confirmDeleteMessage(lang: Lang, title: string): string {
+  return lang === "zh"
+    ? `确定删除「${title}」?`
+    : `Delete "${title}"?`;
+}
+
+export function unreachableHostMessage(lang: Lang, hostname: string): string {
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    return lang === "zh"
+      ? "当前用 localhost 打开,手机连不到你的电脑。请改用终端里 Vite 打印的局域网地址(形如 https://192.168.x.x:5177 或 https://172.x.x.x:5177)重新打开本页,再点拍照。"
+      : "This page is open on localhost, which your phone cannot reach. Reopen it using the LAN address Vite prints in the terminal (like https://192.168.x.x:5177 or https://172.x.x.x:5177), then tap the camera again.";
+  }
+  return lang === "zh"
+    ? `当前地址 ${hostname} 是 VPN/代理的虚拟网卡,手机连不到。请改用真实的 WiFi 局域网地址(通常是 192.168.x.x 或 172.x.x.x)重新打开本页。也可以先关掉代理软件再看终端打印的地址。`
+    : `The current address ${hostname} belongs to a VPN/proxy virtual adapter, which your phone cannot reach. Reopen this page on your real WiFi LAN address (usually 192.168.x.x or 172.x.x.x), or turn the proxy off and use the address Vite prints in the terminal.`;
+}
 
 // Scenario labels come from the server by id; translate on the client so the
 // API stays language-neutral.

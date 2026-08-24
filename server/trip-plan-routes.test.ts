@@ -33,10 +33,10 @@ before(async () => {
       email: "trip@example.com",
       password: "correct-horse",
       name: "Trip",
+      gender: "female",
       age: 30,
       heightCm: 170,
       weightKg: 60,
-      style: "Casual",
     }),
   });
   token = (await res.json()).token;
@@ -202,10 +202,10 @@ test("行程只能看到自己的", async () => {
       email: "other@example.com",
       password: "correct-horse",
       name: "Other",
+      gender: "male",
       age: 30,
       heightCm: 170,
       weightKg: 60,
-      style: "Casual",
     }),
   });
   const otherToken = (await res.json()).token;

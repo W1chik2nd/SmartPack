@@ -1,0 +1,71 @@
+.wardrobe-filter-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.wardrobe-filter {
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  color: var(--text);
+  background: var(--yellow);
+  border: 3px solid var(--text);
+  box-shadow: 4px 4px 0 var(--text);
+  font-size: 13px;
+  font-weight: var(--weight-heavy);
+}
+
+.wardrobe-filter svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  fill: currentColor;
+}
+
+.wardrobe-filter select {
+  min-width: 92px;
+  padding: 5px 24px 5px 7px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  background: var(--white);
+  border: 2px solid var(--text);
+  border-radius: 0;
+  cursor: pointer;
+}
+
+.wardrobe-filter select:focus-visible {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+
+.wardrobe-filter-count {
+  padding-right: 4px;
+  font-size: 11px;
+  font-weight: var(--weight-bold);
+  color: var(--blue);
+}
+
+@media (max-width: 600px) {
+  .wardrobe-filter {
+    height: 48px;
+  }
+
+  .wardrobe-filter > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .wardrobe-filter select {
+    min-width: 86px;
+  }
+}
