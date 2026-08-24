@@ -18,6 +18,8 @@
   --text: var(--black);
   --text-secondary: #3d3d3d;
   --surface: var(--white);
+  --disabled-text: #6b6b6b;
+  --disabled-surface: #d9d9d9;
   --danger: var(--red);
 
   /* Geometry: thick borders, right angles. No gradients, no soft shadows. */

@@ -99,3 +99,11 @@
   border-bottom-width: 6px;
   border-bottom-color: var(--red);
 }
+
+/* 已过去的日期保留在月历中,但不可选择并明确显示为禁用状态。 */
+.calendar-day:disabled {
+  color: var(--disabled-text);
+  background: var(--disabled-surface);
+  border-color: var(--disabled-text);
+  cursor: not-allowed;
+}

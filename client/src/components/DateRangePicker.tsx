@@ -123,6 +123,7 @@ export default function DateRangePicker({ value, onChange }: Props) {
 
         {Array.from({ length: totalDays }, (_, i) => {
           const day = iso(cursor.y, cursor.m, i + 1);
+          const isPast = day < todayIso;
           const isStart = value?.start === day;
           const isEnd = value?.end === day;
           const inRange = !!value && day >= value.start && day <= value.end;
@@ -140,6 +141,7 @@ export default function DateRangePicker({ value, onChange }: Props) {
               key={day}
               type="button"
               className={classes}
+              disabled={isPast}
               aria-pressed={inRange}
               aria-label={day}
               onClick={() => pick(day)}
