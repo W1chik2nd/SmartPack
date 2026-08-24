@@ -102,9 +102,25 @@ export async function searchPlaces(
     `${ENDPOINT}?q=${encodeURIComponent(query)}` +
     `&format=jsonv2&limit=8&accept-language=${lang === "zh" ? "zh-CN" : "en"}`;
 
-  const res = await fetch(url, { headers: { "User-Agent": UA } });
+  let res: Response;
+  try {
+    // 8 秒超时:连不上时快速失败,不要用默认的长挂起把用户晾在那。
+    res = await fetch(url, {
+      headers: { "User-Agent": UA },
+      signal: AbortSignal.timeout(8000),
+    });
+  } catch (err: any) {
+    // fetch 抛错 = 连接层就没通(超时 / DNS / 被拦 / 需要代理),不是响应问题。
+    // Node 的 fetch 默认不走系统代理,所以常见于:浏览器能连 OSM、后端却连不上。
+    // 给一句能照着做的提示,而不是原始的 "fetch failed"。
+    const reason = err?.name === "TimeoutError" ? "连接超时" : "连接失败";
+    throw new Error(
+      `连不上地点服务(${reason})。后端需要能访问 nominatim.openstreetmap.org;` +
+        `若在受限网络下,给后端配代理后重启:export HTTPS_PROXY=你的代理地址。`
+    );
+  }
   if (!res.ok) {
-    throw new Error(`Place search failed (${res.status})`);
+    throw new Error(`地点服务返回错误(${res.status})`);
   }
   return normalizePlaces(await res.json());
 }
