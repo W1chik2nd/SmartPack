@@ -13,6 +13,7 @@
 // 纯展示逻辑,留在前端;行程数据本身全部来自后端(AGENTS.md §3)。
 import type { Trip } from "../api";
 import { useLang } from "../i18n/useLang";
+import { useTranslatedText } from "../hooks/useTranslatedText";
 
 // 画布宽度必须与 itinerary.css 里 .itin-layout 的左栏宽度一致。
 const SPINE_W = 360;
@@ -162,6 +163,12 @@ type Props = {
 export default function TripSpine({ trip, activeDayId, onPickDay }: Props) {
   const { lang, t } = useLang();
   const days = trip.days;
+  const dayLabel = (day: Trip["days"][number]) =>
+    lang === "zh" ? `第${day.dayNumber}天` : `Day ${day.dayNumber}`;
+  const cities = useTranslatedText(
+    days.map((day) => lang === "zh" ? day.city : day.cityEn || day.city),
+    lang
+  );
   const height = canvasHeight(days.length);
   const curve = buildCurve(days.length);
   const points = samplePoints(curve);
@@ -228,10 +235,10 @@ export default function TripSpine({ trip, activeDayId, onPickDay }: Props) {
                   aria-current={active ? "true" : undefined}
                   onClick={() => onPickDay(day.id)}
                 >
-                  <span className="spine-day-number">Day {day.dayNumber}</span>
+                  <span className="spine-day-number">{dayLabel(day)}</span>
                   <span className="spine-day-date">{day.dateLabel}</span>
                   <span className="spine-day-city">
-                    {lang === "zh" ? day.city : day.cityEn}
+                    {cities[i]}
                   </span>
                 </button>
               </li>

@@ -36,8 +36,13 @@ test("generated garments and wardrobe photos share the pixel-art treatment", () 
   const dashboardOutfit = readFileSync(new URL("../src/components/DashboardOutfit.tsx", import.meta.url), "utf8");
   assert.match(home, /<DashboardOutfit/);
   assert.match(dashboardOutfit, /dashboard-outfit-outer/);
+  assert.match(dashboardCss, /dashboard-outfit-panel-left/);
+  assert.match(dashboardCss, /dashboard-outfit-panel-right/);
+  assert.match(dashboardCss, /margin-inline: auto/);
   assert.match(dashboardOutfit, /打开拉链/);
   assert.match(dashboardOutfit, /outfit-description/);
+  assert.match(dashboardOutfit, /lang === "zh"/);
+  assert.match(outfit, /lang === "zh" \? `第\$\{activeDay\.dayNumber\}天`/);
 });
 
 test("outfit pieces use the white pixel line-art reference style", () => {

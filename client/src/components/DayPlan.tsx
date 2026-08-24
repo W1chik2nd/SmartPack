@@ -6,6 +6,7 @@
 // 天然对齐。这两个常量必须与 day-plan.css 里的 grid 保持一致。
 import type { TripDay } from "../api";
 import { useLang } from "../i18n/useLang";
+import { useLocalizedValues } from "../hooks/useLocalizedValues";
 import StopCard from "./StopCard";
 
 const SPINE_W = 150;
@@ -55,11 +56,20 @@ export default function DayPlan({ day }: Props) {
   const weather =
     lang === "zh" ? day.weatherSummary : day.weatherSummaryEn || day.weatherSummary;
   const risk = lang === "zh" ? day.weatherRisk : day.weatherRiskEn || day.weatherRisk;
+  const dayLabel = lang === "zh" ? `第${day.dayNumber}天` : `Day ${day.dayNumber}`;
+  const outfitLabels = useLocalizedValues(
+    outfit.map((item) => ({ zh: item.label, en: item.labelEn })),
+    lang
+  );
+  const equipmentLabels = useLocalizedValues(
+    equipment.map((item) => ({ zh: item.label, en: item.labelEn })),
+    lang
+  );
 
   return (
     <section className="day-plan" aria-label={`Day ${day.dayNumber}`}>
       <header className="day-plan-head">
-        <h2 className="day-plan-title">Day {day.dayNumber}</h2>
+        <h2 className="day-plan-title">{dayLabel}</h2>
         <span className="day-plan-date">{day.dateLabel}</span>
         <span className="day-plan-summary">
           {summary} · {stops.length} {t("dayStops")}
@@ -77,7 +87,7 @@ export default function DayPlan({ day }: Props) {
           <ul className="day-outfit-list">
             {outfit.map((item, index) => (
               <li key={`${item.labelEn}-${index}`}>
-                <span>{lang === "zh" ? item.label : item.labelEn}</span>
+                <span>{outfitLabels[index]}</span>
               </li>
             ))}
           </ul>
@@ -87,7 +97,7 @@ export default function DayPlan({ day }: Props) {
           <ul>
             {equipment.map((item, index) => (
               <li key={`${item.labelEn}-${index}`}>
-                {lang === "zh" ? item.label : item.labelEn}
+                {equipmentLabels[index]}
               </li>
             ))}
           </ul>

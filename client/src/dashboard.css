@@ -215,17 +215,15 @@
 
 .dashboard-outfit-torso {
   position: relative;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 150px;
-  height: 82px;
-  flex: 0 0 82px;
+  height: 84px;
+  flex: 0 0 84px;
 }
 
-.dashboard-outfit-torso > .dress-piece-top {
-  grid-area: 1 / 1;
-}
-
+.dashboard-outfit-inner,
 .dashboard-outfit-outer {
   position: absolute;
   inset: 0;
@@ -233,65 +231,91 @@
   place-items: center;
 }
 
-.dashboard-outfit-outer > .dress-piece-top {
+.dashboard-outfit-inner {
+  z-index: 1;
+}
+
+.dashboard-outfit-outer {
+  z-index: 2;
+  overflow: hidden;
+}
+
+.dashboard-outfit-panel {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.dashboard-outfit-panel-left {
+  clip-path: inset(0 50% 0 0);
+}
+
+.dashboard-outfit-panel-right {
+  clip-path: inset(0 0 0 50%);
+  transform: translateX(4px);
+}
+
+.dashboard-outfit-panel > .dress-piece-top {
   transform: scaleX(0.94);
-  clip-path: polygon(
-    0 34%, 16% 34%, 16% 20%, 30% 20%, 30% 8%, 42% 8%,
-    42% 100%, 26% 100%, 26% 62%, 12% 62%, 12% 74%, 0 74%,
-    58% 74%, 58% 100%, 74% 100%, 74% 62%, 88% 62%, 88% 74%,
-    100% 74%, 100% 34%, 84% 34%, 84% 20%, 70% 20%, 70% 8%,
-    58% 8%, 58% 100%, 42% 100%, 42% 8%, 30% 8%, 30% 20%,
-    16% 20%, 16% 34%, 0 34%
-  );
 }
 
 .dashboard-outfit-zip {
   position: absolute;
   z-index: 3;
+  left: 50%;
   width: 3px;
   height: 68px;
   background: var(--black);
   opacity: 0.85;
+  transform: translateX(-50%);
 }
 
 .dashboard-outfit-stack > .dress-piece-bottom {
-  margin-top: -3px;
+  margin-top: -1px;
+  align-self: center;
 }
 
 .dashboard-outfit-stack > .dress-piece-shoes {
   margin-top: -1px;
+  align-self: center;
 }
 
 .dashboard-outfit-stack > .dress-piece-accessory {
   position: absolute;
   z-index: 4;
-  transform: translateX(68px) translateY(-26px) scale(0.72);
+  right: 4px;
+  top: 18%;
+  transform: scale(0.72);
 }
 
 .outfit-figure .dress-piece-top.is-compact {
-  width: 110px;
-  height: 79px;
+  width: 124px;
+  height: 89px;
+  margin-inline: auto;
 }
 
 .outfit-figure .dress-piece-bottom.is-compact {
-  width: 74px;
-  height: 98px;
-  margin-top: -2px;
+  width: 58px;
+  height: 78px;
+  margin: -2px auto 0;
 }
 
 .outfit-figure .dress-piece-shoes.is-compact {
-  width: 92px;
-  height: 44px;
+  width: 82px;
+  height: 40px;
+  margin-inline: auto;
 }
 
 .outfit-figure .dress-piece-shoes.is-compact::before {
-  width: 50px;
-  height: 34px;
+  width: 44px;
+  height: 30px;
 }
 
 .outfit-figure .dress-piece-shoes.is-compact::after {
-  width: 57px;
-  height: 39px;
+  width: 50px;
+  height: 35px;
 }
 
 .outfit-description {

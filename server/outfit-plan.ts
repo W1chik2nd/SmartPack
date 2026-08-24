@@ -289,6 +289,7 @@ export function buildOutfitPlan(
       dayNumber: index + 1,
       date,
       place: agentDay?.place ?? destination,
+      placeEn: agentDay?.placeEn ?? destination,
       scene: agentDay?.scene ?? scenario,
       pieces,
     };
