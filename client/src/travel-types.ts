@@ -68,6 +68,8 @@ export type PackingItem = {
   quantity?: number;
   daysUsed?: number[];
   wardrobeItemId?: string;
+  /** 服务端判定的「衣橱缺口」标记;装备类永远为 false。 */
+  wardrobeGap?: boolean;
   priority?: "core" | "support" | "optional";
 };
 
