@@ -1,5 +1,13 @@
 import { useEffect, useState } from "react";
-import { me, setToken, logout, type Credentials, type User } from "./api";
+import {
+  me,
+  setToken,
+  logout,
+  type AssistantClientAction,
+  type AssistantPage,
+  type Credentials,
+  type User,
+} from "./api";
 import { LangProvider, useLang } from "./i18n/useLang";
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
@@ -13,6 +21,7 @@ import PhoneUpload from "./pages/PhoneUpload";
 import PackingList from "./pages/PackingList";
 import TripSetup from "./pages/TripSetup";
 import Profile from "./pages/Profile";
+import ChatWidget from "./components/ChatWidget";
 
 type Route =
   | "landing"
@@ -66,6 +75,39 @@ function Shell() {
     setUser(u);
     setPendingCreds(null);
     setRoute("home");
+  }
+
+  const assistantRoutes: Record<AssistantPage, Route> = {
+    home: "home",
+    trips: "trips",
+    tripSetup: "tripSetup",
+    itinerary: "itinerary",
+    wardrobe: "wardrobe",
+    profile: "profile",
+    packing: "packing",
+  };
+
+  function handleAssistantActions(actions: AssistantClientAction[]) {
+    for (const action of actions) {
+      if (action.type === "profileUpdated") setUser(action.user);
+      if (action.type === "navigate") {
+        if (action.scenario) setScenario(action.scenario);
+        setRoute(assistantRoutes[action.page]);
+      }
+      if (action.type === "tripCreated") setRoute("home");
+      if (action.type === "packingChanged") {
+        const current = JSON.parse(
+          sessionStorage.getItem("smartpack_packing_checked") ?? "{}"
+        ) as Record<string, boolean>;
+        for (const id of action.checked ?? []) current[id] = true;
+        for (const id of action.unchecked ?? []) current[id] = false;
+        sessionStorage.setItem("smartpack_packing_checked", JSON.stringify(current));
+        if (action.balance !== undefined) {
+          sessionStorage.setItem("smartpack_packing_balance", String(action.balance));
+        }
+        setRoute("packing");
+      }
+    }
   }
 
   async function handleSignOut() {
@@ -139,6 +181,8 @@ function Shell() {
           )}
         </div>
       </nav>
+
+      {user && <ChatWidget onActions={handleAssistantActions} />}
 
       {route === "login" && (
         <Login onAuthed={handleAuthed} onSwitch={() => setRoute("register")} />

@@ -6,7 +6,6 @@ import {
   type Weather,
   type TripPlan,
 } from "../api";
-import ChatWidget from "../components/ChatWidget";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/strings";
 import { CITIES, storedCity, storeCity, type City } from "../i18n/cities";
@@ -108,8 +107,6 @@ export default function Home({
 
   return (
     <div className="home dashboard">
-      <ChatWidget />
-
       {/* Greeting bar */}
       <header className="dash-greeting">
         <h1>
@@ -187,7 +184,11 @@ export default function Home({
               <span className="card-arrow" aria-hidden="true">›</span>
             </button>
 
-            <button className="today-itinerary" onClick={onOpenItinerary}>
+            <button
+              className="today-itinerary"
+              onClick={latestTrip ? onOpenItinerary : onOpenTrips}
+              aria-label={latestTrip ? t("itinerary") : t("tripPlanner")}
+            >
               <h2>{t("itinerary")}</h2>
               {latestTrip ? (
                 <span className="trip-summary">
@@ -201,8 +202,8 @@ export default function Home({
                   <span className="trip-dates">{tripDates(latestTrip)}</span>
                 </span>
               ) : (
-                <span className="trip-empty">
-                  {trips === null ? "" : t("noTripYet")}
+                <span className="trip-empty" aria-hidden="true">
+                  {trips === null ? "" : "+"}
                 </span>
               )}
               <span className="card-arrow" aria-hidden="true">›</span>

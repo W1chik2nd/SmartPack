@@ -17,6 +17,7 @@ import { handleTripPlanRoutes } from "./trip-plan-routes.ts";
 import { createItineraryStore } from "./itinerary.ts";
 import { handleItineraryRoutes } from "./itinerary-routes.ts";
 import { handleAssistantRoutes } from "./assistant-routes.ts";
+import { assistantDataContext } from "./assistant-context.ts";
 import { handleCatalogRoutes, SCENARIO_IDS } from "./catalog-routes.ts";
 import { dirname, join } from "node:path";
 import {
@@ -374,6 +375,48 @@ export function createApp(dbPath: string): App {
         json,
         readBody,
         userFromHeader: () => userForToken(bearerToken(req)),
+        actionContext: () => {
+          const actor = userForToken(bearerToken(req));
+          if (!actor) return null;
+          return {
+            userId: actor.id,
+            scenarioIds,
+            wardrobe,
+            tripPlans,
+            promptContext: assistantDataContext(
+              wardrobe.list(actor.id),
+              tripPlans.list(actor.id)
+            ),
+            currentProfile: () => {
+              const current = userForToken(bearerToken(req))!;
+              return {
+                name: current.name,
+                gender: current.gender,
+                age: current.age,
+                heightCm: current.height_cm,
+                weightKg: current.weight_kg,
+                bustCm: current.bust_cm,
+                waistCm: current.waist_cm,
+                hipCm: current.hip_cm,
+                bodyType: current.body_type,
+                seasonColorType: current.season_color_type,
+                stylePrefs: current.style_prefs ? JSON.parse(current.style_prefs) : [],
+                wearFeel: current.wear_feel ? JSON.parse(current.wear_feel) : [],
+                wearFeelOther: current.wear_feel_other,
+                travelHabits: current.travel_habits ? JSON.parse(current.travel_habits) : [],
+                travelHabitsOther: current.travel_habits_other,
+              };
+            },
+            updateProfile: (values: Record<string, string | number | null>) => {
+              const columns = Object.keys(values);
+              db.prepare(
+                `UPDATE users SET ${columns.map((column) => `${column} = ?`).join(", ")} WHERE id = ?`
+              ).run(...columns.map((column) => values[column]), actor.id);
+              const updated = db.prepare(`SELECT * FROM users WHERE id = ?`).get(actor.id) as UserRow;
+              return publicUser(updated);
+            },
+          };
+        },
       })
     ) {
       return;

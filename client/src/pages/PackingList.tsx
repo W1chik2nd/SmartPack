@@ -26,7 +26,9 @@ export default function PackingList({ onBack }: Props) {
   const { t } = useLang();
   // 0 = pack lightest · 100 = most variety. The sketch draws the slider
   // vertically with "more variety" on top, so the visual top is 100.
-  const [balance, setBalance] = useState(50);
+  const [balance, setBalance] = useState(() =>
+    Number(sessionStorage.getItem("smartpack_packing_balance") ?? 50)
+  );
   const debouncedBalance = useDebounced(balance, 250);
 
   const [plan, setPlan] = useState<PackingPlan | null>(null);
@@ -35,7 +37,20 @@ export default function PackingList({ onBack }: Props) {
 
   // Ticked-off items, keyed by item/essential id. Purely local UI state — the
   // checklist is a "don't forget" aid, not persisted server data (US 7.1).
-  const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [checked, setChecked] = useState<Record<string, boolean>>(() => {
+    try {
+      return JSON.parse(sessionStorage.getItem("smartpack_packing_checked") ?? "{}");
+    } catch {
+      return {};
+    }
+  });
+
+  useEffect(() => {
+    sessionStorage.setItem("smartpack_packing_checked", JSON.stringify(checked));
+  }, [checked]);
+  useEffect(() => {
+    sessionStorage.setItem("smartpack_packing_balance", String(balance));
+  }, [balance]);
 
   // Guards against out-of-order responses when the slider moves quickly.
   const reqId = useRef(0);
