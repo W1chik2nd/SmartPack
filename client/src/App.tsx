@@ -22,6 +22,7 @@ import PhoneUpload from "./pages/PhoneUpload";
 import PackingList from "./pages/PackingList";
 import TripSetup from "./pages/TripSetup";
 import Profile from "./pages/Profile";
+import OutfitOverview from "./pages/OutfitOverview";
 import ChatWidget from "./components/ChatWidget";
 
 type Route =
@@ -35,7 +36,8 @@ type Route =
   | "itinerary"
   | "wardrobe"
   | "profile"
-  | "packing";
+  | "packing"
+  | "outfit";
 
 /** ?upload=<token> 是手机扫码进来的上传页,免登录。 */
 const uploadToken = new URLSearchParams(window.location.search).get("upload");
@@ -236,6 +238,7 @@ function Shell() {
             setRoute("packing");
           }}
           onOpenProfile={() => setRoute("profile")}
+          onOpenOutfit={() => setRoute("outfit")}
         />
       )}
       {route === "trips" && user && (
@@ -280,6 +283,9 @@ function Shell() {
           tripPlanId={packingTripPlanId}
           onBack={() => setRoute("home")}
         />
+      )}
+      {route === "outfit" && user && (
+        <OutfitOverview onBack={() => setRoute("home")} />
       )}
     </>
   );

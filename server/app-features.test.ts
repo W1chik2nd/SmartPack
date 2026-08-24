@@ -95,6 +95,32 @@ test("packing requires a session and responds to the balance slider", async () =
   assert.equal((await get("/api/packing", token)).body.plan.balance, 50);
 });
 
+test("outfit plan requires a session and uses the latest saved trip", async () => {
+  assert.equal((await get("/api/outfit-plan")).status, 401);
+
+  const saved = await post(
+    "/api/trip-plans",
+    {
+      scenario: "travel",
+      placeName: "上海市",
+      placeDetail: "中国",
+      lat: 31.23,
+      lon: 121.47,
+      startDate: "2026-08-25",
+      endDate: "2026-08-29",
+    },
+    token
+  );
+  assert.equal(saved.status, 201);
+
+  const result = await get("/api/outfit-plan", token);
+  assert.equal(result.status, 200);
+  assert.equal(result.body.plan.destination, "上海市");
+  assert.equal(result.body.plan.days.length, 5);
+  assert.equal(result.body.plan.days[0].pieces.length, 4);
+  assert.equal(result.body.plan.days[0].pieces[2].kind, "accessory");
+});
+
 test("chat validates the message payload at the boundary", async () => {
   process.env.AI_API_KEY = "test-key-not-used";
   try {
