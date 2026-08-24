@@ -37,10 +37,9 @@ struct TripWeatherView: View {
     private func heading(_ trip: TripWeatherSummary) -> some View {
         HStack(alignment: .bottom, spacing: Theme.space2) {
             VStack(alignment: .leading, spacing: 5) {
-                Eyebrow(text: Strings.tripWeatherEyebrow(lang))
-                Text(Strings.tripWeatherTitle(lang).uppercased())
-                    .font(Theme.heavy(32))
-                    .tracking(-1.1)
+                Text(Strings.tripWeatherTitle(lang))
+                    .font(Theme.heavy(36))
+                    .tracking(-0.5)
                     .foregroundStyle(Theme.text)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -201,12 +200,8 @@ private struct ForecastDayCard: View {
             Rule(width: Theme.hairline)
 
             HStack(spacing: Theme.space2) {
-                Image(systemName: weatherSymbol)
-                    .font(.system(size: 38, weight: .bold))
-                    .symbolRenderingMode(.monochrome)
-                    .frame(width: 68, height: 68)
-                    .background(Theme.bg)
-                    .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: Theme.hairline))
+                WeatherArtwork(condition: day.condition)
+                    .frame(width: 96, height: 96)
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(Int(day.maxTempC.rounded()))°")
@@ -244,16 +239,4 @@ private struct ForecastDayCard: View {
         .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: 1.5))
     }
 
-    private var weatherSymbol: String {
-        switch day.condition {
-        case "Clear": return "sun.max.fill"
-        case "Partly cloudy": return "cloud.sun.fill"
-        case "Fog": return "cloud.fog.fill"
-        case "Drizzle": return "cloud.drizzle.fill"
-        case "Rain", "Showers": return "cloud.rain.fill"
-        case "Snow", "Snow showers": return "cloud.snow.fill"
-        case "Thunderstorm": return "cloud.bolt.rain.fill"
-        default: return "cloud.fill"
-        }
-    }
 }

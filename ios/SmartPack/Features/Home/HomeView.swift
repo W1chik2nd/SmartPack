@@ -10,7 +10,7 @@ struct HomeView: View {
     @State private var model = HomeModel()
     @State private var now = Date()
 
-    /// Half-minute ticks keep the date, clock, and greeting current.
+    /// Half-minute ticks keep the greeting and day/night scene current.
     private let clock = Timer.publish(every: 30, on: .main, in: .common).autoconnect()
 
     var body: some View {
@@ -40,19 +40,21 @@ struct HomeView: View {
     // MARK: - Greeting
 
     private var greeting: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        ZStack(alignment: .trailing) {
+            DashboardSkyScene(isDaytime: isDaytime)
+                .frame(width: 92)
+
             Text(greetingLine)
-                .font(Theme.heavy(24))
-                .foregroundStyle(Theme.text)
+                .font(Theme.heavy(22))
+                .foregroundStyle(isDaytime ? Theme.text : Theme.white)
                 .fixedSize(horizontal: false, vertical: true)
-            Text("\(longDate) · \(shortTime)")
-                .font(Theme.bold(14))
-                .foregroundStyle(Theme.textSecondary)
+                .padding(.trailing, 72)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
         .padding(.vertical, Theme.space2)
         .padding(.horizontal, Theme.space2)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .bauhausCard()
+        .frame(maxWidth: .infinity, minHeight: 72, alignment: .leading)
+        .bauhausCard(fill: isDaytime ? Theme.white : Theme.blue)
     }
 
     private var greetingLine: String {
@@ -69,18 +71,8 @@ struct HomeView: View {
         }
     }
 
-    private var longDate: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: lang.localeIdentifier)
-        formatter.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
-        return formatter.string(from: now)
-    }
-
-    private var shortTime: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale(identifier: lang.localeIdentifier)
-        formatter.setLocalizedDateFormatFromTemplate("jjmm")
-        return formatter.string(from: now)
+    private var isDaytime: Bool {
+        DashboardClock.isDaytime(hour: Calendar.current.component(.hour, from: now))
     }
 
     // MARK: - Empty state

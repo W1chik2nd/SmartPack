@@ -43,6 +43,17 @@ final class HomePresentationTests: XCTestCase {
         XCTAssertEqual(day.placeName(.en), "成都")
     }
 
+    func testLatestOutfitDescriptionContractDecodesWithoutPhotoFlag() throws {
+        let json = Data(#"{"id":"top-1","kind":"top","label":"橙色印花长袖","labelEn":"orange printed long sleeve","tone":"orange","pattern":"printed","sleeve":"long","garmentStyle":"shirt","accessoryStyle":null,"fit":"regular","material":"cotton","detail":"contrast print","wardrobeItemId":"wardrobe-1"}"#.utf8)
+
+        let piece = try JSONDecoder().decode(OutfitPiece.self, from: json)
+
+        XCTAssertEqual(piece.tone, .orange)
+        XCTAssertEqual(piece.pattern, .printed)
+        XCTAssertEqual(piece.sleeve, .long)
+        XCTAssertEqual(piece.wardrobeItemId, "wardrobe-1")
+    }
+
     func testTripWeatherContractDecodes() throws {
         let json = Data(#"{"trip":{"id":"trip-1","destination":"Tromsø","destinationDetail":"Norway","startDate":"2026-08-25","endDate":"2026-08-26","dayCount":2},"forecast":{"source":"Open-Meteo","available":true,"note":"","days":[{"date":"2026-08-25","condition":"Rain","minTempC":8.2,"maxTempC":13.4,"precipitationProbability":75,"uvIndex":1.3,"maxWindKph":22.5}]}}"#.utf8)
 
@@ -92,6 +103,46 @@ final class HomePresentationTests: XCTestCase {
         )
     }
 
+    func testLandingArrowShapeFillsItsTransitionHitArea() {
+        let bounds = CGRect(x: 0, y: 0, width: 320, height: 80)
+        let arrowBounds = ArrowBanner().path(in: bounds).boundingRect
+
+        XCTAssertEqual(arrowBounds.minX, bounds.minX)
+        XCTAssertEqual(arrowBounds.minY, bounds.minY)
+        XCTAssertEqual(arrowBounds.maxX, bounds.maxX)
+        XCTAssertEqual(arrowBounds.maxY, bounds.maxY)
+    }
+
+    func testDashboardDaytimeMatchesWebBoundaries() {
+        XCTAssertFalse(DashboardClock.isDaytime(hour: 5))
+        XCTAssertTrue(DashboardClock.isDaytime(hour: 6))
+        XCTAssertTrue(DashboardClock.isDaytime(hour: 17))
+        XCTAssertFalse(DashboardClock.isDaytime(hour: 18))
+    }
+
+    func testTodayCardTrailingArtworkColumnKeepsCompactIconsCentered() {
+        XCTAssertEqual(TodayCardLayout.artworkColumnWidth, 126)
+        XCTAssertEqual(TodayCardLayout.compactArtworkSize, 64)
+        XCTAssertEqual(TodayCardLayout.chevronColumnWidth, 18)
+        XCTAssertGreaterThan(
+            TodayCardLayout.artworkColumnWidth,
+            TodayCardLayout.compactArtworkSize
+        )
+    }
+
+    func testWeatherArtworkUsesSharedConditionMapping() {
+        XCTAssertEqual(WeatherArtwork.assetName(for: "Clear"), "weather-clear")
+        XCTAssertEqual(WeatherArtwork.assetName(for: "Snow showers"), "weather-snow-showers")
+        XCTAssertEqual(WeatherArtwork.assetName(for: "Unknown"), "weather-overcast")
+    }
+
+    func testProfileUsesNeutralAvatarWithoutBinaryGender() {
+        XCTAssertEqual(ProfileAvatar.assetName(gender: "male"), "profile-male")
+        XCTAssertEqual(ProfileAvatar.assetName(gender: "female"), "profile-female")
+        XCTAssertEqual(ProfileAvatar.assetName(gender: nil), "profile-neutral")
+        XCTAssertEqual(ProfileAvatar.assetName(gender: "other"), "profile-neutral")
+    }
+
     @MainActor
     func testChangingPrimarySectionClearsOnlyTheDetailStack() {
         let app = AppState()
@@ -133,13 +184,14 @@ final class HomePresentationTests: XCTestCase {
             label: id,
             labelEn: id,
             tone: .blue,
+            pattern: .solid,
+            sleeve: kind == .top ? .short : nil,
             garmentStyle: kind == .accessory ? nil : .shirt,
             accessoryStyle: kind == .accessory ? .bag : nil,
             fit: .regular,
             material: .cotton,
             detail: "",
-            wardrobeItemId: nil,
-            hasPhoto: false
+            wardrobeItemId: nil
         )
     }
 }

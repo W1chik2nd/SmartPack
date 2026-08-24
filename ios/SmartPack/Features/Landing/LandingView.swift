@@ -11,6 +11,10 @@ import SwiftUI
 struct LandingView: View {
     @Environment(AppState.self) private var app
     @Environment(\.lang) private var lang
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    @State private var presented = false
+    @State private var advancing = false
 
     var body: some View {
         ZStack {
@@ -26,11 +30,14 @@ struct LandingView: View {
                     LogoMark(color: Theme.blue)
                         .frame(width: 46, height: 41)
                         .alignmentGuide(.firstTextBaseline) { $0.height * 0.86 }
-                    Text("SmartPack")
+                    Text("WearRoute")
                         .font(Theme.heavy(40))
                         .tracking(-0.8)
                         .foregroundStyle(Theme.blue)
                 }
+                .opacity(presented ? 1 : 0)
+                .offset(y: presented ? 0 : -14)
+                .animation(entranceAnimation, value: presented)
 
                 Text(Strings.landingTagline(lang))
                     .font(Theme.bold(17))
@@ -38,29 +45,48 @@ struct LandingView: View {
                     .lineSpacing(4)
                     .padding(.top, 14)
                     .fixedSize(horizontal: false, vertical: true)
+                    .opacity(presented ? 1 : 0)
+                    .offset(y: presented ? 0 : 10)
+                    .animation(entranceAnimation.delay(0.08), value: presented)
 
                 Spacer(minLength: Theme.space3)
 
                 SuitcaseArt()
                     .frame(height: 230)
                     .frame(maxWidth: .infinity)
+                    .scaleEffect(presented ? 1 : 0.92)
+                    .opacity(presented ? 1 : 0)
+                    .offset(y: presented ? 0 : 18)
+                    .animation(entranceAnimation.delay(0.14), value: presented)
 
                 Button {
-                    app.phase = .login
+                    advance()
                 } label: {
-                    Text(Strings.landingEnter(lang))
-                        .font(Theme.heavy(15))
-                        .tracking(0.5)
-                        .foregroundStyle(Theme.white)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.leading, 26)
-                        .padding(.trailing, 76)
-                        .padding(.vertical, 22)
-                        .background(ArrowBanner().fill(Theme.red))
-                        .background(ArrowBanner().fill(Theme.black).offset(x: 4, y: 4))
+                    HStack(spacing: Theme.space1) {
+                        Text(Strings.landingEnter(lang))
+                            .font(Theme.heavy(15))
+                            .tracking(0.5)
+                        Spacer(minLength: 0)
+                        Image(systemName: "arrow.right")
+                            .font(.system(size: 18, weight: .black))
+                            .offset(x: advancing ? 12 : 0)
+                    }
+                    .foregroundStyle(Theme.white)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.leading, 26)
+                    .padding(.trailing, 68)
+                    .padding(.vertical, 22)
+                    .background(ArrowBanner().fill(Theme.red))
+                    .background(ArrowBanner().fill(Theme.black).offset(x: 4, y: 4))
                 }
+                .buttonStyle(LandingArrowButtonStyle())
+                .allowsHitTesting(!advancing)
                 .padding(.top, Theme.space3)
                 .padding(.bottom, Theme.space4)
+                .opacity(presented && !advancing ? 1 : 0)
+                .offset(x: advancing ? 38 : 0, y: presented ? 0 : 16)
+                .animation(entranceAnimation.delay(0.20), value: presented)
+                .animation(reduceMotion ? nil : .snappy(duration: 0.30), value: advancing)
             }
             .padding(.horizontal, Theme.space3)
             .padding(.top, Theme.space4)
@@ -69,7 +95,42 @@ struct LandingView: View {
         .overlay(alignment: .topTrailing) {
             LanguageToggle()
                 .padding(Theme.space2)
+                .opacity(presented ? 1 : 0)
         }
+        .onAppear {
+            if reduceMotion {
+                presented = true
+            } else {
+                withAnimation { presented = true }
+            }
+        }
+    }
+
+    private var entranceAnimation: Animation {
+        reduceMotion ? .linear(duration: 0) : .spring(duration: 0.62, bounce: 0.16)
+    }
+
+    private func advance() {
+        guard !advancing else { return }
+        if reduceMotion {
+            app.phase = .login
+            return
+        }
+
+        advancing = true
+        Task {
+            try? await Task.sleep(nanoseconds: 230_000_000)
+            app.phase = .login
+        }
+    }
+}
+
+private struct LandingArrowButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .offset(x: configuration.isPressed ? 5 : 0)
+            .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
     }
 }
 

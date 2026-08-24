@@ -42,6 +42,19 @@ enum PixelShape {
         (24, 8), (28, 8), (28, 4), (32, 4),
     ]))
 
+    /// Full-length sleeves from the latest shared outfit renderer.
+    static let longSleeveTop = PixelPolygon(points: pts([
+        (32, 0), (68, 0), (68, 4), (72, 4), (72, 8), (76, 8),
+        (76, 12), (80, 12), (80, 16), (84, 16), (84, 22),
+        (88, 22), (88, 32), (92, 32), (92, 46), (96, 46),
+        (96, 62), (100, 62), (100, 88), (84, 88), (84, 54),
+        (80, 54), (80, 100), (20, 100), (20, 54), (16, 54),
+        (16, 88), (0, 88), (0, 62), (4, 62), (4, 46),
+        (8, 46), (8, 32), (12, 32), (12, 22), (16, 22),
+        (16, 16), (20, 16), (20, 12), (24, 12), (24, 8),
+        (28, 8), (28, 4), (32, 4),
+    ]))
+
     /// Trousers: a block with the inseam notched out of the bottom edge.
     static let bottom = PixelPolygon(points: pts([
         (0, 0), (100, 0), (100, 100), (58, 100), (58, 64),
@@ -89,14 +102,17 @@ extension OutfitTone {
     var body: Color {
         switch self {
         case .red: return Theme.red
+        case .orange: return Theme.garmentOrange
         case .yellow: return Theme.yellow
         case .blue: return Theme.blue
+        case .purple: return Theme.garmentPurple
+        case .pink: return Theme.garmentPink
         case .black: return Theme.black
         case .white: return Theme.white
-        case .green: return Color(hex: 0x4D8B57)
-        case .brown: return Color(hex: 0x9A6A3A)
-        case .gray: return Color(hex: 0x7D8790)
-        case .beige: return Color(hex: 0xD8BD86)
+        case .green: return Theme.garmentGreen
+        case .brown: return Theme.garmentBrown
+        case .gray: return Theme.garmentGray
+        case .beige: return Theme.garmentBeige
         }
     }
 
@@ -105,10 +121,13 @@ extension OutfitTone {
     var detail: Color {
         switch self {
         case .white: return Theme.black
-        case .green: return Color(hex: 0x285C35)
-        case .brown: return Color(hex: 0x5C3D20)
-        case .gray: return Color(hex: 0x4D5660)
-        case .beige: return Color(hex: 0x9A7B43)
+        case .orange: return Theme.garmentOrangeDetail
+        case .purple: return Theme.garmentPurpleDetail
+        case .pink: return Theme.garmentPinkDetail
+        case .green: return Theme.garmentGreenDetail
+        case .brown: return Theme.garmentBrownDetail
+        case .gray: return Theme.garmentGrayDetail
+        case .beige: return Theme.garmentBeigeDetail
         default: return body
         }
     }

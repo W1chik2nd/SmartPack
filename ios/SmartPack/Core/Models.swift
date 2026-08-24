@@ -221,8 +221,12 @@ enum AssistantPage: String, Codable {
 enum OutfitPieceKind: String, Codable { case top, bottom, shoes, accessory }
 
 enum OutfitTone: String, Codable {
-    case red, yellow, blue, black, white, green, brown, gray, beige
+    case red, orange, yellow, blue, purple, pink, black, white, green, brown, gray, beige
 }
+
+enum OutfitPattern: String, Codable { case solid, plaid, striped, printed }
+
+enum OutfitSleeve: String, Codable { case short, long }
 
 enum OutfitFit: String, Codable { case slim, regular, relaxed }
 
@@ -244,13 +248,16 @@ struct OutfitPiece: Codable, Identifiable, Hashable {
     let label: String
     let labelEn: String
     let tone: OutfitTone
+    /// Optional while older generated plans age out; current servers always
+    /// return one of the shared pattern values.
+    let pattern: OutfitPattern?
+    let sleeve: OutfitSleeve?
     let garmentStyle: GarmentStyle?
     let accessoryStyle: AccessoryStyle?
     let fit: OutfitFit?
     let material: OutfitMaterial?
     let detail: String
     let wardrobeItemId: String?
-    let hasPhoto: Bool
 
     func name(_ lang: Lang) -> String { lang == .zh ? label : labelEn }
 }

@@ -10,7 +10,7 @@
 // 生产环境的正确做法是自建 Nominatim 或换付费额度,见 README 部署说明。
 
 const ENDPOINT = "https://nominatim.openstreetmap.org/search";
-const UA = "SmartPack/0.1 (https://github.com/W1chik2nd/SmartPack)";
+const UA = "WearRoute/0.1 (https://github.com/W1chik2nd/SmartPack)";
 
 /** 一个候选地点。lat/lon 供地图定位,name/detail 供列表展示。 */
 export type Place = {

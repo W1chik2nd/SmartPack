@@ -1,4 +1,4 @@
-// SmartPack auth API.
+// WearRoute auth API.
 //
 // Architecture note (AGENTS.md §3): all auth logic lives here on the server.
 // Clients (web now, SwiftUI later) only call these endpoints and render the
@@ -20,6 +20,7 @@ import { createPackingPlanStore } from "./packing-store.ts";
 import { handleTripGenerationRoutes } from "./trip-generation-routes.ts";
 import { generateTrip, type GenerateTrip } from "./trip-agent.ts";
 import { handleAssistantRoutes } from "./assistant-routes.ts";
+import { handleTranslationRoutes } from "./translation-routes.ts";
 import { assistantDataContext } from "./assistant-context.ts";
 import { handleCatalogRoutes, SCENARIO_IDS } from "./catalog-routes.ts";
 import { dirname, join } from "node:path";
@@ -126,6 +127,19 @@ export function createApp(
         res,
         url,
         json,
+        userFromHeader: () => accounts.userForRequest(req),
+      })
+    ) {
+      return;
+    }
+
+    if (
+      await handleTranslationRoutes({
+        req,
+        res,
+        url,
+        json,
+        readBody,
         userFromHeader: () => accounts.userForRequest(req),
       })
     ) {

@@ -18,7 +18,7 @@ export const STRINGS = {
   landingEnter: { en: "Start the journey", zh: "继续旅程" },
 
   // login
-  loginTitle: { en: "Sign in to SmartPack", zh: "登录 SmartPack" },
+  loginTitle: { en: "Sign in to WearRoute", zh: "登录 WearRoute" },
   loginSubtitle: {
     en: "Your wardrobe, your trips, one plan.",
     zh: "你的衣橱、你的行程,一份方案。",
@@ -32,7 +32,7 @@ export const STRINGS = {
 
   // register step 1
   step1: { en: "Step 1 of 2", zh: "第 1 步,共 2 步" },
-  registerTitle: { en: "Create your SmartPack account", zh: "创建 SmartPack 账号" },
+  registerTitle: { en: "Create your WearRoute account", zh: "创建 WearRoute 账号" },
   registerSubtitle: {
     en: "One account. Every outfit. Every trip.",
     zh: "一个账号,所有穿搭与行程。",
@@ -49,8 +49,8 @@ export const STRINGS = {
   step2: { en: "Step 2 of 2", zh: "第 2 步,共 2 步" },
   quizTitle: { en: "Tell us about yourself", zh: "介绍一下你自己" },
   quizSubtitle: {
-    en: "SmartPack tailors every outfit to you. Complete this to finish creating your account.",
-    zh: "SmartPack 会为你量身定制每套穿搭。完成问卷即注册成功。",
+    en: "WearRoute tailors every outfit to you. Complete this to finish creating your account.",
+    zh: "WearRoute 会为你量身定制每套穿搭。完成问卷即注册成功。",
   },
   name: { en: "Name", zh: "姓名" },
   gender: { en: "Gender", zh: "性别" },
@@ -97,7 +97,6 @@ export const STRINGS = {
   weatherLoading: { en: "Loading…", zh: "加载中…" },
   weatherUnavailable: { en: "Unavailable", zh: "暂不可用" },
   weatherNoDestination: { en: "Set a trip destination", zh: "请先设置行程目的地" },
-  tripWeatherEyebrow: { en: "Destination forecast", zh: "目的地天气" },
   tripWeatherTitle: { en: "Trip Weather", zh: "行程天气" },
   tripWeatherDays: { en: "Trip days", zh: "行程天数" },
   tripWeatherDayUnit: { en: "days", zh: "天" },
@@ -193,8 +192,8 @@ export const STRINGS = {
   profileFinish: { en: "Save profile", zh: "保存资料" },
   profileRequired: { en: "Required", zh: "必填" },
   dashFooter: {
-    en: "SmartPack — an AI scenario wardrobe. Sections open detailed pages as they are built.",
-    zh: "SmartPack —— AI 场景衣橱。各板块的详细页面将陆续上线。",
+    en: "WearRoute — an AI scenario wardrobe. Sections open detailed pages as they are built.",
+    zh: "WearRoute —— AI 场景衣橱。各板块的详细页面将陆续上线。",
   },
 
   // trip planner (scenario picker)
@@ -264,15 +263,15 @@ export const STRINGS = {
   // chat
   chatTitle: { en: "Assistant", zh: "助手" },
   chatGreeting: {
-    en: "Hi! I'm your SmartPack assistant. Ask me what to wear today, or tell me about a trip — destination, dates, occasions — and I'll plan outfits and a packing list.",
-    zh: "你好!我是你的 SmartPack 助手。可以问我今天穿什么,或告诉我行程——目的地、日期、场合——我来帮你规划穿搭和行李清单。",
+    en: "Hi! I'm your WearRoute assistant. Ask me what to wear today, or tell me about a trip — destination, dates, occasions — and I'll plan outfits and a packing list.",
+    zh: "你好!我是你的 WearRoute 助手。可以问我今天穿什么,或告诉我行程——目的地、日期、场合——我来帮你规划穿搭和行李清单。",
   },
   chatPlaceholder: { en: "Ask about outfits or packing…", zh: "问穿搭或打包…" },
   chatSend: { en: "Send", zh: "发送" },
   chatThinking: { en: "Thinking…", zh: "思考中…" },
   chatUnavailable: { en: "The assistant is unavailable.", zh: "助手暂不可用。" },
-  chatOpen: { en: "Open SmartPack assistant", zh: "打开 SmartPack 助手" },
-  chatClose: { en: "Close SmartPack assistant", zh: "关闭 SmartPack 助手" },
+  chatOpen: { en: "Open WearRoute assistant", zh: "打开 WearRoute 助手" },
+  chatClose: { en: "Close WearRoute assistant", zh: "关闭 WearRoute 助手" },
   chatCloseDialog: { en: "Close assistant", zh: "关闭助手" },
 
   // wardrobe
@@ -337,7 +336,7 @@ export const STRINGS = {
   pkWardrobeGap: { en: "Wardrobe gap", zh: "衣橱缺口" },
 
   // phone upload page
-  phoneTitle: { en: "SmartPack Photo Upload", zh: "SmartPack 拍照上传" },
+  phoneTitle: { en: "WearRoute Photo Upload", zh: "WearRoute 拍照上传" },
   phoneOpening: {
     en: "Opening the camera… if nothing happens, tap the button below.",
     zh: "正在调起相机…若没反应,点下面的按钮。",
@@ -379,79 +378,3 @@ export const STRINGS = {
 } as const;
 
 export type StringKey = keyof typeof STRINGS;
-
-// Sentences with a number in a different position per language need a
-// formatter rather than a lookup: word order is part of the translation.
-
-export function wardrobeFilterCountMessage(
-  lang: Lang,
-  visibleCount: number,
-  totalCount: number
-): string {
-  return lang === "zh"
-    ? `${visibleCount} / ${totalCount} 款`
-    : `${visibleCount} of ${totalCount} items`;
-}
-
-export function wardrobeFilterRegionLabel(lang: Lang, filter: string): string {
-  return lang === "zh"
-    ? `我的衣柜，当前筛选：${filter}`
-    : `My wardrobe, current filter: ${filter}`;
-}
-
-export function wardrobeNoFilteredItemsMessage(
-  lang: Lang,
-  filter: string
-): string {
-  return lang === "zh" ? `还没有${filter}` : `No ${filter.toLowerCase()} yet`;
-}
-
-export function photosSentMessage(lang: Lang, count: number): string {
-  return lang === "zh"
-    ? `✓ 已传 ${count} 张到电脑`
-    : `✓ ${count} photo${count === 1 ? "" : "s"} sent to your computer`;
-}
-
-export function confirmDeleteMessage(lang: Lang, title: string): string {
-  return lang === "zh"
-    ? `确定删除「${title}」?`
-    : `Delete "${title}"?`;
-}
-
-export function unreachableHostMessage(lang: Lang, hostname: string): string {
-  if (hostname === "localhost" || hostname === "127.0.0.1") {
-    return lang === "zh"
-      ? "当前用 localhost 打开,手机连不到你的电脑。请改用终端里 Vite 打印的局域网地址(形如 https://192.168.x.x:5177 或 https://172.x.x.x:5177)重新打开本页,再点拍照。"
-      : "This page is open on localhost, which your phone cannot reach. Reopen it using the LAN address Vite prints in the terminal (like https://192.168.x.x:5177 or https://172.x.x.x:5177), then tap the camera again.";
-  }
-  return lang === "zh"
-    ? `当前地址 ${hostname} 是 VPN/代理的虚拟网卡,手机连不到。请改用真实的 WiFi 局域网地址(通常是 192.168.x.x 或 172.x.x.x)重新打开本页。也可以先关掉代理软件再看终端打印的地址。`
-    : `The current address ${hostname} belongs to a VPN/proxy virtual adapter, which your phone cannot reach. Reopen this page on your real WiFi LAN address (usually 192.168.x.x or 172.x.x.x), or turn the proxy off and use the address Vite prints in the terminal.`;
-}
-
-// Scenario labels come from the server by id; translate on the client so the
-// API stays language-neutral.
-export const SCENARIO_LABELS: Record<string, { en: string; zh: string }> = {
-  commute: { en: "Commute", zh: "通勤" },
-  travel: { en: "Travel", zh: "旅行" },
-  business: { en: "Business Trip", zh: "出差" },
-  date: { en: "Date", zh: "约会" },
-  sport: { en: "Sport", zh: "运动" },
-  formal: { en: "Formal", zh: "正式场合" },
-};
-
-export const WEATHER_CONDITION_LABELS: Record<
-  string,
-  { en: string; zh: string }
-> = {
-  Clear: { en: "Clear", zh: "晴" },
-  "Partly cloudy": { en: "Partly cloudy", zh: "多云" },
-  Overcast: { en: "Overcast", zh: "阴" },
-  Fog: { en: "Fog", zh: "雾" },
-  Drizzle: { en: "Drizzle", zh: "毛毛雨" },
-  Rain: { en: "Rain", zh: "雨" },
-  Snow: { en: "Snow", zh: "雪" },
-  Showers: { en: "Showers", zh: "阵雨" },
-  "Snow showers": { en: "Snow showers", zh: "阵雪" },
-  Thunderstorm: { en: "Thunderstorm", zh: "雷暴" },
-};

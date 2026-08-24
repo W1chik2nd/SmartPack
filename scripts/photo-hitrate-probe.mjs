@@ -17,7 +17,7 @@ async function openverse(query) {
     `https://api.openverse.org/v1/images/` +
     `?q=${encodeURIComponent(query)}&page_size=1&mature=false`;
   try {
-    const res = await fetch(url, { headers: { "User-Agent": "SmartPack/0.1 (dev probe)" } });
+    const res = await fetch(url, { headers: { "User-Agent": "WearRoute/0.1 (dev probe)" } });
     if (res.status === 429) return { hit: false, note: "rate-limited" };
     if (!res.ok) return { hit: false, note: `http ${res.status}` };
     const body = await res.json();

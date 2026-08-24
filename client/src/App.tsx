@@ -62,6 +62,10 @@ function Shell() {
   const [outfitTripPlanId, setOutfitTripPlanId] = useState<string | undefined>(
     undefined
   );
+  const openOutfit = (tripPlanId?: string) => {
+    setOutfitTripPlanId(tripPlanId);
+    setRoute("outfit");
+  };
   const [retryPlan, setRetryPlan] = useState<TripPlan | null>(null);
   const [weatherTripPlanId, setWeatherTripPlanId] = useState<string | null>(null);
 
@@ -184,7 +188,7 @@ function Shell() {
           className="nav-brand"
           onClick={() => setRoute(user ? "home" : "landing")}
         >
-          SmartPack
+          WearRoute
         </button>
         <div className="nav-actions">
           {langToggle}
@@ -259,10 +263,7 @@ function Shell() {
             setRoute("weather");
           }}
           onOpenProfile={() => setRoute("profile")}
-          onOpenOutfit={(tripPlanId) => {
-            setOutfitTripPlanId(tripPlanId);
-            setRoute("outfit");
-          }}
+          onOpenOutfit={openOutfit}
         />
       )}
       {route === "trips" && user && (

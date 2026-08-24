@@ -7,59 +7,37 @@ import type { TripPlan } from "./trip-plan.ts";
 import type { BilingualItem } from "./trip-agent-types.ts";
 import type { WardrobeItem } from "./wardrobe.ts";
 import { DEFAULT_COORDS } from "./weather.ts";
+import {
+  descriptionPattern,
+  descriptionSleeve,
+  descriptionTone,
+} from "./outfit-description.ts";
+import type {
+  AccessoryStyle,
+  GarmentStyle,
+  OutfitFit,
+  OutfitMaterial,
+  OutfitPattern,
+  OutfitPiece,
+  OutfitPieceKind,
+  OutfitPlan,
+  OutfitSleeve,
+  OutfitTone,
+} from "../shared/outfit-types.ts";
 
-export type OutfitPieceKind = "top" | "bottom" | "shoes" | "accessory";
-export type OutfitTone =
-  | "red"
-  | "yellow"
-  | "blue"
-  | "black"
-  | "white"
-  | "green"
-  | "brown"
-  | "gray"
-  | "beige";
-export type AccessoryStyle = "bag" | "hat" | "glasses" | "scarf" | "watch" | "necklace";
-export type OutfitFit = "slim" | "regular" | "relaxed";
-export type OutfitMaterial = "cotton" | "knit" | "denim" | "leather" | "linen" | "technical" | "other";
-export type GarmentStyle = "tee" | "shirt" | "knit" | "trousers" | "skirt" | "jeans" | "loafers" | "sneakers";
-
-export type OutfitPiece = {
-  id: string;
-  kind: OutfitPieceKind;
-  label: string;
-  labelEn: string;
-  tone: OutfitTone;
-  garmentStyle: GarmentStyle | null;
-  accessoryStyle: AccessoryStyle | null;
-  fit: OutfitFit | null;
-  material: OutfitMaterial | null;
-  detail: string;
-  wardrobeItemId: string | null;
-  hasPhoto: boolean;
-};
-
-export type OutfitDay = {
-  id: string;
-  dayNumber: number;
-  date: string;
-  place: string;
-  placeEn: string;
-  scene: string;
-  pieces: OutfitPiece[];
-};
-
-export type OutfitPlan = {
-  destination: string;
-  destinationDetail: string;
-  scenario: string;
-  startDate: string;
-  endDate: string;
-  lat: number;
-  lon: number;
-  usesWardrobe: boolean;
-  days: OutfitDay[];
-};
+export type {
+  AccessoryStyle,
+  GarmentStyle,
+  OutfitDay,
+  OutfitFit,
+  OutfitMaterial,
+  OutfitPattern,
+  OutfitPiece,
+  OutfitPieceKind,
+  OutfitPlan,
+  OutfitSleeve,
+  OutfitTone,
+} from "../shared/outfit-types.ts";
 
 type Candidate = OutfitPiece;
 
@@ -94,7 +72,12 @@ function piece(
   label: string,
   labelEn: string,
   tone: OutfitTone,
-  style: { garmentStyle?: GarmentStyle; accessoryStyle?: AccessoryStyle } = {}
+  style: {
+    garmentStyle?: GarmentStyle;
+    accessoryStyle?: AccessoryStyle;
+    pattern?: OutfitPattern;
+    sleeve?: OutfitSleeve;
+  } = {}
 ): OutfitPiece {
   return {
     id,
@@ -102,13 +85,14 @@ function piece(
     label,
     labelEn,
     tone,
+    pattern: style.pattern ?? descriptionPattern(label, labelEn),
+    sleeve: style.sleeve ?? descriptionSleeve(kind, label, labelEn),
     garmentStyle: style.garmentStyle ?? null,
     accessoryStyle: style.accessoryStyle ?? null,
     fit: null,
     material: null,
     detail: "",
     wardrobeItemId: null,
-    hasPhoto: false,
   };
 }
 
@@ -156,19 +140,6 @@ function garmentStyleOf(item: WardrobeItem, kind: OutfitPieceKind): GarmentStyle
   return null;
 }
 
-function toneOf(item: WardrobeItem): OutfitTone {
-  const color = `${item.colors.join(" ")} ${item.title} ${item.details}`.toLowerCase();
-  if (/red|红|砖红/.test(color)) return "red";
-  if (/yellow|黄|金色/.test(color)) return "yellow";
-  if (/green|绿|橄榄/.test(color)) return "green";
-  if (/brown|棕|咖啡/.test(color)) return "brown";
-  if (/gray|grey|灰/.test(color)) return "gray";
-  if (/beige|cream|米|奶油|卡其/.test(color)) return "beige";
-  if (/white|白/.test(color)) return "white";
-  if (/black|黑/.test(color)) return "black";
-  return "blue";
-}
-
 function fitOf(item: WardrobeItem): OutfitFit {
   const text = `${item.fit} ${item.details} ${item.title}`.toLowerCase();
   if (/slim|fitted|修身|紧身/.test(text)) return "slim";
@@ -193,14 +164,15 @@ function fromWardrobe(item: WardrobeItem, kind: OutfitPieceKind): Candidate {
     kind,
     label: item.title,
     labelEn: item.title,
-    tone: toneOf(item),
+    tone: descriptionTone(item.title, item.colors.join(" "), item.details),
+    pattern: descriptionPattern(item.title, item.styleTags.join(" "), item.details),
+    sleeve: descriptionSleeve(kind, item.title, item.subtype, item.details),
     garmentStyle: garmentStyleOf(item, kind),
     accessoryStyle: kind === "accessory" ? accessoryStyleOf(item) : null,
     fit: fitOf(item),
     material: materialOf(item),
     detail: item.details,
     wardrobeItemId: item.id,
-    hasPhoto: item.hasPhoto,
   };
 }
 
@@ -228,7 +200,7 @@ function agentPiece(
     kind,
     recommendation.label,
     recommendation.labelEn,
-    "blue",
+    descriptionTone(recommendation.label, recommendation.labelEn),
     kind === "accessory"
       ? { accessoryStyle: accessoryStyleFromLabel(recommendation.label) }
       : { garmentStyle: garmentStyleFromLabel(recommendation.label, kind) }

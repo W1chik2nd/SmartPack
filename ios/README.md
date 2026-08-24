@@ -1,4 +1,4 @@
-# SmartPack iOS
+# WearRoute iOS
 
 原生 SwiftUI 客户端。和 web 端是**同一个后端、同一套设计令牌**——两端只共享后端 API，
 不共享代码（AGENTS.md §3）。

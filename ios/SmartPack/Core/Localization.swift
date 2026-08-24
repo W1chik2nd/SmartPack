@@ -77,7 +77,7 @@ extension Strings {
     /// the LAN need different values (see ios/README.md).
     static func backendUnreachable(_ path: String, _ detail: String) -> String {
         let host = APIClient.baseURL.absoluteString
-        return "无法连接 SmartPack 服务（\(host)\(path)）。\(detail) 请确认后端已启动，并检查 Info.plist 里的 SmartPackAPIBaseURL。"
+        return "无法连接 WearRoute 服务（\(host)\(path)）。\(detail) 请确认后端已启动，并检查 Info.plist 里的 SmartPackAPIBaseURL。"
     }
 
     /// Scenario labels come from the server by id; translated here so the API

@@ -11,9 +11,13 @@ import {
 } from "../api";
 import TripSwitcher from "../components/TripSwitcher";
 import DashboardOutfit from "../components/DashboardOutfit";
+import DashboardSky from "../components/DashboardSky";
 import { useLang } from "../i18n/useLang";
-import { SCENARIO_LABELS } from "../i18n/strings";
-import { dashboardTrips, tripAfterDeletionId } from "../lib/trip-dashboard";
+import { SCENARIO_LABELS } from "../i18n/dynamic-strings";
+import {
+  dashboardTrips, formatDashboardClock, formatTripDates,
+  greetingKey, isDashboardDaytime, tripAfterDeletionId, weatherIconPath,
+} from "../lib/trip-dashboard";
 
 type Props = {
   user: User;
@@ -26,9 +30,6 @@ type Props = {
   onOpenProfile: () => void;
   onOpenOutfit: (tripPlanId?: string) => void;
 };
-
-// TODO: wire the recent-date header once a calendar overview exists.
-const openDates = () => {};
 
 export default function Home({
   user,
@@ -93,7 +94,6 @@ export default function Home({
     };
   }, []);
 
-  // Keep selection stable as background status updates replace the trip list.
   useEffect(() => {
     if (selectedTrip && selectedTrip.id !== selectedTripId) {
       setSelectedTripId(selectedTrip.id);
@@ -149,14 +149,6 @@ export default function Home({
     };
   }, [selectedTrip?.id, selectedTrip?.lat, selectedTrip?.lon]);
 
-  function greeting(): string {
-    const hour = now.getHours();
-    if (hour < 5) return t("goodNight");
-    if (hour < 12) return t("goodMorning");
-    if (hour < 18) return t("goodAfternoon");
-    return t("goodEvening");
-  }
-
   async function removeSelectedTrip() {
     if (!selectedTrip) return;
     const id = selectedTrip.id;
@@ -195,49 +187,19 @@ export default function Home({
     onOpenTrips();
   }
 
-  const locale = lang === "zh" ? "zh-CN" : "en-GB";
-  const dateLong = now.toLocaleDateString(locale, {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
-  const timeShort = now.toLocaleTimeString(locale, {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-
-  // 一条行程的日期区间显示。按本地年月日解析,不走 UTC,免得跨时区错一天。
-  function tripDates(trip: TripPlan): string {
-    const fmt = (iso: string) => {
-      const [y, m, d] = iso.split("-").map(Number);
-      return new Date(y, m - 1, d).toLocaleDateString(locale, {
-        month: "short",
-        day: "numeric",
-      });
-    };
-    const nights = Math.round(
-      (new Date(`${trip.endDate}T00:00:00Z`).getTime() -
-        new Date(`${trip.startDate}T00:00:00Z`).getTime()) /
-        86_400_000
-    );
-    if (nights <= 0) return `${fmt(trip.startDate)} · ${t("tripSameDay")}`;
-    return `${fmt(trip.startDate)} – ${fmt(trip.endDate)} · ${nights} ${t("tripNights")}`;
-  }
+  const { locale, dateLong } = formatDashboardClock(now, lang);
+  const isDaytime = isDashboardDaytime(now.getHours());
 
   return (
     <div className="home dashboard">
-      {/* Greeting bar */}
-      <header className="dash-greeting">
+      <header className={`dash-greeting ${isDaytime ? "is-day" : "is-night"}`}>
         <h1>
-          {greeting()}, {user.name}.
+          {t(greetingKey(now.getHours()))}, {user.name}.
         </h1>
-        <p>
-          {dateLong} · {timeShort}
-        </p>
+        <DashboardSky />
       </header>
 
       <div className="dash-layout">
-        {/* Left: today card, laid out after the wireframe */}
         <div className="today-card-shell">
           {selectedTrip ? (
             <>
@@ -252,7 +214,7 @@ export default function Home({
                 aria-label="Today"
               >
                 <div className="today-header">
-                  <button className="today-dates" onClick={openDates}>
+                  <button className="today-dates">
                     {t("upcoming")} · {dateLong} <span aria-hidden="true">›</span>
                   </button>
                   <div className="trip-switch-copy" aria-live="polite">
@@ -275,8 +237,12 @@ export default function Home({
                       <h2>{t("destinationWeatherToday")}</h2>
                       {wx ? (
                         <p className="weather-reading">
-                          {Math.round(wx.tempC)}°C
-                          <span className="weather-cond">{wx.condition}</span>
+                          <span>{Math.round(wx.tempC)}°C</span>
+                          <img
+                            className="weather-icon"
+                            src={weatherIconPath(wx.condition)}
+                            alt={wx.condition}
+                          />
                         </p>
                       ) : (
                         <p className="weather-reading weather-pending">
@@ -303,7 +269,9 @@ export default function Home({
                   </div>
 
                   <button
+                    type="button"
                     className="today-outfit"
+                    aria-label={t("todaysOutfit")}
                     onClick={() => onOpenOutfit(selectedTrip.id)}
                   >
                     <h2>{t("todaysOutfit")}</h2>
@@ -329,7 +297,14 @@ export default function Home({
                               selectedTrip.scenario}
                           </span>
                         </span>
-                        <span className="trip-dates">{tripDates(selectedTrip)}</span>
+                        <span className="trip-dates">
+                          {formatTripDates(
+                            selectedTrip,
+                            locale,
+                            t("tripSameDay"),
+                            t("tripNights")
+                          )}
+                        </span>
                         {selectedTrip.generationStatus === "processing" && (
                           <span className="trip-generation-status is-processing">
                             {t("tripGeneratingHome")}
@@ -405,7 +380,6 @@ export default function Home({
           )}
         </div>
 
-        {/* Right: primary navigation tiles */}
         <nav className="dash-nav" aria-label="Sections">
           <button onClick={onOpenWardrobe}>
             <span className="nav-tile-mark red" aria-hidden="true" />

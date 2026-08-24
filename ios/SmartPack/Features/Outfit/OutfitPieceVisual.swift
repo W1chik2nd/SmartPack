@@ -1,8 +1,8 @@
 import SwiftUI
 
-/// One garment as the app draws it: either the pixelated wardrobe photo, or
-/// the 8-bit silhouette in the piece's own colour. Shared by the dashboard
-/// card and the outfit overview, exactly as `OutfitPieceVisual.tsx` is.
+/// One garment drawn from its server-provided description. Photos no longer
+/// replace the outfit figure, so color, cut, sleeve, and pattern stay legible
+/// in both the dashboard and the overview.
 struct OutfitPieceVisual: View {
     let piece: OutfitPiece
     var compact = false
@@ -11,13 +11,7 @@ struct OutfitPieceVisual: View {
     var scale: CGFloat = 1
 
     var body: some View {
-        Group {
-            if piece.hasPhoto, let itemId = piece.wardrobeItemId {
-                PhotoTile(itemId: itemId, label: piece.label, size: size)
-            } else {
-                silhouette
-            }
-        }
+        silhouette
         .frame(width: size.width, height: size.height)
         .accessibilityElement()
         .accessibilityLabel(piece.detail.isEmpty ? piece.label : "\(piece.label): \(piece.detail)")
@@ -57,47 +51,25 @@ struct OutfitPieceVisual: View {
     }
 }
 
-// MARK: - Photo tile
-
-/// Wardrobe photos are deliberately downsampled and blown back up so they sit
-/// in the same 8-bit register as the drawn pieces.
-private struct PhotoTile: View {
-    let itemId: String
-    let label: String
-    let size: CGSize
-
-    var body: some View {
-        ZStack {
-            Theme.bg
-            AsyncImage(url: APIClient.wardrobePhotoURL(id: itemId)) { image in
-                image
-                    .resizable()
-                    .interpolation(.none)
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Theme.bg
-            }
-        }
-        .frame(width: size.width, height: size.height)
-        .clipped()
-        .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: max(2, size.height / 32)))
-        .accessibilityLabel(label)
-    }
-}
-
 // MARK: - Tops
 
 private struct TopPiece: View {
     let piece: OutfitPiece
     let outline: CGFloat
 
+    private var shape: PixelPolygon {
+        piece.sleeve == .long ? PixelShape.longSleeveTop : PixelShape.top
+    }
+
     var body: some View {
         GeometryReader { geo in
             let w = geo.size.width
             let h = geo.size.height
             ZStack(alignment: .topLeading) {
-                PixelShape.top.fill(piece.tone.body)
-                PixelShape.top.stroke(Theme.black, lineWidth: outline)
+                shape.fill(piece.tone.body)
+                PiecePattern(pattern: piece.pattern ?? .solid, color: piece.tone.detail)
+                    .mask { shape }
+                shape.stroke(Theme.black, lineWidth: outline)
 
                 // Neck notch: a bite of background out of the top edge.
                 Rectangle()
@@ -159,6 +131,8 @@ private struct BottomPiece: View {
 
             ZStack(alignment: .topLeading) {
                 shape.fill(piece.tone.body)
+                PiecePattern(pattern: piece.pattern ?? .solid, color: piece.tone.detail)
+                    .mask { shape }
                 shape.stroke(Theme.black, lineWidth: outline)
 
                 Rectangle()
@@ -204,6 +178,8 @@ private struct ShoesPiece: View {
     private func shoe(width: CGFloat, height: CGFloat) -> some View {
         ZStack {
             PixelShape.shoe.fill(piece.tone.body)
+            PiecePattern(pattern: piece.pattern ?? .solid, color: piece.tone.detail)
+                .mask { PixelShape.shoe }
             // Sneakers carry a contrast midsole; loafers a single dark welt.
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
@@ -216,5 +192,59 @@ private struct ShoesPiece: View {
             PixelShape.shoe.stroke(Theme.black, lineWidth: outline)
         }
         .frame(width: width, height: height)
+    }
+}
+
+// MARK: - Surface pattern
+
+/// Flat pattern marks matching the shared web renderer. The parent masks this
+/// view to the garment silhouette, so marks never spill outside the pixels.
+private struct PiecePattern: View {
+    let pattern: OutfitPattern
+    let color: Color
+
+    private let printMarks = [
+        CGPoint(x: 0.32, y: 0.28),
+        CGPoint(x: 0.68, y: 0.52),
+        CGPoint(x: 0.40, y: 0.76),
+    ]
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let h = geo.size.height
+            ZStack(alignment: .topLeading) {
+                switch pattern {
+                case .solid:
+                    EmptyView()
+                case .plaid:
+                    Rectangle()
+                        .fill(color)
+                        .frame(width: max(2, w * 0.08), height: h)
+                        .offset(x: w * 0.28)
+                    Rectangle()
+                        .fill(color)
+                        .frame(width: w, height: max(2, h * 0.08))
+                        .offset(y: h * 0.42)
+                case .striped:
+                    ForEach([0.28, 0.64], id: \.self) { left in
+                        Rectangle()
+                            .fill(color)
+                            .frame(width: max(2, w * 0.08), height: h)
+                            .offset(x: w * left)
+                    }
+                case .printed:
+                    ForEach(printMarks.indices, id: \.self) { index in
+                        let point = printMarks[index]
+                        Rectangle()
+                            .fill(color)
+                            .frame(width: max(3, w * 0.10), height: max(3, h * 0.12))
+                            .offset(x: w * point.x, y: h * point.y)
+                    }
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }

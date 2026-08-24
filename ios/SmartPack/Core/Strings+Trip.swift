@@ -76,14 +76,14 @@ extension Strings {
 
     static let chatTitle = LocalizedText(en: "Assistant", zh: "助手")
     static let chatGreeting = LocalizedText(
-        en: "Hi! I'm your SmartPack assistant. Ask me what to wear today, or tell me about a trip — destination, dates, occasions — and I'll plan outfits and a packing list.",
-        zh: "你好!我是你的 SmartPack 助手。可以问我今天穿什么,或告诉我行程——目的地、日期、场合——我来帮你规划穿搭和行李清单。"
+        en: "Hi! I'm your WearRoute assistant. Ask me what to wear today, or tell me about a trip — destination, dates, occasions — and I'll plan outfits and a packing list.",
+        zh: "你好!我是你的 WearRoute 助手。可以问我今天穿什么,或告诉我行程——目的地、日期、场合——我来帮你规划穿搭和行李清单。"
     )
     static let chatPlaceholder = LocalizedText(en: "Ask about outfits or packing…", zh: "问穿搭或打包…")
     static let chatSend = LocalizedText(en: "Send", zh: "发送")
     static let chatThinking = LocalizedText(en: "Thinking…", zh: "思考中…")
     static let chatUnavailable = LocalizedText(en: "The assistant is unavailable.", zh: "助手暂不可用。")
-    static let chatOpen = LocalizedText(en: "Open SmartPack assistant", zh: "打开 SmartPack 助手")
+    static let chatOpen = LocalizedText(en: "Open WearRoute assistant", zh: "打开 WearRoute 助手")
     static let chatCloseDialog = LocalizedText(en: "Close assistant", zh: "关闭助手")
 
     // MARK: - Wardrobe

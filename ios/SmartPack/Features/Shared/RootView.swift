@@ -6,13 +6,28 @@ import SwiftUI
 struct RootView: View {
     @State private var app = AppState()
     @State private var language = LanguageStore()
+    @State private var launchIntroVisible = true
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        content
-            .environment(app)
-            .environment(language)
-            .environment(\.lang, language.lang)
-            .task { await app.restoreSession() }
+        ZStack {
+            if launchIntroVisible {
+                LaunchIntroView()
+                    .transition(.opacity.combined(with: .scale(scale: 0.98)))
+                    .zIndex(1)
+            } else {
+                content
+                    .id(phaseKey)
+                    .transition(pageTransition)
+                    .zIndex(0)
+            }
+        }
+        .background(Theme.bg)
+        .environment(app)
+        .environment(language)
+        .environment(\.lang, language.lang)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.42), value: phaseKey)
+        .task { await boot() }
     }
 
     @ViewBuilder
@@ -33,6 +48,43 @@ struct RootView: View {
         case .authed:
             SignedInShell()
         }
+    }
+
+    private var phaseKey: String {
+        switch app.phase {
+        case .booting: return "booting"
+        case .landing: return "landing"
+        case .login: return "login"
+        case .register: return "register"
+        case .questionnaire: return "questionnaire"
+        case .authed: return "authed"
+        }
+    }
+
+    private var pageTransition: AnyTransition {
+        guard !reduceMotion else { return .opacity }
+        return .asymmetric(
+            insertion: .move(edge: .trailing).combined(with: .opacity),
+            removal: .move(edge: .leading).combined(with: .opacity)
+        )
+    }
+
+    private func boot() async {
+        async let minimumDisplay: Void = holdLaunchIntro()
+        await app.restoreSession()
+        await minimumDisplay
+
+        if reduceMotion {
+            launchIntroVisible = false
+        } else {
+            withAnimation(.easeInOut(duration: 0.38)) {
+                launchIntroVisible = false
+            }
+        }
+    }
+
+    private func holdLaunchIntro() async {
+        try? await Task.sleep(nanoseconds: 1_150_000_000)
     }
 }
 
@@ -127,7 +179,7 @@ struct HomeBrandBar: View {
         HStack(spacing: 10) {
             LogoMark()
                 .frame(width: 30, height: 27)
-            Text("SMARTPACK")
+            Text("WEARROUTE")
                 .font(Theme.heavy(17))
                 .tracking(-0.2)
                 .foregroundStyle(Theme.text)
@@ -139,7 +191,7 @@ struct HomeBrandBar: View {
         .background(Theme.bg)
         .overlay(alignment: .bottom) { Rule() }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("SmartPack")
+        .accessibilityLabel("WearRoute")
     }
 }
 

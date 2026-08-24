@@ -7,9 +7,11 @@ import {
   type OutfitPlan,
   type Weather,
 } from "../api";
-import { SCENARIO_LABELS } from "../i18n/strings";
+import { SCENARIO_LABELS } from "../i18n/dynamic-strings";
 import { useLang } from "../i18n/useLang";
 import OutfitPieceVisual from "../components/OutfitPieceVisual";
+import { useLocalizedValues } from "../hooks/useLocalizedValues";
+import { useTranslatedText } from "../hooks/useTranslatedText";
 
 type Props = { onBack: () => void; tripPlanId?: string };
 
@@ -43,6 +45,11 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
   const [error, setError] = useState(false);
 
   useEffect(() => {
+    setPlan(null);
+    setError(false);
+    setWx(null);
+    setWxError(false);
+    setActiveIndex(0);
     getOutfitPlan(tripPlanId)
       .then(({ plan: next }) => {
         setPlan(next);
@@ -61,6 +68,30 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
     });
   };
 
+  // These localization hooks must run on both the loading render and the
+  // loaded render. Calling them only after `plan` exists changes the hook
+  // order when the request resolves and crashes the route with a blank page.
+  const activeDay = plan?.days[activeIndex];
+  const activeAccessory = activeDay?.pieces.find(
+    (piece) => piece.kind === "accessory"
+  );
+  const activeGarments =
+    activeDay?.pieces.filter((piece) => piece.kind !== "accessory") ?? [];
+  const garmentLabels = useLocalizedValues(
+    activeGarments.map((piece) => ({ zh: piece.label, en: piece.labelEn })),
+    lang
+  );
+  const accessoryLabels = useLocalizedValues(
+    activeAccessory
+      ? [{ zh: activeAccessory.label, en: activeAccessory.labelEn }]
+      : [],
+    lang
+  );
+  const places = useTranslatedText(
+    plan?.days.map((day) => (lang === "zh" ? day.place : day.placeEn)) ?? [],
+    lang
+  );
+
   if (error) {
     return (
       <main className="dress-page dress-state">
@@ -74,9 +105,15 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
     return <main className="dress-page dress-state">{t("outfitLoading")}</main>;
   }
 
-  const activeDay = plan.days[activeIndex];
-  const activeAccessory = activeDay.pieces.find((piece) => piece.kind === "accessory");
-  const activeGarments = activeDay.pieces.filter((piece) => piece.kind !== "accessory");
+  if (!activeDay) {
+    return (
+      <main className="dress-page dress-state">
+        <button type="button" className="dress-back" onClick={onBack}>‹ {t("backToHome")}</button>
+        <p role="alert">{t("outfitLoadFailed")}</p>
+      </main>
+    );
+  }
+
   const scenario = SCENARIO_LABELS[plan.scenario]?.[lang] ?? plan.scenario;
   const dayLabel = lang === "zh" ? `第${activeDay.dayNumber}天` : `Day ${activeDay.dayNumber}`;
   const incompleteWardrobe = activeDay.pieces.some((piece) => !piece.wardrobeItemId);
@@ -128,7 +165,7 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
                   onClick={() => setActiveIndex(index)}
                   aria-pressed={index === activeIndex}
                 >
-                  <span>{fmtDate(day.date, true)}</span><span>{lang === "zh" ? day.place : day.placeEn || day.place}</span><span>{SCENARIO_LABELS[day.scene]?.[lang] ?? day.scene}</span>
+                  <span>{fmtDate(day.date, true)}</span><span>{places[index]}</span><span>{SCENARIO_LABELS[day.scene]?.[lang] ?? day.scene}</span>
                 </button>
               ))}
             </div>
@@ -137,23 +174,23 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
 
         <section className="dress-featured" aria-label={t("outfitSelectedDay")}>
           <header>
-            <p>{dayLabel} · {fmtDate(activeDay.date)} · {lang === "zh" ? activeDay.place : activeDay.placeEn || activeDay.place}</p>
+            <p>{dayLabel} · {fmtDate(activeDay.date)} · {places[activeIndex]}</p>
             <h2>{scenario}</h2>
           </header>
           <div className="dress-outfit-stage">
             <button type="button" className="dress-switch prev" onClick={() => move(-1)} aria-label={t("outfitPreviousDay")}>‹</button>
             <div className="dress-stack">
-              {activeGarments.map((piece) => (
+              {activeGarments.map((piece, index) => (
                 <figure key={piece.id}>
                   <PieceVisual piece={piece} />
-                  <figcaption>{lang === "zh" ? piece.label : piece.labelEn}</figcaption>
+                  <figcaption>{garmentLabels[index]}</figcaption>
                 </figure>
               ))}
             </div>
             {activeAccessory && (
               <figure className="dress-featured-accessory">
                 <PieceVisual piece={activeAccessory} />
-                <figcaption>{lang === "zh" ? activeAccessory.label : activeAccessory.labelEn}</figcaption>
+                <figcaption>{accessoryLabels[0]}</figcaption>
               </figure>
             )}
             <button type="button" className="dress-switch next" onClick={() => move(1)} aria-label={t("outfitNextDay")}>›</button>

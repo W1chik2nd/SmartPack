@@ -20,7 +20,7 @@ enum Strings {
 
     // MARK: - Sign in
 
-    static let loginTitle = LocalizedText(en: "Sign in to SmartPack", zh: "登录 SmartPack")
+    static let loginTitle = LocalizedText(en: "Sign in to WearRoute", zh: "登录 WearRoute")
     static let loginSubtitle = LocalizedText(
         en: "Your wardrobe, your trips, one plan.",
         zh: "你的衣橱、你的行程,一份方案。"
@@ -35,7 +35,7 @@ enum Strings {
     // MARK: - Sign up, step 1
 
     static let step1 = LocalizedText(en: "Step 1 of 2", zh: "第 1 步,共 2 步")
-    static let registerTitle = LocalizedText(en: "Create your SmartPack account", zh: "创建 SmartPack 账号")
+    static let registerTitle = LocalizedText(en: "Create your WearRoute account", zh: "创建 WearRoute 账号")
     static let registerSubtitle = LocalizedText(
         en: "One account. Every outfit. Every trip.",
         zh: "一个账号,所有穿搭与行程。"
@@ -53,8 +53,8 @@ enum Strings {
     static let step2 = LocalizedText(en: "Step 2 of 2", zh: "第 2 步,共 2 步")
     static let quizTitle = LocalizedText(en: "Tell us about yourself", zh: "介绍一下你自己")
     static let quizSubtitle = LocalizedText(
-        en: "SmartPack tailors every outfit to you. Complete this to finish creating your account.",
-        zh: "SmartPack 会为你量身定制每套穿搭。完成问卷即注册成功。"
+        en: "WearRoute tailors every outfit to you. Complete this to finish creating your account.",
+        zh: "WearRoute 会为你量身定制每套穿搭。完成问卷即注册成功。"
     )
     static let optionalMark = LocalizedText(en: "optional", zh: "非必填")
     static let optionalSection = LocalizedText(
@@ -108,7 +108,6 @@ enum Strings {
     static let weatherLoading = LocalizedText(en: "Loading…", zh: "加载中…")
     static let weatherUnavailable = LocalizedText(en: "Unavailable", zh: "暂不可用")
     static let weatherNoDestination = LocalizedText(en: "Set a trip destination", zh: "请先设置行程目的地")
-    static let tripWeatherEyebrow = LocalizedText(en: "Destination forecast", zh: "目的地天气")
     static let tripWeatherTitle = LocalizedText(en: "Trip Weather", zh: "行程天气")
     static let tripWeatherDays = LocalizedText(en: "Trip days", zh: "行程天数")
     static let tripWeatherDayUnit = LocalizedText(en: "days", zh: "天")

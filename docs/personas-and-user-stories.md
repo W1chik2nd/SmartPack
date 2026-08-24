@@ -1,6 +1,6 @@
 # Personas and User Stories
 
-This document defines the target user personas for SmartPack and the user stories for each feature area.
+This document defines the target user personas for WearRoute and the user stories for each feature area.
 
 ## Personas
 

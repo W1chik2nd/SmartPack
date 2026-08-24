@@ -22,7 +22,7 @@ import {
   unreachableHostMessage,
   wardrobeFilterRegionLabel,
   wardrobeNoFilteredItemsMessage,
-} from "../i18n/strings";
+} from "../i18n/dynamic-strings";
 import WardrobeFilter from "../components/WardrobeFilter";
 import "./Wardrobe.css";
 

@@ -8,8 +8,8 @@ extension Strings {
     static let personalColorKicker = LocalizedText(en: "Personal color analysis", zh: "个人色彩分析")
     static let personalColorTitle = LocalizedText(en: "Find your season", zh: "找到你的四季型")
     static let personalColorIntro = LocalizedText(
-        en: "Upload a portrait. SmartPack will analyse its visible colour relationships and recommend a seasonal palette.",
-        zh: "上传一张真人照片，SmartPack 会分析照片中可见的色彩关系，并推荐适合你的四季型。"
+        en: "Upload a portrait. WearRoute will analyse its visible colour relationships and recommend a seasonal palette.",
+        zh: "上传一张真人照片，WearRoute 会分析照片中可见的色彩关系，并推荐适合你的四季型。"
     )
     static let personalColorUpload = LocalizedText(en: "Choose a portrait", zh: "上传真人照片")
     static let personalColorReplace = LocalizedText(en: "Choose another photo", zh: "重新上传")

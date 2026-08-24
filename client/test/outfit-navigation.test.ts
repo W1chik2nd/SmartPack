@@ -9,20 +9,24 @@ const outfit = readFileSync(new URL("../src/pages/OutfitOverview.tsx", import.me
 const outfitCss = readFileSync(new URL("../src/outfit.css", import.meta.url), "utf8");
 const garmentCss = readFileSync(new URL("../src/outfit-garments.css", import.meta.url), "utf8");
 const accessoryCss = readFileSync(new URL("../src/outfit-accessories.css", import.meta.url), "utf8");
+const outfitTypes = readFileSync(new URL("../../shared/outfit-types.ts", import.meta.url), "utf8");
 
 test("today outfit tile opens the outfit overview route", () => {
-  assert.match(home, /className="today-outfit"/);
+  assert.match(home, /type="button"\s+className="today-outfit"/);
   assert.match(home, /onClick=\{\(\) => onOpenOutfit\(selectedTrip\.id\)\}/);
   assert.match(home, /getOutfitPlan\(selectedTrip\.id\)/);
-  assert.match(app, /onOpenOutfit=\{\(tripPlanId\) =>/);
+  assert.match(app, /const openOutfit = \(tripPlanId\?: string\)/);
+  assert.match(app, /onOpenOutfit=\{openOutfit\}/);
   assert.match(app, /route === "outfit"/);
   assert.match(app, /tripPlanId=\{outfitTripPlanId\}/);
   assert.match(dashboardCss, /\.today-outfit \{[\s\S]*background: var\(--white\) !important;/);
 });
 
-test("generated garments and wardrobe photos share the pixel-art treatment", () => {
+test("outfit pieces always render from descriptions instead of wardrobe photos", () => {
   const visual = readFileSync(new URL("../src/components/OutfitPieceVisual.tsx", import.meta.url), "utf8");
-  assert.doesNotMatch(visual, /wardrobePhotoUrl|<img/);
+  assert.doesNotMatch(visual, /hasPhoto|wardrobePhotoUrl|<img/);
+  assert.doesNotMatch(outfitTypes, /hasPhoto/);
+  assert.doesNotMatch(`${outfitCss}\n${accessoryCss}`, /dress-piece-photo|is-accessory-photo/);
   assert.match(visual, /pixel-garment dress-piece-\$\{piece\.kind\}/);
   assert.match(outfitCss, /image-rendering: pixelated/);
   assert.match(outfitCss, /background: var\(--bg\)/);
@@ -32,6 +36,8 @@ test("generated garments and wardrobe photos share the pixel-art treatment", () 
   assert.match(outfit, /dress-mini-clothes/);
   assert.match(outfit, /dress-featured-accessory/);
   assert.match(visual, /garment-\$\{piece\.garmentStyle\}/);
+  assert.match(visual, /pattern-\$\{piece\.pattern\}/);
+  assert.match(visual, /sleeve-\$\{piece\.sleeve\}/);
   const home = readFileSync(new URL("../src/pages/index.tsx", import.meta.url), "utf8");
   const dashboardOutfit = readFileSync(new URL("../src/components/DashboardOutfit.tsx", import.meta.url), "utf8");
   assert.match(home, /<DashboardOutfit/);
@@ -49,8 +55,13 @@ test("outfit pieces use the white pixel line-art reference style", () => {
   assert.match(outfitCss, /--detail-color/);
   assert.match(outfitCss, /\.dress-piece-top \{[\s\S]*background: var\(--piece-color\)/);
   assert.match(outfitCss, /\.dress-piece-bottom \{[\s\S]*background: var\(--piece-color\)/);
-  assert.match(outfitCss, /\.tone-green/);
-  assert.match(outfitCss, /\.tone-brown/);
+  assert.match(garmentCss, /\.tone-orange/);
+  assert.match(garmentCss, /\.tone-white/);
+  assert.match(garmentCss, /\.tone-green/);
+  assert.match(garmentCss, /\.tone-brown/);
+  assert.match(garmentCss, /\.pattern-plaid/);
+  assert.match(garmentCss, /\.sleeve-long/);
+  assert.doesNotMatch(garmentCss, /gradient/);
   assert.match(outfitCss, /\.fit-relaxed/);
   assert.match(garmentCss, /\.garment-sneakers::before/);
   assert.match(garmentCss, /inset 0 -6px 0 var\(--black\)/);

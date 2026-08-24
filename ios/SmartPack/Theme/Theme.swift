@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// SmartPack design tokens — the Swift mirror of `client/src/theme.css`
+/// WearRoute design tokens — the Swift mirror of `client/src/theme.css`
 /// (AGENTS.md §8). Every screen pulls colors, type, spacing, and borders from
 /// here. Do not hardcode colors in views or add per-screen variants.
 enum Theme {
@@ -17,6 +17,22 @@ enum Theme {
 
     static let black = Color(hex: 0x111111)
     static let white = Color(hex: 0xFFFFFF)
+
+    // Descriptive wardrobe colors: data-driven garment rendering only.
+    static let garmentOrange = Color(hex: 0xE8751A)
+    static let garmentOrangeDetail = Color(hex: 0x9F410B)
+    static let garmentPurple = Color(hex: 0x76519B)
+    static let garmentPurpleDetail = Color(hex: 0x452D63)
+    static let garmentPink = Color(hex: 0xE487A5)
+    static let garmentPinkDetail = Color(hex: 0x9F4664)
+    static let garmentGreen = Color(hex: 0x4D8B57)
+    static let garmentGreenDetail = Color(hex: 0x285C35)
+    static let garmentBrown = Color(hex: 0x9A6A3A)
+    static let garmentBrownDetail = Color(hex: 0x5C3D20)
+    static let garmentGray = Color(hex: 0x7D8790)
+    static let garmentGrayDetail = Color(hex: 0x4D5660)
+    static let garmentBeige = Color(hex: 0xD8BD86)
+    static let garmentBeigeDetail = Color(hex: 0x9A7B43)
 
     // Roles
     static let text = black

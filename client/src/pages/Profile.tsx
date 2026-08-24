@@ -11,7 +11,7 @@ import { useLang } from "../i18n/useLang";
 import PersonalColorGuide from "../components/PersonalColorGuide";
 
 type Props = { user: User; onBack: () => void; onSaved: (user: User) => void };
-type Avatar = "woman" | "man";
+type Avatar = "woman" | "man" | "neutral";
 type Draft = {
   name: string;
   gender: string;
@@ -30,14 +30,20 @@ type Draft = {
 function avatarForGender(gender: string | null): Avatar | null {
   if (gender === "male") return "man";
   if (gender === "female") return "woman";
-  return null;
+  return "neutral";
 }
 
 function AvatarArt({ variant }: { variant: Avatar }) {
   return (
     <img
       className="profile-avatar-image"
-      src={variant === "man" ? "/profile-male.jpg" : "/profile-female.jpg"}
+      src={
+        variant === "man"
+          ? "/profile-male.jpg"
+          : variant === "woman"
+            ? "/profile-female.jpg"
+            : "/profile-neutral.png"
+      }
       alt=""
     />
   );
@@ -195,7 +201,7 @@ export default function Profile({ user, onBack, onSaved }: Props) {
           <span aria-hidden="true">←</span> {t("backToHome")}
         </button>
         <div>
-          <p className="profile-kicker">SmartPack / 03</p>
+          <p className="profile-kicker">WearRoute / 03</p>
           <h1>{t("profileTitle")}</h1>
         </div>
       </header>

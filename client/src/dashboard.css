@@ -14,28 +14,6 @@
   padding: 80px var(--space-4) var(--space-4);
 }
 
-.dash-greeting {
-  border: var(--border);
-  background: var(--white);
-  box-shadow: 6px 6px 0 var(--black);
-  padding: var(--space-2) var(--space-3);
-  margin-bottom: var(--space-3);
-}
-
-.dash-greeting h1 {
-  font-size: 28px;
-  font-weight: var(--weight-heavy);
-  text-transform: uppercase;
-  letter-spacing: -0.01em;
-}
-
-.dash-greeting p {
-  margin-top: 4px;
-  font-size: 15px;
-  font-weight: var(--weight-bold);
-  color: var(--text-secondary);
-}
-
 .dash-layout {
   /* Absorb all remaining viewport height */
   flex: 1;
@@ -94,11 +72,19 @@
 
 .card-arrow {
   position: absolute;
-  right: 12px;
-  bottom: 6px;
-  font-size: 28px;
+  right: 10px;
+  bottom: 4px;
+  font-size: 34px;
   line-height: 1;
   font-weight: var(--weight-heavy);
+}
+
+.today-dates > span {
+  display: inline-block;
+  margin-left: 2px;
+  font-size: 20px;
+  line-height: 0;
+  vertical-align: -2px;
 }
 
 /* Header shares the body's column grid so its date/location divider lines
@@ -141,17 +127,19 @@
 
 .weather-reading {
   margin-top: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
   font-size: 40px;
   font-weight: var(--weight-heavy);
   line-height: 1;
 }
 
-.weather-cond {
-  display: block;
-  margin-top: 6px;
-  font-size: 15px;
-  font-weight: var(--weight-bold);
-  color: var(--text-secondary);
+.weather-icon {
+  width: clamp(52px, 6vw, 76px);
+  height: clamp(52px, 6vw, 76px);
+  object-fit: contain;
+  mix-blend-mode: multiply;
 }
 
 .weather-pending {
@@ -291,31 +279,31 @@
 }
 
 .outfit-figure .dress-piece-top.is-compact {
-  width: 110px;
-  height: 79px;
+  width: 124px;
+  height: 89px;
   margin-inline: auto;
 }
 
 .outfit-figure .dress-piece-bottom.is-compact {
-  width: 74px;
-  height: 98px;
+  width: 58px;
+  height: 78px;
   margin: -2px auto 0;
 }
 
 .outfit-figure .dress-piece-shoes.is-compact {
-  width: 92px;
-  height: 44px;
+  width: 82px;
+  height: 40px;
   margin-inline: auto;
 }
 
 .outfit-figure .dress-piece-shoes.is-compact::before {
-  width: 50px;
-  height: 34px;
+  width: 44px;
+  height: 30px;
 }
 
 .outfit-figure .dress-piece-shoes.is-compact::after {
-  width: 57px;
-  height: 39px;
+  width: 50px;
+  height: 35px;
 }
 
 .outfit-description {
@@ -357,111 +345,4 @@
   font-size: clamp(72px, 10vw, 132px);
   line-height: 1;
   font-weight: var(--weight-regular);
-}
-
-/* ---------- nav tiles (right) ---------- */
-
-/* Three equal tiles filling exactly the today-card height (stretch grid) */
-.dash-nav {
-  min-width: 0;
-  min-height: 0;
-  display: grid;
-  grid-template-rows: repeat(3, minmax(0, 1fr));
-  gap: var(--space-3);
-}
-
-.dash-nav button {
-  min-width: 0;
-  min-height: 0;
-  overflow: hidden;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  padding: 0 var(--space-3);
-  font-family: inherit;
-  font-size: 24px;
-  font-weight: var(--weight-heavy);
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
-  text-align: left;
-  white-space: normal;
-  color: var(--text);
-  background: var(--white);
-  border: var(--border);
-  box-shadow: 6px 6px 0 var(--black);
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.dash-nav button:hover {
-  background: var(--yellow);
-}
-
-.dash-nav button:focus-visible {
-  outline: 3px solid var(--yellow);
-  outline-offset: 2px;
-}
-
-.nav-tile-mark {
-  width: 40px;
-  height: 40px;
-  border: var(--border);
-  flex-shrink: 0;
-}
-
-.nav-tile-mark.red {
-  background: var(--red);
-}
-
-.nav-tile-mark.yellow {
-  background: var(--yellow);
-  border-radius: 50%;
-}
-
-.nav-tile-mark.blue {
-  background: var(--blue);
-}
-
-/* ---------- responsive ---------- */
-
-@media (max-width: 900px) {
-  .dash-layout {
-    grid-template-columns: 1fr;
-  }
-  .today-body {
-    grid-template-columns: 1fr 1fr;
-  }
-  .today-itinerary {
-    grid-column: 1 / -1;
-    border-top: var(--border);
-  }
-  /* Stacked below the card, tiles size themselves again */
-  .dash-nav {
-    grid-template-rows: none;
-  }
-  .dash-nav button {
-    padding: var(--space-3);
-  }
-}
-
-@media (max-width: 600px) {
-  .today-body {
-    grid-template-columns: 1fr;
-  }
-  .today-left {
-    border-right: none;
-  }
-  .today-outfit {
-    border-right: none !important;
-    border-top: var(--border);
-  }
-  .dash-greeting h1 {
-    font-size: 22px;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .dash-nav button {
-    transition: none;
-  }
 }

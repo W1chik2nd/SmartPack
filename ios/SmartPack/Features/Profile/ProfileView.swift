@@ -60,7 +60,7 @@ struct ProfileView: View {
 
     private var header: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Eyebrow(text: "SmartPack / 03", color: Theme.textSecondary)
+            Eyebrow(text: "WearRoute / 03", color: Theme.textSecondary)
             Text(Strings.profileTitle(lang))
                 .font(Theme.heavy(30))
                 .foregroundStyle(Theme.text)
@@ -299,11 +299,7 @@ struct ProfileView: View {
     }
 
     private func avatarName(_ answers: ProfileAnswers) -> String? {
-        switch answers.selected("gender").first {
-        case "male": return "profile-male"
-        case "female": return "profile-female"
-        default: return nil
-        }
+        ProfileAvatar.assetName(gender: answers.selected("gender").first)
     }
 
     // MARK: - Loading and saving
@@ -326,6 +322,16 @@ struct ProfileView: View {
             notice = .saved
         } catch {
             notice = .failed
+        }
+    }
+}
+
+enum ProfileAvatar {
+    static func assetName(gender: String?) -> String {
+        switch gender {
+        case "male": return "profile-male"
+        case "female": return "profile-female"
+        default: return "profile-neutral"
         }
     }
 }

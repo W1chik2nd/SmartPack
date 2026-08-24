@@ -1,5 +1,22 @@
 import SwiftUI
 
+enum TodayCardLayout {
+    static let artworkColumnWidth: CGFloat = 126
+    static let compactArtworkSize: CGFloat = 64
+    static let chevronColumnWidth: CGFloat = 18
+}
+
+/// Home tiles share this trailing column so unlike-sized artwork has one
+/// visual centerline and one right edge before the chevron.
+private struct TodayCardTrailingArtwork<Content: View>: View {
+    @ViewBuilder let content: () -> Content
+
+    var body: some View {
+        content()
+            .frame(width: TodayCardLayout.artworkColumnWidth, alignment: .center)
+    }
+}
+
 /// The "today" card. On desktop its four blocks sit in a three-column grid;
 /// on a phone they stack, keeping the same thick rules between them so the
 /// card still reads as one gridded object rather than four loose tiles.
@@ -49,9 +66,14 @@ struct TodayCard: View {
         // TODO: the web's date header links nowhere yet either; make it a
         // control once a dedicated dates page exists.
         HStack(alignment: .firstTextBaseline) {
-            Text("\(Strings.upcoming(lang)) · \(longDate)")
-                .font(Theme.bold(14))
-                .foregroundStyle(Theme.text)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text("\(Strings.upcoming(lang)) · \(longDate)")
+                    .font(Theme.bold(14))
+                    .foregroundStyle(Theme.text)
+                Text("›")
+                    .font(Theme.heavy(20))
+                    .accessibilityHidden(true)
+            }
             Spacer()
             Text(trip.placeName)
                 .font(Theme.heavy(14))
@@ -75,25 +97,43 @@ struct TodayCard: View {
         Button {
             app.push(.weather(tripPlanId: trip.id))
         } label: {
-            VStack(alignment: .leading, spacing: Theme.space1) {
-                CardHeading(text: Strings.destinationWeatherToday(lang))
-                if let weather = model.weather {
-                    HStack(alignment: .firstTextBaseline, spacing: Theme.space2) {
+            HStack(alignment: .center, spacing: 12) {
+                VStack(alignment: .leading, spacing: Theme.space1) {
+                    CardHeading(text: Strings.destinationWeatherToday(lang))
+                    if let weather = model.weather {
                         Text("\(Int(weather.tempC.rounded()))°C")
                             .font(Theme.heavy(38))
-                        Text(Strings.weatherCondition(weather.condition, lang))
-                            .font(Theme.bold(15))
-                            .foregroundStyle(Theme.textSecondary)
+                            .accessibilityLabel(
+                                "\(Int(weather.tempC.rounded()))°C, \(Strings.weatherCondition(weather.condition, lang))"
+                            )
+                    } else {
+                        Text(model.weatherFailed ? Strings.weatherUnavailable(lang) : Strings.weatherLoading(lang))
+                            .font(Theme.bold(18))
+                            .foregroundStyle(Theme.disabledText)
                     }
-                } else {
-                    Text(model.weatherFailed ? Strings.weatherUnavailable(lang) : Strings.weatherLoading(lang))
-                        .font(Theme.bold(18))
-                        .foregroundStyle(Theme.disabledText)
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
+
+                TodayCardTrailingArtwork {
+                    if let weather = model.weather {
+                        WeatherArtwork(condition: weather.condition)
+                            .frame(
+                                width: TodayCardLayout.compactArtworkSize,
+                                height: TodayCardLayout.compactArtworkSize
+                            )
+                    } else {
+                        Color.clear
+                            .frame(
+                                width: TodayCardLayout.compactArtworkSize,
+                                height: TodayCardLayout.compactArtworkSize
+                            )
+                    }
+                }
+
+                Chevron().frame(width: TodayCardLayout.chevronColumnWidth)
             }
             .padding(Theme.space2)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .overlay(alignment: .bottomTrailing) { Chevron().padding(12) }
             .contentShape(Rectangle())
         }
         .buttonStyle(TileButtonStyle())
@@ -106,10 +146,15 @@ struct TodayCard: View {
         } label: {
             HStack(alignment: .center, spacing: 12) {
                 CardHeading(text: Strings.checklist(lang))
-                ChecklistBagArt()
-                    .frame(width: 64, height: 64)
-                    .frame(width: 126, alignment: .center)
-                Chevron().frame(width: 18)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                TodayCardTrailingArtwork {
+                    ChecklistBagArt()
+                        .frame(
+                            width: TodayCardLayout.compactArtworkSize,
+                            height: TodayCardLayout.compactArtworkSize
+                        )
+                }
+                Chevron().frame(width: TodayCardLayout.chevronColumnWidth)
             }
             .padding(Theme.space2)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -138,10 +183,11 @@ struct TodayCard: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
 
-                DashboardOutfitFigure(day: model.todayOutfit, placeName: trip.placeName)
-                    .frame(width: 126, alignment: .center)
+                TodayCardTrailingArtwork {
+                    DashboardOutfitFigure(day: model.todayOutfit, placeName: trip.placeName)
+                }
 
-                Chevron().frame(width: 18)
+                Chevron().frame(width: TodayCardLayout.chevronColumnWidth)
             }
             .padding(Theme.space2)
             .frame(maxWidth: .infinity, minHeight: 170, alignment: .leading)

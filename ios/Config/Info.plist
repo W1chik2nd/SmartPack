@@ -20,17 +20,14 @@
 	<string>0.1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
-	<key>UILaunchScreen</key>
-	<dict>
-		<key>UIColorName</key>
-		<string></string>
-	</dict>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
 
-	<!-- Where the SmartPack backend lives. The simulator shares the Mac's
+	<!-- Where the WearRoute backend lives. The simulator shares the Mac's
 	     localhost; a real device needs the Mac's LAN address here, plus a
 	     matching NSExceptionDomains entry below. -->
 	<key>SmartPackAPIBaseURL</key>
@@ -58,7 +55,7 @@
 	</dict>
 
 	<key>NSCameraUsageDescription</key>
-	<string>拍照识别衣物,把它加进你的电子衣橱。Used to photograph clothing so SmartPack can add it to your wardrobe.</string>
+	<string>拍照识别衣物,把它加进你的电子衣橱。Used to photograph clothing so WearRoute can add it to your wardrobe.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>从相册选择衣物照片或个人色彩分析照片。Used to pick clothing or personal-colour analysis photos.</string>
 </dict>
