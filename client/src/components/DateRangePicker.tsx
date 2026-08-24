@@ -4,7 +4,9 @@ import { useLang } from "../i18n/useLang";
 // 日期区间选择 —— 线框图右侧的 calendar 方块。
 //
 // 第一次点击定起点,第二次点击定终点(点到早于起点的日子就重新起算)。
-// 纯 UI 状态,不含业务规则(AGENTS.md §3):合法性由后端在保存时再校验一次。
+// 已选起点后,超过"起点 + 30 天(含首尾)"的日子会灰掉不可点,让用户选不到
+// 超范围的区间。这只是即时反馈;30 天上限的强制校验在后端(AGENTS.md §3),
+// 后端才是唯一事实来源。
 //
 // 日期一律用 "YYYY-MM-DD" 字符串传递,并且只按本地年月日拼接 ——
 // 不走 Date.toISOString(),那会按 UTC 折算,东八区选 1 号会存成上个月 31 号。
@@ -16,8 +18,19 @@ type Props = {
   onChange: (range: DateRange | null) => void;
 };
 
+// 行程最长天数(含首尾)。与后端 MAX_TRIP_DAYS 保持一致;后端才是强制守卫,
+// 这里只是即时把超范围的日子灰掉,让用户根本选不到,而不是选完再被拒。
+const MAX_TRIP_DAYS = 30;
+
 const pad = (n: number) => String(n).padStart(2, "0");
 const iso = (y: number, m: number, d: number) => `${y}-${pad(m + 1)}-${pad(d)}`;
+
+/** 在某个本地日期上加 n 天,返回 ISO 串。用来算起点之后允许的最晚终点。 */
+function addDays(isoDay: string, n: number): string {
+  const [y, m, d] = isoDay.split("-").map(Number);
+  const next = new Date(y, m - 1, d + n);
+  return iso(next.getFullYear(), next.getMonth(), next.getDate());
+}
 
 /** 某月有多少天。第 0 天等于上个月最后一天,所以用下个月的第 0 天。 */
 const daysInMonth = (y: number, m: number) => new Date(y, m + 1, 0).getDate();
@@ -80,6 +93,12 @@ export default function DateRangePicker({ value, onChange }: Props) {
   const lead = firstWeekday(cursor.y, cursor.m);
   const todayIso = iso(today.getFullYear(), today.getMonth(), today.getDate());
 
+  // 已选起点、还在等终点时(start === end),终点最晚只能到"起点 + 29 天"
+  // (含首尾共 30 天)。超过这个的日子灰掉,让用户选不出超范围区间。
+  const waitingForEnd = !!value && value.start === value.end;
+  const maxEnd =
+    waitingForEnd && value ? addDays(value.start, MAX_TRIP_DAYS - 1) : null;
+
   const monthLabel =
     lang === "zh"
       ? `${cursor.y} 年 ${MONTHS.zh[cursor.m]}`
@@ -125,12 +144,16 @@ export default function DateRangePicker({ value, onChange }: Props) {
           const day = iso(cursor.y, cursor.m, i + 1);
           // 过去的日子不能选:出行日期不会在今天之前。ISO 串按字典序比较即可。
           const isPast = day < todayIso;
+          // 等待终点时,超过"起点 + 30 天"的日子不能选(超范围)。
+          const isTooFar = maxEnd !== null && day > maxEnd;
+          const disabled = isPast || isTooFar;
           const isStart = value?.start === day;
           const isEnd = value?.end === day;
           const inRange = !!value && day >= value.start && day <= value.end;
           const classes = [
             "calendar-day",
             isPast ? "is-past" : "",
+            isTooFar ? "is-past" : "",
             inRange ? "is-in-range" : "",
             isStart || isEnd ? "is-edge" : "",
             day === todayIso ? "is-today" : "",
@@ -145,7 +168,7 @@ export default function DateRangePicker({ value, onChange }: Props) {
               className={classes}
               aria-pressed={inRange}
               aria-label={day}
-              disabled={isPast}
+              disabled={disabled}
               onClick={() => pick(day)}
             >
               {i + 1}

@@ -32,6 +32,20 @@ export function isIsoDate(value: unknown): value is string {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
 }
 
+/** 行程最长天数(含首尾)。业务规则:不允许超过 30 天的行程。 */
+export const MAX_TRIP_DAYS = 30;
+
+/**
+ * 行程总天数(含首尾)。start=end 记 1 天。
+ * 调用方需保证两个都是合法 ISO 日期(信任边界已校验)。
+ */
+export function tripDayCount(start: string, end: string): number {
+  const ms =
+    new Date(`${end}T00:00:00Z`).getTime() -
+    new Date(`${start}T00:00:00Z`).getTime();
+  return Math.round(ms / 86_400_000) + 1;
+}
+
 /** 处理了就返回 true,让 app.ts 知道不用继续匹配后面的路由。 */
 export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
   const { req, res, url, tripPlans, scenarioIds, json, readBody } = ctx;
@@ -108,6 +122,13 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
     }
     if (body.endDate < body.startDate) {
       json(res, 400, { error: "endDate must not precede startDate." });
+      return true;
+    }
+    // 业务规则:行程不超过 30 天(含首尾)。信任边界强制校验,前端只是即时提示。
+    if (tripDayCount(body.startDate, body.endDate) > MAX_TRIP_DAYS) {
+      json(res, 400, {
+        error: `Trip must not exceed ${MAX_TRIP_DAYS} days.`,
+      });
       return true;
     }
 
