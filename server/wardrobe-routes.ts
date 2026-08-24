@@ -11,6 +11,11 @@ import {
 } from "./vision.ts";
 import { searchProducts, ecommerceProvider } from "./ecommerce.ts";
 import type { AsyncValue } from "./async-value.ts";
+import { wardrobeItemVisual } from "./outfit-plan.ts";
+
+function displayItem(item: Awaited<ReturnType<WardrobeStore["add"]>>) {
+  return { ...item, visual: wardrobeItemVisual(item) };
+}
 
 type Ctx = {
   req: IncomingMessage;
@@ -87,7 +92,12 @@ export async function handleWardrobeRoutes(ctx: Ctx): Promise<boolean> {
       details: item.details,
       photoDataUrl: image,
     });
-    json(res, 201, { item: saved, provider, products, productsError });
+    json(res, 201, {
+      item: displayItem(saved),
+      provider,
+      products,
+      productsError,
+    });
     return true;
   }
 
@@ -98,7 +108,8 @@ export async function handleWardrobeRoutes(ctx: Ctx): Promise<boolean> {
       json(res, 401, { error: "Not signed in." });
       return true;
     }
-    json(res, 200, { items: await wardrobe.list(user.id) });
+    const items = await wardrobe.list(user.id);
+    json(res, 200, { items: items.map(displayItem) });
     return true;
   }
 
@@ -142,7 +153,7 @@ export async function handleWardrobeRoutes(ctx: Ctx): Promise<boolean> {
       json(res, 404, { error: "单品不存在。" });
       return true;
     }
-    json(res, 200, { item: updated });
+    json(res, 200, { item: displayItem(updated) });
     return true;
   }
 

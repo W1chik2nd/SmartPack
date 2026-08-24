@@ -3,10 +3,15 @@ import type { OutfitPiece } from "../api";
 type Props = {
   piece: OutfitPiece;
   compact?: boolean;
+  wardrobe?: boolean;
 };
 
 /** Render every outfit piece from its description, regardless of stored photos. */
-export default function OutfitPieceVisual({ piece, compact = false }: Props) {
+export default function OutfitPieceVisual({
+  piece,
+  compact = false,
+  wardrobe = false,
+}: Props) {
   const label = piece.label;
   const isAccessory = piece.kind === "accessory";
   const accessoryClass = isAccessory
@@ -18,9 +23,10 @@ export default function OutfitPieceVisual({ piece, compact = false }: Props) {
   const fitClass = piece.fit ? ` fit-${piece.fit}` : "";
   const materialClass = piece.material ? ` material-${piece.material}` : "";
   const sleeveClass = piece.sleeve ? ` sleeve-${piece.sleeve}` : "";
+  const sizeClass = compact ? " is-compact" : wardrobe ? " is-wardrobe" : "";
   return (
     <span
-      className={`dress-piece pixel-garment dress-piece-${piece.kind}${accessoryClass}${garmentClass}${fitClass}${materialClass}${sleeveClass} pattern-${piece.pattern} tone-${piece.tone}${compact ? " is-compact" : ""}`}
+      className={`dress-piece pixel-garment dress-piece-${piece.kind}${accessoryClass}${garmentClass}${fitClass}${materialClass}${sleeveClass} pattern-${piece.pattern} tone-${piece.tone}${sizeClass}`}
       role="img"
       aria-label={piece.detail ? `${label}: ${piece.detail}` : label}
     >

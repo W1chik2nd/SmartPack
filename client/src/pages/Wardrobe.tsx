@@ -7,8 +7,7 @@ import {
   endUploadSession,
   listWardrobeItems,
   deleteWardrobeItem,
-  wardrobePhotoUrl,
-  type WardrobeItem,
+  type WardrobeDisplayItem,
 } from "../api";
 import { toDataUrl } from "../lib/image";
 import {
@@ -24,6 +23,7 @@ import {
   wardrobeNoFilteredItemsMessage,
 } from "../i18n/dynamic-strings";
 import WardrobeFilter from "../components/WardrobeFilter";
+import OutfitPieceVisual from "../components/OutfitPieceVisual";
 import "./Wardrobe.css";
 
 /** 正在识别中的临时卡片:还没落库,所以没有真实 id。 */
@@ -49,29 +49,13 @@ function isUnreachableHost(hostname: string): boolean {
   return /^198\.1[89]\./.test(hostname) || /^169\.254\./.test(hostname);
 }
 
-/** 手绘感 T 恤线稿,对应线框图里的占位图形。 */
-function TShirtSketch() {
-  return (
-    <svg viewBox="0 0 100 90" className="wardrobe-sketch" aria-hidden="true">
-      <path
-        d="M30 12 L42 6 Q50 15 58 6 L70 12 L87 27 L74 39 L71 32 L72 76 Q50 84 28 76 L29 32 L26 39 L13 27 Z"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="4"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-    </svg>
-  );
-}
-
 type Props = {
   onBack: () => void;
 };
 
 export default function Wardrobe({ onBack }: Props) {
   const { lang, t } = useLang();
-  const [items, setItems] = useState<WardrobeItem[]>([]);
+  const [items, setItems] = useState<WardrobeDisplayItem[]>([]);
   const [pending, setPending] = useState<PendingItem[]>([]);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
@@ -269,15 +253,9 @@ export default function Wardrobe({ onBack }: Props) {
             >
               ✕
             </button>
-            {item.hasPhoto ? (
-              <img
-                className="wardrobe-photo"
-                src={wardrobePhotoUrl(item.id)}
-                alt={item.title}
-              />
-            ) : (
-              <TShirtSketch />
-            )}
+            <span className="wardrobe-pixel-visual">
+              <OutfitPieceVisual piece={item.visual} wardrobe />
+            </span>
             {/* 大标题:颜色+版型+品类,如“黄色宽松外套” */}
             <span className="wardrobe-item-title">{item.title}</span>
             {/* 细节以标签形式简要呈现;完整细节存在库里供 AI 分析 */}

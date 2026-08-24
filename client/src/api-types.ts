@@ -1,6 +1,8 @@
 import type { WardrobeItem } from "../../shared/wardrobe-types";
+import type { OutfitPiece } from "../../shared/outfit-types";
 
 export type { WardrobeItem } from "../../shared/wardrobe-types";
+export type WardrobeDisplayItem = WardrobeItem & { visual: OutfitPiece };
 export type {
   ForecastDay,
   TripWeather,
@@ -73,7 +75,7 @@ export type Product = {
 };
 
 export type RecognizeResponse = {
-  item: WardrobeItem;
+  item: WardrobeDisplayItem;
   provider: "jd" | "taobao" | null;
   products: Product[];
   productsError?: string;

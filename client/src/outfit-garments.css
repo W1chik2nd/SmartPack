@@ -102,6 +102,48 @@
   box-shadow: 0 10px 0 var(--black);
 }
 
+.garment-jacket::before {
+  top: 0;
+  left: 36%;
+  width: 28%;
+  height: 18%;
+  border: 4px solid var(--black);
+  border-top: 0;
+  background: var(--piece-color);
+}
+
+.garment-jacket::after {
+  right: auto;
+  bottom: 0;
+  left: 48%;
+  width: 4%;
+  height: 82%;
+  border: 0;
+  background: var(--black);
+  box-shadow: -34px 44px 0 2px var(--detail-color), 34px 44px 0 2px var(--detail-color);
+}
+
+.garment-hoodie::before {
+  top: -2%;
+  left: 34%;
+  width: 32%;
+  height: 28%;
+  border: 5px solid var(--black);
+  border-bottom-width: 3px;
+  background: var(--piece-color);
+}
+
+.garment-hoodie::after {
+  right: auto;
+  bottom: 12%;
+  left: 32%;
+  width: 36%;
+  height: 18%;
+  border: 4px solid var(--black);
+  border-top: 5px solid var(--detail-color);
+  background: var(--piece-color);
+}
+
 .garment-skirt {
   clip-path: polygon(
     18% 0, 82% 0, 82% 8%, 86% 8%, 86% 20%, 90% 20%,
@@ -115,6 +157,15 @@
   left: 18%;
   width: 64%;
   background: var(--detail-color);
+}
+
+.garment-shorts {
+  height: 92px;
+  clip-path: polygon(
+    0 0, 100% 0, 100% 100%, 58% 100%, 58% 58%,
+    54% 58%, 54% 50%, 46% 50%, 46% 58%, 42% 58%,
+    42% 100%, 0 100%
+  );
 }
 
 .garment-jeans::after {
@@ -150,6 +201,23 @@
 .garment-loafers::before { top: 12px; height: 46px; }
 .garment-loafers::after { height: 52px; }
 
+.garment-boots::before,
+.garment-boots::after {
+  clip-path: polygon(
+    18% 0, 70% 0, 70% 34%, 82% 34%, 82% 48%,
+    94% 48%, 94% 60%, 100% 60%, 100% 90%, 88% 90%,
+    88% 100%, 8% 100%, 8% 92%, 0 92%, 0 44%,
+    10% 44%, 10% 18%, 18% 18%
+  );
+  box-shadow:
+    inset 0 -7px 0 var(--black),
+    inset 0 -13px 0 var(--detail-color),
+    inset 12px 0 0 -8px var(--black);
+}
+
+.garment-boots::before { top: 0; height: 64px; }
+.garment-boots::after { height: 70px; }
+
 .dress-piece.is-compact.garment-shirt::after {
   box-shadow: -4px 6px 0 -1px var(--detail-color), 4px 6px 0 -1px var(--detail-color);
 }
@@ -165,3 +233,13 @@
 
 .dress-piece.is-compact.garment-loafers::before { top: 6px; height: 23px; }
 .dress-piece.is-compact.garment-loafers::after { height: 26px; }
+.dress-piece.is-compact.garment-boots::before { height: 31px; }
+.dress-piece.is-compact.garment-boots::after { height: 35px; }
+
+.dress-piece.is-wardrobe.garment-jacket::after {
+  box-shadow: -20px 26px 0 1px var(--detail-color), 20px 26px 0 1px var(--detail-color);
+}
+
+.dress-piece.is-wardrobe.garment-boots::before { height: 43px; }
+.dress-piece.is-wardrobe.garment-boots::after { height: 48px; }
+.dress-piece.is-wardrobe.garment-shorts { height: 58px; }

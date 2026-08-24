@@ -27,20 +27,27 @@ export type OutfitMaterial =
   | "other";
 export type AccessoryStyle =
   | "bag"
+  | "tote"
+  | "waistbag"
   | "hat"
   | "glasses"
   | "scarf"
   | "watch"
-  | "necklace";
+  | "necklace"
+  | "belt";
 export type GarmentStyle =
   | "tee"
   | "shirt"
   | "knit"
+  | "jacket"
+  | "hoodie"
   | "trousers"
   | "skirt"
   | "jeans"
+  | "shorts"
   | "loafers"
-  | "sneakers";
+  | "sneakers"
+  | "boots";
 
 export type OutfitPiece = {
   id: string;

@@ -113,6 +113,9 @@ function kindOf(item: WardrobeItem): OutfitPieceKind | null {
 
 function accessoryStyleOf(item: WardrobeItem): AccessoryStyle | null {
   const text = `${item.title} ${item.category} ${item.subtype}`.toLowerCase();
+  if (/waist\s?bag|fanny|腰包/.test(text)) return "waistbag";
+  if (/tote|托特/.test(text)) return "tote";
+  if (/belt|腰带|皮带/.test(text)) return "belt";
   if (/hat|cap|帽/.test(text)) return "hat";
   if (/glass|眼镜/.test(text)) return "glasses";
   if (/scarf|围巾/.test(text)) return "scarf";
@@ -124,17 +127,21 @@ function accessoryStyleOf(item: WardrobeItem): AccessoryStyle | null {
 function garmentStyleOf(item: WardrobeItem, kind: OutfitPieceKind): GarmentStyle | null {
   const text = `${item.title} ${item.category} ${item.subtype}`.toLowerCase();
   if (kind === "top") {
+    if (/hoodie|卫衣/.test(text)) return "hoodie";
+    if (/jacket|coat|夹克|外套/.test(text)) return "jacket";
     if (/shirt|blouse|衬衫/.test(text)) return "shirt";
-    if (/knit|sweater|针织|毛衣/.test(text)) return "knit";
+    if (/knit|sweater|cardigan|针织|毛衣|开衫/.test(text)) return "knit";
     return "tee";
   }
   if (kind === "bottom") {
+    if (/short|短裤/.test(text)) return "shorts";
     if (/skirt|裙/.test(text)) return "skirt";
     if (/jean|denim|牛仔/.test(text)) return "jeans";
     return "trousers";
   }
   if (kind === "shoes") {
-    if (/sneaker|trainer|运动鞋/.test(text)) return "sneakers";
+    if (/boot|靴/.test(text)) return "boots";
+    if (/sneaker|trainer|hiking|canvas|运动鞋|徒步鞋|帆布鞋/.test(text)) return "sneakers";
     return "loafers";
   }
   return null;
@@ -184,6 +191,18 @@ function kindFromLabel(label: string): OutfitPieceKind {
   return "accessory";
 }
 
+/**
+ * Public display contract for one owned item. The server derives every visual
+ * field from the stored description so Web and iOS never have to reinterpret
+ * colours or garment types independently.
+ */
+export function wardrobeItemVisual(item: WardrobeItem): OutfitPiece {
+  const kind = kindOf(item) ?? kindFromLabel(
+    `${item.title} ${item.category} ${item.subtype}`
+  );
+  return fromWardrobe(item, kind);
+}
+
 function agentPiece(
   recommendation: BilingualItem,
   wardrobeById: Map<string, WardrobeItem>
@@ -210,6 +229,9 @@ function agentPiece(
 
 function accessoryStyleFromLabel(label: string): AccessoryStyle {
   const text = label.toLowerCase();
+  if (/waist\s?bag|fanny|腰包/.test(text)) return "waistbag";
+  if (/tote|托特/.test(text)) return "tote";
+  if (/belt|腰带|皮带/.test(text)) return "belt";
   if (/hat|cap|帽/.test(text)) return "hat";
   if (/glass|眼镜/.test(text)) return "glasses";
   if (/scarf|围巾/.test(text)) return "scarf";
@@ -224,17 +246,23 @@ function garmentStyleFromLabel(
 ): GarmentStyle | null {
   const text = label.toLowerCase();
   if (kind === "top") {
+    if (/hoodie|卫衣/.test(text)) return "hoodie";
+    if (/jacket|coat|夹克|外套/.test(text)) return "jacket";
     if (/shirt|blouse|衬衫/.test(text)) return "shirt";
     if (/knit|sweater|针织|毛衣/.test(text)) return "knit";
     return "tee";
   }
   if (kind === "bottom") {
+    if (/short|短裤/.test(text)) return "shorts";
     if (/skirt|裙/.test(text)) return "skirt";
     if (/jean|denim|牛仔/.test(text)) return "jeans";
     return "trousers";
   }
   if (kind === "shoes") {
-    return /sneaker|trainer|运动鞋/.test(text) ? "sneakers" : "loafers";
+    if (/boot|靴/.test(text)) return "boots";
+    return /sneaker|trainer|hiking|canvas|运动鞋|徒步鞋|帆布鞋/.test(text)
+      ? "sneakers"
+      : "loafers";
   }
   return null;
 }

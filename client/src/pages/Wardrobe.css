@@ -115,17 +115,26 @@
   color: var(--text);
 }
 
-.wardrobe-sketch {
-  width: 70%;
-  height: auto;
-}
-
 .wardrobe-photo {
   width: 70%;
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border: 2px solid var(--text);
   border-radius: 4px;
+}
+
+.wardrobe-pixel-visual {
+  width: 122px;
+  height: 96px;
+  display: grid;
+  place-items: center;
+  /* clip-path 会把衣物自身的阴影裁掉；在不裁剪的外层描边，白色衣物
+     才能在白卡片上保持真实白色，同时仍有清楚的黑色像素轮廓。 */
+  filter:
+    drop-shadow(2px 0 0 var(--black))
+    drop-shadow(-2px 0 0 var(--black))
+    drop-shadow(0 2px 0 var(--black))
+    drop-shadow(0 -2px 0 var(--black));
 }
 
 /* 数量角标:图示的「数量 ×××」 */

@@ -19,7 +19,7 @@ import type {
   TripGenerationEstimate,
   TripWeather,
   User,
-  WardrobeItem,
+  WardrobeDisplayItem,
   Weather,
 } from "./api-types";
 export type * from "./travel-types";
@@ -148,8 +148,8 @@ export function recognizeClothing(
   });
 }
 
-export function listWardrobeItems(): Promise<{ items: WardrobeItem[] }> {
-  return request<{ items: WardrobeItem[] }>("/api/wardrobe/items");
+export function listWardrobeItems(): Promise<{ items: WardrobeDisplayItem[] }> {
+  return request<{ items: WardrobeDisplayItem[] }>("/api/wardrobe/items");
 }
 
 export function deleteWardrobeItem(id: string): Promise<{ ok: boolean }> {

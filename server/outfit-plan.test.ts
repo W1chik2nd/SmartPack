@@ -1,8 +1,9 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildOutfitPlan } from "./outfit-plan.ts";
+import { buildOutfitPlan, wardrobeItemVisual } from "./outfit-plan.ts";
 import type { TripPlan } from "./trip-plan.ts";
 import type { WardrobeItem } from "./wardrobe.ts";
+import { DEMO_WARDROBE_ITEMS } from "./demo-wardrobe.ts";
 
 const trip: TripPlan = {
   id: "trip-1",
@@ -105,6 +106,49 @@ test("the title color and concrete garment description win over conflicting meta
   assert.equal(white.garmentStyle, "tee");
   assert.equal(white.pattern, "solid");
   assert.equal(white.sleeve, "short");
+});
+
+test("the 30-item demo wardrobe has unique description-derived pixel visuals", () => {
+  assert.equal(DEMO_WARDROBE_ITEMS.length, 30);
+  assert.equal(
+    new Set(DEMO_WARDROBE_ITEMS.map((item) => item.title)).size,
+    30,
+    "seed titles must stay unique"
+  );
+  const visuals = DEMO_WARDROBE_ITEMS.map((item, index) =>
+    wardrobeItemVisual({
+      ...item,
+      id: `demo-${index}`,
+      subtype: item.subtype ?? "",
+      count: item.count ?? 1,
+      colors: item.colors ?? [],
+      fit: item.fit ?? "",
+      material: item.material ?? "",
+      seasons: item.seasons ?? [],
+      styleTags: item.styleTags ?? [],
+      details: item.details ?? "",
+      hasPhoto: false,
+      createdAt: "2026-08-25T00:00:00Z",
+    })
+  );
+
+  assert.equal(visuals.length, 30);
+  assert.ok(visuals.every((visual) => visual.label && visual.wardrobeItemId));
+  assert.ok(
+    new Set(
+      visuals.map((visual) => visual.garmentStyle ?? visual.accessoryStyle)
+    ).size >= 18,
+    "the varied wardrobe should exercise recognisably different silhouettes"
+  );
+  const visualFor = (title: string) =>
+    visuals[DEMO_WARDROBE_ITEMS.findIndex((item) => item.title === title)];
+  assert.equal(visualFor("白色纯棉T恤").tone, "white");
+  assert.equal(visualFor("藏蓝轻薄夹克").garmentStyle, "jacket");
+  assert.equal(visualFor("黄色连帽卫衣").garmentStyle, "hoodie");
+  assert.equal(visualFor("深灰运动短裤").garmentStyle, "shorts");
+  assert.equal(visualFor("黑色短靴").garmentStyle, "boots");
+  assert.equal(visualFor("绿色防水腰包").accessoryStyle, "waistbag");
+  assert.equal(visualFor("棕色皮带").accessoryStyle, "belt");
 });
 
 test("AI-suggested wardrobe gaps derive their appearance from the recommendation", () => {

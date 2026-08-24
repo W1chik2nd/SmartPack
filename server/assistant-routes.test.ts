@@ -101,6 +101,9 @@ test("chat wardrobe action writes to SQLite and reports completion", async () =>
       });
       const { items } = await wardrobe.json() as any;
       assert.equal(items[0].title, "Black tee");
+      assert.equal(items[0].visual.kind, "top");
+      assert.equal(items[0].visual.tone, "black");
+      assert.equal(items[0].visual.garmentStyle, "tee");
     }
   );
 });
