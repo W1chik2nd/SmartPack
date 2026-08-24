@@ -30,7 +30,7 @@ function plan(
   };
 }
 
-test("dashboard keeps travel, business, and date plans only", () => {
+test("dashboard includes commute and other supported upcoming scenarios", () => {
   const visible = dashboardTrips([
     plan("complete", "completed", "trip-1"),
     plan("working", "processing"),
@@ -44,7 +44,7 @@ test("dashboard keeps travel, business, and date plans only", () => {
   ]);
   assert.deepEqual(
     visible.map((trip) => trip.id),
-    ["complete", "working", "failed", "business", "date"]
+    ["complete", "working", "failed", "business", "date", "commute", "sport", "formal"]
   );
 });
 
