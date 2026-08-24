@@ -27,6 +27,7 @@ import {
 // ai / prompts / weather 的 import 已随路由拆分挪进 assistant-routes.ts
 // 和 catalog-routes.ts,这里只留 packing 还在本文件处理的那一个。
 import { buildPackingPlan } from "./packing.ts";
+import { analyzePersonalColor, visionConfigured } from "./vision.ts";
 // Password hashing (AGENTS.md §5): passwords require a password-specific KDF,
 // not a general-purpose hash like SHA256. We use scrypt because it is a
 // memory-hard password KDF that ships with Node — bcrypt/argon2 would add a
@@ -228,6 +229,29 @@ export function createApp(dbPath: string): App {
         return;
       }
       json(res, 200, { ok: true });
+      return;
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/personal-color/analyze") {
+      if (!visionConfigured()) {
+        json(res, 503, { error: "图片分析服务尚未配置，请设置 VISION_API_KEY。" });
+        return;
+      }
+      const { image } = await readBody(req, 8_000_000);
+      if (typeof image !== "string" || !image.startsWith("data:image/")) {
+        json(res, 400, { error: "请上传有效的真人照片。" });
+        return;
+      }
+      try {
+        const result = await analyzePersonalColor(image);
+        json(res, 200, result);
+      } catch (err) {
+        const detail = err instanceof Error
+          ? `${err.name}: ${err.message}${err.cause instanceof Error ? ` (原因: ${err.cause.name}: ${err.cause.message})` : ""}`
+          : String(err);
+        console.error(`[personal-color] ${detail}`);
+        json(res, 502, { error: `个人色彩分析请求失败：${detail}` });
+      }
       return;
     }
 

@@ -47,6 +47,48 @@ export function visionConfigured(): boolean {
   return Boolean(process.env.VISION_API_KEY);
 }
 
+const PERSONAL_COLOR_PROMPT = `你是专业形象顾问和高级时尚造型师。请仅根据照片中可见的色彩关系，为这张照片提供个人色彩搭配建议。
+这是造型与配色建议，不要识别或推断人物身份、种族、民族、国籍、健康状况、年龄、性取向、宗教等敏感或个人属性，也不要进行人脸识别。只描述可见的肤色色调、明暗、饱和度，以及头发、眼睛和五官之间的色彩对比，并说明照片光线会影响判断。
+请用中文输出，专业、具体、视觉化，不要模糊描述。必须覆盖以下栏目：
+1. 可见肤色的冷暖倾向：偏冷 / 偏暖 / 中性，并说明观察依据（这是妆容与服装配色建议，不是身份判断）
+2. 最匹配的四季配色方向：春 / 夏 / 秋 / 冬，给出最可能的一个结论和置信度
+3. 可见肤色的明度、饱和度、五官色彩对比度
+4. 可见的头发颜色与眼睛颜色
+5. 最适合的服装颜色（列出具体色名和可参考的色值方向）
+6. 妆容颜色、口红色号方向、发色方向
+7. 配饰金属建议：银色 / 金色，并说明配色原因
+8. 最显亮肤色的颜色、最容易让整体显灰暗的颜色
+9. 最后用“我的整体气质关键词：……”总结
+如果照片不适合准确判断，请说明限制，但仍然基于照片中可见的颜色关系给出一套具体的造型配色建议。`;
+
+export async function analyzePersonalColor(imageDataUrl: string): Promise<{ analysis: string; season: string | null }> {
+  const baseUrl = process.env.VISION_BASE_URL ?? "https://dashscope.aliyuncs.com/compatible-mode/v1";
+  const model = process.env.VISION_MODEL ?? "qwen-vl-plus";
+  const res = await fetch(`${baseUrl}/chat/completions`, {
+
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.VISION_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content: [
+        { type: "image_url", image_url: { url: imageDataUrl } },
+        { type: "text", text: PERSONAL_COLOR_PROMPT },
+      ] }],
+      temperature: 0.4,
+    }),
+  });
+  if (!res.ok) throw new Error(`vision api ${res.status}`);
+  const body = (await res.json()) as any;
+  const text = body?.choices?.[0]?.message?.content;
+  if (typeof text !== "string" || text.trim().length === 0) throw new Error("vision api: empty response");
+  const seasonMatch = text.match(/(?:四季型|季型|season)[^\n：:]*[：:]?\s*(春|夏|秋|冬)/i);
+  const season = seasonMatch ? ({ 春: "spring", 夏: "summer", 秋: "autumn", 冬: "winter" } as Record<string, string>)[seasonMatch[1]] ?? null : null;
+  return { analysis: text.trim(), season };
+}
+
 export async function recognizeClothing(
   imageDataUrl: string
 ): Promise<RecognizedItem> {

@@ -48,9 +48,10 @@ async function request<T>(
   let res: Response;
   try {
     res = await fetch(path, { ...options, headers });
-  } catch {
+  } catch (err) {
+    const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
     throw new Error(
-      "Cannot reach the SmartPack server. Is it running? Start everything with: npm run dev"
+      `请求失败：无法连接 SmartPack 服务。${detail}（请求：${path}）。请确认后端已启动。`
     );
   }
   const body = await res.json().catch(() => ({}));
@@ -99,6 +100,13 @@ export type ProfileField = {
 /** The questionnaire catalog. Unauthenticated: needed during sign-up step 2. */
 export function profileOptions(): Promise<{ fields: ProfileField[] }> {
   return request<{ fields: ProfileField[] }>("/api/profile-options");
+}
+
+export function analyzePersonalColor(image: string): Promise<{ analysis: string; season: string | null }> {
+  return request<{ analysis: string; season: string | null }>("/api/personal-color/analyze", {
+    method: "POST",
+    body: JSON.stringify({ image }),
+  });
 }
 
 export function checkEmail(email: string): Promise<{ ok: boolean }> {
