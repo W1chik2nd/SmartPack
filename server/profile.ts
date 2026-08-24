@@ -59,7 +59,7 @@ const BODY_TYPES: Option[] = [
 ];
 
 // 四季型人 — the seasonal color analysis used by stylists.
-const SEASON_COLOR_TYPES: Option[] = [
+export const SEASON_COLOR_TYPES: Option[] = [
   { id: "spring", en: "Spring (warm, light)", zh: "春季型(暖·浅)" },
   { id: "summer", en: "Summer (cool, light)", zh: "夏季型(冷·浅)" },
   { id: "autumn", en: "Autumn (warm, deep)", zh: "秋季型(暖·深)" },
