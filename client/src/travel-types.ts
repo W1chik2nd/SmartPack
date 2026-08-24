@@ -60,44 +60,13 @@ export type StopPhoto = {
   sourceUrl: string;
 };
 
-export type PackingItem = {
-  id: string;
-  label: string;
-  labelEn: string;
-  reuse: number;
-  quantity?: number;
-  daysUsed?: number[];
-  wardrobeItemId?: string;
-  /** 服务端判定的「衣橱缺口」标记;装备类永远为 false。 */
-  wardrobeGap?: boolean;
-  priority?: "core" | "support" | "optional";
-};
-
-export type PackingCategory = {
-  id: string;
-  title: string;
-  titleEn: string;
-  items: PackingItem[];
-};
-
-export type EssentialItem = { id: string; label: string; labelEn: string };
-
-export type CorePiece = {
-  id: string;
-  label: string;
-  labelEn: string;
-  reuse: number;
-};
-
-export type PackingPlan = {
-  balance: number;
-  tripDays: number;
-  summary: string;
-  summaryEn: string;
-  categories: PackingCategory[];
-  essentials: EssentialItem[];
-  corePieces: CorePiece[];
-};
+export type {
+  CorePiece,
+  EssentialItem,
+  PackingCategory,
+  PackingItem,
+  PackingPlan,
+} from "../../shared/packing-types";
 
 export type Place = {
   id: string;

@@ -1,4 +1,10 @@
 import type { NewTripPlan } from "./trip-plan.ts";
+import {
+  MAX_TRIP_DAYS,
+  tripDaysInclusive,
+} from "../shared/trip-constraints.ts";
+
+export { MAX_TRIP_DAYS } from "../shared/trip-constraints.ts";
 
 export function isIsoDate(value: unknown): value is string {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
@@ -8,18 +14,13 @@ export function isIsoDate(value: unknown): value is string {
   return !Number.isNaN(d.getTime()) && d.toISOString().slice(0, 10) === value;
 }
 
-export const MAX_TRIP_DAYS = 30;
-
 export type TripGenerationEstimate = {
   minSeconds: number;
   maxSeconds: number;
 };
 
 export function tripDayCount(start: string, end: string): number {
-  const ms =
-    new Date(`${end}T00:00:00Z`).getTime() -
-    new Date(`${start}T00:00:00Z`).getTime();
-  return Math.round(ms / 86_400_000) + 1;
+  return tripDaysInclusive(start, end);
 }
 
 /**

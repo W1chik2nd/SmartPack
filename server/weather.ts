@@ -3,39 +3,19 @@
 // (AGENTS.md §3) so the future iOS client gets weather from our API, not
 // from a vendor SDK.
 
-export type Weather = {
-  tempC: number;
-  condition: string;
-};
+import { tripDaysInclusive } from "../shared/trip-constraints.ts";
+import type {
+  TripForecast,
+  TripWeather,
+  Weather,
+} from "../shared/weather-types.ts";
 
-export type ForecastDay = {
-  date: string;
-  condition: string;
-  minTempC: number;
-  maxTempC: number;
-  precipitationProbability: number;
-  uvIndex: number;
-  maxWindKph: number;
-};
-
-export type TripForecast = {
-  source: "Open-Meteo";
-  available: boolean;
-  note: string;
-  days: ForecastDay[];
-};
-
-export type TripWeather = {
-  trip: {
-    id: string;
-    destination: string;
-    destinationDetail: string;
-    startDate: string;
-    endDate: string;
-    dayCount: number;
-  };
-  forecast: TripForecast;
-};
+export type {
+  ForecastDay,
+  TripForecast,
+  TripWeather,
+  Weather,
+} from "../shared/weather-types.ts";
 
 // Fallback when the browser denies geolocation: the team's home base.
 export const DEFAULT_COORDS = { lat: 53.8008, lon: -1.5491 }; // Leeds, UK
@@ -186,9 +166,6 @@ export async function weatherForTrip(plan: {
     plan.startDate,
     plan.endDate
   );
-  const start = Date.parse(`${plan.startDate}T00:00:00Z`);
-  const end = Date.parse(`${plan.endDate}T00:00:00Z`);
-
   return {
     trip: {
       id: plan.id,
@@ -196,7 +173,7 @@ export async function weatherForTrip(plan: {
       destinationDetail: plan.placeDetail,
       startDate: plan.startDate,
       endDate: plan.endDate,
-      dayCount: Math.round((end - start) / 86_400_000) + 1,
+      dayCount: tripDaysInclusive(plan.startDate, plan.endDate),
     },
     forecast,
   };

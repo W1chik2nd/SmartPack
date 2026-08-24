@@ -2,6 +2,7 @@ import { type IncomingMessage, type ServerResponse } from "node:http";
 import type { TripPlanStore } from "./trip-plan.ts";
 import type { WardrobeStore } from "./wardrobe.ts";
 import { buildOutfitPlan } from "./outfit-plan.ts";
+import { addIsoDays } from "../shared/trip-constraints.ts";
 
 type Ctx = {
   req: IncomingMessage;
@@ -33,14 +34,7 @@ export async function handleOutfitRoutes(ctx: Ctx): Promise<boolean> {
   const agentDays = linkedItinerary?.days.map((day, index) => ({
     // Generated itinerary currently exposes a display date label; the trip
     // range is the canonical ISO source for joining outfit days.
-    date: latestTrip
-      ? new Date(
-          new Date(`${latestTrip.startDate}T00:00:00Z`).getTime() +
-            index * 86_400_000
-        )
-          .toISOString()
-          .slice(0, 10)
-      : day.dateLabel,
+    date: latestTrip ? addIsoDays(latestTrip.startDate, index) : day.dateLabel,
     place: day.city,
     placeEn: day.cityEn,
     scene: linkedItinerary.scenario,
