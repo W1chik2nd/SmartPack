@@ -16,6 +16,16 @@ export type TripStop = {
   photoSourceUrl: string | null;
 };
 
+export type OutfitItemKind = "top" | "bottom" | "shoes" | "accessory";
+
+export type TripOutfitItem = {
+  label: string;
+  labelEn: string;
+  wardrobeItemId?: string;
+  kind?: OutfitItemKind;
+  hasPhoto?: boolean;
+};
+
 export type TripDay = {
   id: string;
   dayNumber: number;
@@ -28,7 +38,7 @@ export type TripDay = {
   weatherSummaryEn: string;
   weatherRisk: string;
   weatherRiskEn: string;
-  outfit: { label: string; labelEn: string }[];
+  outfit: TripOutfitItem[];
   equipment: { label: string; labelEn: string }[];
   stops: TripStop[];
 };

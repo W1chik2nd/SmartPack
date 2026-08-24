@@ -241,6 +241,7 @@ export function createApp(
         url,
         wardrobe,
         tripPlans,
+        itinerary,
         json,
         userFromHeader: () => accounts.userForRequest(req),
       })
