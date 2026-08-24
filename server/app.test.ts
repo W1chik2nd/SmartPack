@@ -452,6 +452,34 @@ test("packing requires a session and returns a plan for the slider value", async
   assert.equal(noParam.body.plan.balance, 50);
 });
 
+test("outfit plan requires a session and uses the latest saved trip", async () => {
+  const anon = await get("/api/outfit-plan");
+  assert.equal(anon.status, 401);
+
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+  const saved = await post("/api/trip-plans", {
+    scenario: "travel",
+    placeName: "上海市",
+    placeDetail: "中国",
+    lat: 31.23,
+    lon: 121.47,
+    startDate: "2026-08-25",
+    endDate: "2026-08-29",
+  }, token);
+  assert.equal(saved.status, 201);
+
+  const result = await get("/api/outfit-plan", token);
+  assert.equal(result.status, 200);
+  assert.equal(result.body.plan.destination, "上海市");
+  assert.equal(result.body.plan.days.length, 5);
+  assert.equal(result.body.plan.days[0].pieces.length, 4);
+  assert.equal(result.body.plan.days[0].pieces[2].kind, "accessory");
+});
+
 test("chat validates the message payload at the boundary", async () => {
   const login = await post("/api/login", {
     email: "anna@example.com",
