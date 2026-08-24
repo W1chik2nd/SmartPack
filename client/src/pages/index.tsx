@@ -15,7 +15,9 @@ type Props = {
   user: User;
   onOpenTrips: () => void;
   onOpenWardrobe: () => void;
+  onOpenItinerary: () => void;
   onOpenPacking: () => void;
+  onOpenProfile: () => void;
 };
 
 // Placeholder navigation targets. Wire real routes here as the pages land.
@@ -24,14 +26,15 @@ const TODO_LINKS = {
   weather: () => {},
   dates: () => {},
   outfit: () => {},
-  profile: () => {},
 };
 
 export default function Home({
   user,
   onOpenTrips,
   onOpenWardrobe,
+  onOpenItinerary,
   onOpenPacking,
+  onOpenProfile,
 }: Props) {
   const { lang, t } = useLang();
   const [now, setNow] = useState(new Date());
@@ -164,7 +167,12 @@ export default function Home({
 
               <button className="today-checklist" onClick={onOpenPacking}>
                 <h2>{t("checklist")}</h2>
-                <span className="check-mark" aria-hidden="true" />
+                <img
+                  className="checklist-bag"
+                  src="/checklist-bag.png"
+                  alt=""
+                  aria-hidden="true"
+                />
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
             </div>
@@ -179,7 +187,7 @@ export default function Home({
               <span className="card-arrow" aria-hidden="true">›</span>
             </button>
 
-            <button className="today-itinerary" onClick={onOpenTrips}>
+            <button className="today-itinerary" onClick={onOpenItinerary}>
               <h2>{t("itinerary")}</h2>
               {latestTrip ? (
                 <span className="trip-summary">
@@ -212,7 +220,7 @@ export default function Home({
             <span className="nav-tile-mark yellow" aria-hidden="true" />
             {t("tripPlanner")}
           </button>
-          <button onClick={TODO_LINKS.profile}>
+          <button onClick={onOpenProfile}>
             <span className="nav-tile-mark blue" aria-hidden="true" />
             {t("myProfile")}
           </button>

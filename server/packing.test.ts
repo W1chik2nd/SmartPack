@@ -5,12 +5,37 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { buildPackingPlan } from "./packing.ts";
 
+// Every human-readable field ships both languages so the client can render the
+// plan in whichever language the user picked. `label` stays Chinese for
+// backward-compatibility; the *En variants back the English UI.
+function assertBilingual(p: ReturnType<typeof buildPackingPlan>) {
+  assert.ok(p.summary && p.summaryEn, "summary + summaryEn non-empty");
+  for (const cat of p.categories) {
+    assert.ok(cat.title && cat.titleEn, `category ${cat.id} bilingual`);
+    for (const item of cat.items) {
+      assert.ok(item.label && item.labelEn, `item ${item.id} bilingual`);
+    }
+  }
+  for (const e of p.essentials) {
+    assert.ok(e.label && e.labelEn, `essential ${e.id} bilingual`);
+  }
+  for (const c of p.corePieces) {
+    assert.ok(c.label && c.labelEn, `core piece ${c.id} bilingual`);
+  }
+}
+
 test("plan is deterministic and clamps balance to 0..100", () => {
   assert.deepEqual(buildPackingPlan(50), buildPackingPlan(50));
   assert.equal(buildPackingPlan(-20).balance, 0);
   assert.equal(buildPackingPlan(999).balance, 100);
   // Non-numeric drift is the caller's job to guard; but rounding is ours.
   assert.equal(buildPackingPlan(49.6).balance, 50);
+});
+
+test("every label ships a non-empty English variant", () => {
+  assertBilingual(buildPackingPlan(0));
+  assertBilingual(buildPackingPlan(50));
+  assertBilingual(buildPackingPlan(100));
 });
 
 test("lean packing means fewer items but higher reuse than a varied plan", () => {

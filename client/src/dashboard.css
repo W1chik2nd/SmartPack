@@ -180,22 +180,14 @@
   padding: var(--space-2);
 }
 
-/* Checked box: square with a yellow fill block, pure geometry */
-.check-mark {
+/* User-provided bag illustration replaces the checklist placeholder mark. */
+.checklist-bag {
   display: block;
   margin-top: var(--space-2);
-  width: 28px;
-  height: 28px;
-  border: var(--border);
-  background:
-    linear-gradient(
-        to top right,
-        transparent 42%,
-        var(--black) 44%,
-        var(--black) 56%,
-        transparent 58%
-      )
-      var(--yellow);
+  width: clamp(72px, 7vw, 104px);
+  max-width: 72%;
+  height: auto;
+  object-fit: contain;
 }
 
 .today-outfit {

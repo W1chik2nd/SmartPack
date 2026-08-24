@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { scryptSync, randomBytes } from "node:crypto";
 import { createApp, type App } from "./app.ts";
+import { profileOptionsPayload } from "./profile.ts";
 
 let app: App;
 let server: Server;
@@ -50,13 +51,38 @@ async function get(path: string, token?: string) {
   return { status: res.status, body: await res.json() };
 }
 
-// A complete sign-up payload: account fields plus the style questionnaire.
+async function put(path: string, body: unknown, token?: string) {
+  const res = await fetch(base + path, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  return { status: res.status, body: await res.json() };
+}
+
+// The required half of the current questionnaire — the only part that gates
+// sign-up. Optional profile answers are exercised separately below.
 const annaProfile = {
   name: "Anna",
+  gender: "female",
   age: 28,
   heightCm: 168,
   weightKg: 55,
-  style: "Business",
+};
+
+// Every optional answer filled in, for the round-trip test below.
+const annaOptional = {
+  bustCm: 86,
+  waistCm: 68,
+  hipCm: 92,
+  bodyType: "hourglass",
+  seasonColorType: "winter",
+  stylePrefs: ["business", "elegant"],
+  wearFeel: ["runs-cold", "prefers-fitted"],
+  travelHabits: ["carry-on-only", "frequent-business"],
 };
 
 test("register creates an account and returns a session", async () => {
@@ -84,9 +110,9 @@ test("register rejects invalid email, short password, missing name", async () =>
   }
 });
 
-test("register without the questionnaire stores nothing", async () => {
-  // Product rule: sign-up only counts once the questionnaire is complete.
-  // Account-only payloads and partial/invalid questionnaires must all fail…
+test("register without the required questionnaire fields stores nothing", async () => {
+  // Product rule: sign-up only counts once the required answers are there.
+  // Account-only payloads and invalid required answers must all fail…
   const attempts = [
     { email: "ben@example.com", password: "long-enough-pass" },
     { email: "ben@example.com", password: "long-enough-pass", name: "Ben" },
@@ -108,12 +134,6 @@ test("register without the questionnaire stores nothing", async () => {
       ...annaProfile,
       weightKg: -5,
     },
-    {
-      email: "ben@example.com",
-      password: "long-enough-pass",
-      ...annaProfile,
-      style: "",
-    },
   ];
   for (const payload of attempts) {
     const { status } = await post("/api/register", payload);
@@ -126,6 +146,70 @@ test("register without the questionnaire stores nothing", async () => {
     password: "long-enough-pass",
   });
   assert.equal(login.status, 401);
+});
+
+test("optional answers never block sign-up and round-trip intact", async () => {
+  // Only name/gender/age/height/weight gate the account. Unanswered optional fields
+  // stay NULL — "skipped" must stay distinguishable from "answered with
+  // nothing" — and multi-selects land as JSON arrays.
+  async function registered(email: string, payload: object) {
+    const { status } = await post("/api/register", {
+      email,
+      password: "long-enough-pass",
+      ...annaProfile,
+      ...payload,
+    });
+    assert.equal(status, 201);
+    const db = new DatabaseSync(join(dir, "test.db"));
+    const row = db.prepare(`SELECT * FROM users WHERE email = ?`).get(email);
+    db.close();
+    return row as Record<string, unknown>;
+  }
+
+  const minimal = await registered("minimal@example.com", { name: "Minimal" });
+  const optional = ["bust_cm", "waist_cm", "hip_cm", "body_type",
+    "season_color_type", "style_prefs", "wear_feel", "travel_habits"];
+  for (const col of optional) {
+    assert.equal(minimal[col], null, `${col} must stay NULL when unanswered`);
+  }
+
+  const full = await registered("full@example.com", { ...annaOptional, name: "Full" });
+  assert.equal(full.bust_cm, 86);
+  assert.equal(full.body_type, "hourglass");
+  assert.equal(full.season_color_type, "winter");
+  assert.deepEqual(JSON.parse(full.style_prefs as string), ["business", "elegant"]);
+  assert.deepEqual(JSON.parse(full.travel_habits as string), [
+    "carry-on-only",
+    "frequent-business",
+  ]);
+});
+
+test("register rejects an invalid optional answer and stores nothing", async () => {
+  // Optional does not mean unchecked. The per-field rules are covered in
+  // profile.test.ts; this proves the route enforces them and creates no row.
+  const { status, body } = await post("/api/register", {
+    email: "reject@example.com",
+    password: "long-enough-pass",
+    ...annaProfile,
+    stylePrefs: ["business", "not-a-style"],
+  });
+  assert.equal(status, 400);
+  assert.match(body.error, /style preferences/);
+
+  const login = await post("/api/login", {
+    email: "reject@example.com",
+    password: "long-enough-pass",
+  });
+  assert.equal(login.status, 401, "no account may be left behind");
+});
+
+test("profile-options serves the catalog without a session", async () => {
+  // Sign-up step 2 fetches this before any account exists, so it is public by
+  // design: option lists only, no user data. The catalog's own shape is
+  // asserted in profile.test.ts; here it only has to reach an anonymous caller.
+  const { status, body } = await get("/api/profile-options");
+  assert.equal(status, 200);
+  assert.deepEqual(body, JSON.parse(JSON.stringify(profileOptionsPayload())));
 });
 
 test("check-email flags duplicates without creating anything", async () => {
@@ -215,6 +299,41 @@ test("scenarios requires auth and returns the catalog", async () => {
   }
 });
 
+test("profile update persists measurements, gender, and preferences", async () => {
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const update = await put("/api/profile", {
+    name: "Anna Updated",
+    gender: "female",
+    age: 29,
+    heightCm: 168,
+    weightKg: 55,
+    bustCm: 88,
+    waistCm: 68,
+    hipCm: 94,
+    bodyType: "hourglass",
+    seasonColorType: "autumn",
+    stylePrefs: ["minimalist", "elegant"],
+    wearFeel: ["runs-cold", "prefers-loose"],
+    travelHabits: ["packs-light"],
+  }, login.body.token);
+  assert.equal(update.status, 200);
+  assert.equal(update.body.user.gender, "female");
+  assert.equal(update.body.user.bustCm, 88);
+  assert.deepEqual(update.body.user.stylePrefs, ["minimalist", "elegant"]);
+  const current = await get("/api/me", login.body.token);
+  assert.equal(current.body.user.name, "Anna Updated");
+  assert.equal(current.body.user.bodyType, "hourglass");
+  assert.deepEqual(current.body.user.travelHabits, ["packs-light"]);
+});
+
+test("profile update requires authentication", async () => {
+  const response = await put("/api/profile", { name: "Nobody" });
+  assert.equal(response.status, 401);
+});
+
 test("logout invalidates the session token", async () => {
   const login = await post("/api/login", {
     email: "anna@example.com",
@@ -238,7 +357,7 @@ test("passwords are stored hashed, never in plain text", async () => {
     password: "plain-text-secret",
     ...annaProfile,
     name: "Chloe",
-    style: "Streetwear",
+    stylePrefs: ["streetwear"],
   });
   assert.equal(reg.status, 201);
   const serialized = JSON.stringify(reg.body);
@@ -357,4 +476,64 @@ test("chat validates the message payload at the boundary", async () => {
   } finally {
     delete process.env.AI_API_KEY;
   }
+});
+
+test("itinerary endpoints require a session", async () => {
+  for (const path of [
+    "/api/itinerary/trips",
+    "/api/itinerary/trips/some-id",
+    "/api/itinerary/photo/some-stop",
+  ]) {
+    const { status } = await get(path);
+    assert.equal(status, 401);
+  }
+});
+
+test("itinerary returns a trip whose days and stops drive both panels", async () => {
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const token = login.body.token;
+
+  const { status, body } = await get("/api/itinerary/trips", token);
+  assert.equal(status, 200);
+  assert.ok(Array.isArray(body.trips) && body.trips.length > 0);
+  // 配图供应商永远有值:没配 key 时兜底 openverse。
+  assert.ok(
+    typeof body.photoProvider === "string" && body.photoProvider.length > 0
+  );
+
+  const trip = body.trips[0];
+  assert.ok(trip.departLabel.length > 0, "left panel shows 'x.xx 出发'");
+  assert.ok(trip.days.length > 0);
+  for (const day of trip.days) {
+    assert.equal(typeof day.dayNumber, "number");
+    assert.equal(typeof day.dateLabel, "string");
+    assert.ok(day.stops.length > 0, "right panel needs stops per day");
+  }
+
+  // 同一用户再取一次不该又造一份演示行程。
+  const again = await get("/api/itinerary/trips", token);
+  assert.equal(again.body.trips.length, body.trips.length);
+
+  const one = await get(`/api/itinerary/trips/${trip.id}`, token);
+  assert.equal(one.status, 200);
+  assert.equal(one.body.trip.id, trip.id);
+
+  const missing = await get("/api/itinerary/trips/not-a-trip", token);
+  assert.equal(missing.status, 404);
+});
+
+test("itinerary photo endpoint rejects unknown stops", async () => {
+  // 真实图库调用需要外部网络,不在单测范围;这里只测存在性/归属这道门。
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const { status } = await get(
+    "/api/itinerary/photo/not-a-stop",
+    login.body.token
+  );
+  assert.equal(status, 404);
 });
