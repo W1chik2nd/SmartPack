@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   getOutfitPlan,
   weather,
-  wardrobePhotoUrl,
   type OutfitDay,
   type OutfitPiece,
   type OutfitPlan,
