@@ -170,7 +170,7 @@
   border-right: var(--border) !important;
   display: flex;
   flex-direction: column;
-  background: var(--bg) !important;
+  background: var(--white) !important;
 }
 
 /* 首页也复用详情页的 8-bit 造型语言：台阶轮廓 + 硬像素描边。 */

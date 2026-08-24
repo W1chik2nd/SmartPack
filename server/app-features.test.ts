@@ -115,7 +115,7 @@ test("packing requires a session and responds to the balance slider", async () =
   assert.equal((await get("/api/packing", token)).body.plan.balance, 50);
 });
 
-test("outfit plan requires a session and uses the latest saved trip", async () => {
+test("outfit plan requires a session and can select a saved trip", async () => {
   assert.equal((await get("/api/outfit-plan")).status, 401);
 
   const saved = await post(
@@ -136,6 +136,27 @@ test("outfit plan requires a session and uses the latest saved trip", async () =
   const result = await get("/api/outfit-plan", token);
   assert.equal(result.status, 200);
   assert.equal(result.body.plan.destination, "上海市");
+
+  const second = await post(
+    "/api/trip-plans",
+    {
+      scenario: "business",
+      placeName: "京都市",
+      placeDetail: "日本",
+      lat: 35.01,
+      lon: 135.76,
+      startDate: "2026-09-01",
+      endDate: "2026-09-02",
+    },
+    token
+  );
+  assert.equal(second.status, 201);
+  const selected = await get(
+    `/api/outfit-plan?tripPlanId=${encodeURIComponent(second.body.plan.id)}`,
+    token
+  );
+  assert.equal(selected.status, 200);
+  assert.equal(selected.body.plan.destination, "京都市");
   assert.equal(result.body.plan.days.length, 5);
   assert.equal(result.body.plan.days[0].pieces.length, 4);
   assert.equal(result.body.plan.days[0].pieces[2].kind, "accessory");

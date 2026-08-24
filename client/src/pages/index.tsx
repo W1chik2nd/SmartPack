@@ -3,11 +3,14 @@ import {
   deleteTripPlan,
   weather,
   listTripPlans,
+  getOutfitPlan,
   type User,
   type Weather,
   type TripPlan,
+  type OutfitDay,
 } from "../api";
 import TripSwitcher from "../components/TripSwitcher";
+import OutfitPieceVisual from "../components/OutfitPieceVisual";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/strings";
 import { dashboardTrips, tripAfterDeletionId } from "../lib/trip-dashboard";
@@ -20,7 +23,7 @@ type Props = {
   onOpenItinerary: (itineraryId: string) => void;
   onOpenPacking: (tripPlanId: string) => void;
   onOpenProfile: () => void;
-  onOpenOutfit: () => void;
+  onOpenOutfit: (tripPlanId?: string) => void;
 };
 
 // Placeholder navigation targets. Wire real routes here as the pages land.
@@ -44,6 +47,7 @@ export default function Home({
   const [now, setNow] = useState(new Date());
   const [wx, setWx] = useState<Weather | null>(null);
   const [wxError, setWxError] = useState(false);
+  const [todayOutfit, setTodayOutfit] = useState<OutfitDay | null>(null);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [trips, setTrips] = useState<TripPlan[] | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -103,6 +107,30 @@ export default function Home({
   useEffect(() => {
     setDeleteConfirmId(null);
     setDeleteError(false);
+  }, [selectedTrip?.id]);
+
+  // Outfit data follows the same selected trip as weather and checklist.
+  useEffect(() => {
+    if (!selectedTrip) {
+      setTodayOutfit(null);
+      return;
+    }
+    let active = true;
+    setTodayOutfit(null);
+    getOutfitPlan(selectedTrip.id)
+      .then(({ plan }) => {
+        if (!active) return;
+        const today = new Date().toISOString().slice(0, 10);
+        setTodayOutfit(
+          plan.days.find((day) => day.date === today) ?? plan.days[0] ?? null
+        );
+      })
+      .catch(() => {
+        if (active) setTodayOutfit(null);
+      });
+    return () => {
+      active = false;
+    };
   }, [selectedTrip?.id]);
 
   // Weather always follows the destination selected by the trip switcher.
@@ -273,11 +301,22 @@ export default function Home({
                     </button>
                   </div>
 
-                  <button className="today-outfit" onClick={onOpenOutfit}>
+                  <button
+                    className="today-outfit"
+                    onClick={() => onOpenOutfit(selectedTrip.id)}
+                  >
                     <h2>{t("todaysOutfit")}</h2>
-                    <span className="outfit-figure" aria-hidden="true">
-                      <span className="outfit-shirt pixel-garment" />
-                      <span className="outfit-trousers pixel-garment" />
+                    <span className="outfit-figure" aria-label={todayOutfit?.place ?? selectedTrip.placeName}>
+                      {todayOutfit ? (
+                        todayOutfit.pieces
+                          .filter((piece) => piece.kind === "top" || piece.kind === "bottom")
+                          .map((piece) => <OutfitPieceVisual key={piece.id} piece={piece} compact />)
+                      ) : (
+                        <>
+                          <span className="outfit-shirt pixel-garment" />
+                          <span className="outfit-trousers pixel-garment" />
+                        </>
+                      )}
                     </span>
                     <span className="card-arrow" aria-hidden="true">›</span>
                   </button>

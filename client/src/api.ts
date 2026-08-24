@@ -447,6 +447,11 @@ export type OutfitPlan = {
   days: OutfitDay[];
 };
 
-export function getOutfitPlan(): Promise<{ plan: OutfitPlan }> {
-  return request<{ plan: OutfitPlan }>("/api/outfit-plan");
+export function getOutfitPlan(
+  tripPlanId?: string
+): Promise<{ plan: OutfitPlan }> {
+  const query = tripPlanId
+    ? `?tripPlanId=${encodeURIComponent(tripPlanId)}`
+    : "";
+  return request<{ plan: OutfitPlan }>(`/api/outfit-plan${query}`);
 }
