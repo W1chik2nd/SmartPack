@@ -57,6 +57,9 @@ function Shell() {
   const [packingTripPlanId, setPackingTripPlanId] = useState<string | undefined>(
     undefined
   );
+  const [outfitTripPlanId, setOutfitTripPlanId] = useState<string | undefined>(
+    undefined
+  );
   const [retryPlan, setRetryPlan] = useState<TripPlan | null>(null);
 
   useEffect(() => {
@@ -249,7 +252,10 @@ function Shell() {
             setRoute("packing");
           }}
           onOpenProfile={() => setRoute("profile")}
-          onOpenOutfit={() => setRoute("outfit")}
+          onOpenOutfit={(tripPlanId) => {
+            setOutfitTripPlanId(tripPlanId);
+            setRoute("outfit");
+          }}
         />
       )}
       {route === "trips" && user && (
@@ -304,7 +310,10 @@ function Shell() {
         />
       )}
       {route === "outfit" && user && (
-        <OutfitOverview onBack={() => setRoute("home")} />
+        <OutfitOverview
+          tripPlanId={outfitTripPlanId}
+          onBack={() => setRoute("home")}
+        />
       )}
     </>
   );
