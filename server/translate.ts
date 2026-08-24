@@ -17,7 +17,7 @@ export async function translateBatch(
     JSON.stringify(texts),
   ].join("\n");
   const content = await chatCompletion(
-    "You are SmartPack's UI translation service. Never add explanations or markdown.",
+    "You are WearRoute's UI translation service. Never add explanations or markdown.",
     [{ role: "user", content: prompt }]
   );
   let parsed: unknown;

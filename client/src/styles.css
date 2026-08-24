@@ -1,4 +1,4 @@
-/* SmartPack — Bauhaus styling (AGENTS.md §8).
+/* WearRoute — Bauhaus styling (AGENTS.md §8).
    All colors and style tokens come from theme.css; nothing is hardcoded here.
    Geometry first, primary-color accents, flat surfaces, thick lines. */
 
@@ -7,6 +7,8 @@
 @import "./chat.css";
 @import "./components/PersonalColorGuide.css";
 @import "./dashboard.css";
+@import "./dashboard-sky.css";
+@import "./dashboard-nav.css";
 @import "./trip-switcher.css";
 @import "./profile.css";
 @import "./scenarios.css";

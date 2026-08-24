@@ -55,6 +55,27 @@ export function greetingKey(hour: number): StringKey {
   return "goodEvening";
 }
 
+export function isDashboardDaytime(hour: number): boolean {
+  return hour >= 6 && hour < 18;
+}
+
+const WEATHER_ICON_BY_CONDITION: Record<string, string> = {
+  Clear: "clear.png",
+  "Partly cloudy": "partly-cloudy.png",
+  Overcast: "overcast.png",
+  Fog: "fog.png",
+  Drizzle: "drizzle.png",
+  Rain: "rain.png",
+  Snow: "snow.png",
+  Showers: "showers.png",
+  "Snow showers": "snow-showers.png",
+  Thunderstorm: "thunderstorm.png",
+};
+
+export function weatherIconPath(condition: string): string {
+  return `/weather/${WEATHER_ICON_BY_CONDITION[condition] ?? "overcast.png"}`;
+}
+
 export function formatDashboardClock(now: Date, lang: "en" | "zh") {
   const locale = lang === "zh" ? "zh-CN" : "en-GB";
   return {
@@ -63,10 +84,6 @@ export function formatDashboardClock(now: Date, lang: "en" | "zh") {
       weekday: "long",
       day: "numeric",
       month: "long",
-    }),
-    timeShort: now.toLocaleTimeString(locale, {
-      hour: "2-digit",
-      minute: "2-digit",
     }),
   };
 }
