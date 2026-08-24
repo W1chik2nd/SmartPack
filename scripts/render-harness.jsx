@@ -10,6 +10,7 @@ import TripSpine from "../client/src/components/TripSpine";
 import DayPlan from "../client/src/components/DayPlan";
 import Profile from "../client/src/pages/Profile";
 import Home from "../client/src/pages";
+import TripSwitcher from "../client/src/components/TripSwitcher";
 
 /** 造一趟 days 天、每天 stopsPerDay 个停靠点的假行程。 */
 function makeTrip(days, stopsPerDay) {
@@ -20,6 +21,7 @@ function makeTrip(days, stopsPerDay) {
     scenario: "travel",
     departLabel: "3.14",
     createdAt: "2024-03-14",
+    sourcePlanId: "plan-1",
     days: Array.from({ length: days }, (_, d) => ({
       id: `day-${d + 1}`,
       dayNumber: d + 1,
@@ -28,6 +30,15 @@ function makeTrip(days, stopsPerDay) {
       cityEn: "Chengdu",
       summary: "测试",
       summaryEn: "Test",
+      weatherSummary: "12–18°C，多云",
+      weatherSummaryEn: "12–18°C, cloudy",
+      weatherRisk: "午后可能降雨",
+      weatherRiskEn: "Possible afternoon rain",
+      outfit: [
+        { label: "防水外套", labelEn: "Waterproof jacket" },
+        { label: "轻便长裤", labelEn: "Light trousers" },
+      ],
+      equipment: [{ label: "折叠伞", labelEn: "Compact umbrella" }],
       stops: Array.from({ length: stopsPerDay }, (_, s) => ({
         id: `stop-${d + 1}-${s + 1}`,
         position: s,
@@ -107,6 +118,33 @@ export function renderHome() {
         onOpenPacking={() => {}}
         onOpenProfile={() => {}}
         onOpenOutfit={() => {}}
+      />
+    </LangProvider>
+  );
+}
+
+export function renderTripSwitcher(count) {
+  const trips = Array.from({ length: count }, (_, index) => ({
+    id: `plan-${index + 1}`,
+    scenario: "travel",
+    placeName: index === 0 ? "Paris" : "Kyoto",
+    placeDetail: "",
+    lat: 0,
+    lon: 0,
+    startDate: "2026-08-26",
+    endDate: "2026-08-31",
+    notes: "",
+    itineraryId: null,
+    generationStatus: "completed",
+    generationError: null,
+    createdAt: "2026-08-24 10:00:00",
+  }));
+  return renderToStaticMarkup(
+    <LangProvider>
+      <TripSwitcher
+        trips={trips}
+        selectedId={trips[0]?.id ?? null}
+        onSelect={() => {}}
       />
     </LangProvider>
   );

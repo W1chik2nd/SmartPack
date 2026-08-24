@@ -127,7 +127,7 @@ export default function OutfitOverview({ onBack }: Props) {
             </dl>
           </section>
 
-          <section className="dress-weather" aria-label={t("todaysWeather")}>
+          <section className="dress-weather" aria-label={t("destinationWeatherToday")}>
             <span className="dress-weather-mark" aria-hidden="true" />
             <div>
               <strong>{wx ? `${Math.round(wx.tempC)}°C` : "—"}</strong>
