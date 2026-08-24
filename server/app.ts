@@ -29,6 +29,7 @@ import { dirname, join } from "node:path";
 import { aiConfigured, chatCompletion, type ChatMessage } from "./ai.ts";
 import { buildSystemPrompt } from "./prompts.ts";
 import { currentWeather, DEFAULT_COORDS } from "./weather.ts";
+import { buildPackingPlan } from "./packing.ts";
 
 // Password hashing (AGENTS.md §5): passwords require a password-specific KDF,
 // not a general-purpose hash like SHA256. We use scrypt because it is a
@@ -368,6 +369,24 @@ export function createApp(dbPath: string): App {
       const systemPrompt = buildSystemPrompt(user);
       const reply = await chatCompletion(systemPrompt, messages);
       json(res, 200, { reply });
+      return;
+    }
+
+    // Packing plan. Session-gated because the plan is personal (and will draw
+    // on the user's wardrobe + itinerary once those exist). `balance` is the
+    // one query knob: 0 = pack lightest, 100 = most outfit variety (US 6.3).
+    // Trust boundary (AGENTS.md §4): coerce and clamp here; buildPackingPlan
+    // trusts its caller.
+    if (req.method === "GET" && url.pathname === "/api/packing") {
+      const user = userForToken(bearerToken(req));
+      if (!user) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      const rawParam = url.searchParams.get("balance");
+      const raw = rawParam === null ? NaN : Number(rawParam);
+      const balance = Number.isFinite(raw) ? raw : 50;
+      json(res, 200, { plan: buildPackingPlan(balance) });
       return;
     }
 
