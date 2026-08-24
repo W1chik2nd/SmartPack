@@ -167,6 +167,26 @@ export const STRINGS = {
   phoneAnother: { en: "Take another", zh: "再拍一张" },
   phoneTake: { en: "Take photo", zh: "拍照" },
   phoneUploadFailed: { en: "Upload failed.", zh: "上传失败" },
+
+  // itinerary (left: whole-trip map, right: one day's plan)
+  itineraryTitle: { en: "Itinerary", zh: "行程计划" },
+  tripOverview: { en: "Trip Overview", zh: "总行程图" },
+  departs: { en: "Departs", zh: "出发" },
+  itineraryLoading: { en: "Loading itinerary…", zh: "正在加载行程…" },
+  itineraryError: { en: "Could not load the itinerary.", zh: "无法加载行程。" },
+  itineraryEmpty: { en: "No itinerary yet.", zh: "还没有行程。" },
+  collapseOverview: { en: "Collapse trip overview", zh: "收起总行程图" },
+  expandOverview: { en: "Expand trip overview", zh: "展开总行程图" },
+  pickDay: { en: "Pick a day", zh: "选择某一天" },
+  dayStops: { en: "stops", zh: "个停靠点" },
+  stopSpot: { en: "Sight", zh: "景点" },
+  stopTransit: { en: "Transit", zh: "交通" },
+  stopMeal: { en: "Meal", zh: "餐饮" },
+  stopHotel: { en: "Stay", zh: "住宿" },
+  photoPending: { en: "Finding a photo…", zh: "正在找配图…" },
+  photoNone: { en: "No photo", zh: "暂无配图" },
+  photoSource: { en: "Photos", zh: "图片来源" },
+  continueToItinerary: { en: "Plan this trip", zh: "规划这趟行程" },
 } as const;
 
 export type StringKey = keyof typeof STRINGS;
