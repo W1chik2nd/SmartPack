@@ -1,17 +1,23 @@
 /* Home dashboard — wireframe layout in Bauhaus form.
    Left: the "today" card (dates/location header; weather + checklist column,
    outfit column, itinerary column). Right: three primary nav tiles.
-   All colors via tokens from theme.css. */
+   All colors via tokens from theme.css.
+   Proportions and the hard offset shadows follow the wireframe exactly;
+   the grid fills the whole viewport below the nav. */
 
 .dashboard {
-  padding: 88px var(--space-3) var(--space-3);
-  max-width: 1200px;
-  margin: 0 auto;
+  /* Fill the screen: nav is 56px; the column flexes so the card grid
+     absorbs all remaining height instead of leaving dead space below. */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 80px var(--space-4) var(--space-4);
 }
 
 .dash-greeting {
   border: var(--border);
   background: var(--white);
+  box-shadow: 6px 6px 0 var(--black);
   padding: var(--space-2) var(--space-3);
   margin-bottom: var(--space-3);
 }
@@ -31,11 +37,13 @@
 }
 
 .dash-layout {
+  /* Absorb all remaining viewport height */
+  flex: 1;
+  min-height: 0;
   display: grid;
-  /* Right rail mirrors the card: both columns stretch to the same height,
-     so the three tiles always add up to exactly the today-card height. */
-  grid-template-columns: 1fr 380px;
-  gap: var(--space-3);
+  /* Wireframe: left card ≈ 710, right rail ≈ 600 → 1.18 : 1 */
+  grid-template-columns: 1.18fr 1fr;
+  gap: var(--space-4);
   align-items: stretch;
 }
 
@@ -44,6 +52,7 @@
 .today-card {
   border: var(--border);
   background: var(--white);
+  box-shadow: 6px 6px 0 var(--black);
   display: flex;
   flex-direction: column;
 }
@@ -77,19 +86,23 @@
 
 .card-arrow {
   position: absolute;
-  right: 10px;
+  right: 12px;
   bottom: 6px;
-  font-size: 18px;
+  font-size: 28px;
+  line-height: 1;
   font-weight: var(--weight-heavy);
 }
 
+/* Header shares the body's column grid so its date/location divider lines
+   up exactly with the outfit/itinerary divider below it. */
 .today-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1.55fr 1.65fr 1fr;
   border-bottom: var(--border);
 }
 
 .today-dates {
-  flex: 1;
+  grid-column: 1 / 3;
   padding: 12px var(--space-2);
   font-size: 14px;
   font-weight: var(--weight-bold);
@@ -97,7 +110,6 @@
 }
 
 .today-location {
-  width: 140px;
   display: flex;
   align-items: center;
 }
@@ -124,16 +136,19 @@
 
 .today-body {
   flex: 1;
+  min-height: 0;
   display: grid;
-  grid-template-columns: 1fr 1.4fr 150px;
-  /* Equalize the two stacked left cells so weather and checklist match */
+  /* Wireframe column widths ≈ 250 : 265 : 160 */
+  grid-template-columns: 1.55fr 1.65fr 1fr;
   grid-template-rows: 1fr;
 }
 
 .today-left {
   display: grid;
-  grid-template-rows: 1fr 1fr;
+  /* Wireframe: weather cell ≈ 300 tall, checklist ≈ 415 → 42/58 split */
+  grid-template-rows: 42fr 58fr;
   border-right: var(--border);
+  min-height: 0;
 }
 
 .today-weather {
@@ -165,22 +180,14 @@
   padding: var(--space-2);
 }
 
-/* Checked box: square with a yellow fill block, pure geometry */
-.check-mark {
+/* User-provided bag illustration replaces the checklist placeholder mark. */
+.checklist-bag {
   display: block;
   margin-top: var(--space-2);
-  width: 28px;
-  height: 28px;
-  border: var(--border);
-  background:
-    linear-gradient(
-        to top right,
-        transparent 42%,
-        var(--black) 44%,
-        var(--black) 56%,
-        transparent 58%
-      )
-      var(--yellow);
+  width: clamp(72px, 7vw, 104px);
+  max-width: 72%;
+  height: auto;
+  object-fit: contain;
 }
 
 .today-outfit {
@@ -192,21 +199,22 @@
 
 /* Shirt + trousers drawn from rectangles: Bauhaus garment figure.
    Same visual width and a shared vertical axis so the figure reads as one
-   outfit, not two floating shapes. */
+   outfit, not two floating shapes. Sizes scale with the card height. */
 .outfit-figure {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: clamp(10px, 1.6vh, 18px);
   padding: var(--space-2) 0;
   min-height: 220px;
 }
 
 .outfit-shirt {
-  width: 132px;
-  height: 96px;
+  width: clamp(132px, 16vh, 190px);
+  aspect-ratio: 11 / 8;
+  height: auto;
   background: var(--red);
   /* body + sleeves in one block: clip the top corners into a tee shape */
   clip-path: polygon(
@@ -215,9 +223,10 @@
 }
 
 .outfit-trousers {
-  /* trouser waist == shirt body width (22%..78% of 132px ≈ 74px) */
-  width: 74px;
-  height: 110px;
+  /* trouser waist == shirt body width (56% of the shirt block) */
+  width: clamp(74px, 9vh, 106px);
+  aspect-ratio: 74 / 110;
+  height: auto;
   background: var(--blue);
   clip-path: polygon(0 0, 100% 0, 96% 100%, 58% 100%, 50% 26%, 42% 100%, 4% 100%);
 }
@@ -275,7 +284,7 @@
   gap: var(--space-3);
   padding: 0 var(--space-3);
   font-family: inherit;
-  font-size: 22px;
+  font-size: 24px;
   font-weight: var(--weight-heavy);
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -283,6 +292,7 @@
   color: var(--text);
   background: var(--white);
   border: var(--border);
+  box-shadow: 6px 6px 0 var(--black);
   cursor: pointer;
   transition: background 0.15s ease;
 }

@@ -2,6 +2,21 @@ export type User = {
   id: string;
   email: string;
   name: string;
+  age: number | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  style: string | null;
+  gender: string | null;
+  bustCm: number | null;
+  waistCm: number | null;
+  hipCm: number | null;
+  bodyType: string | null;
+  seasonColorType: string | null;
+  stylePrefs: string[];
+  wearFeel: string[];
+  wearFeelOther: string | null;
+  travelHabits: string[];
+  travelHabitsOther: string | null;
 };
 
 type AuthResponse = { token: string; user: User };
@@ -55,9 +70,10 @@ export type Credentials = {
  * The profile questionnaire payload. Keyed by the field keys the server
  * publishes via /api/profile-options rather than typed field by field: the
  * form is built from that catalog, so a new question needs no client change.
- * Only name/age/heightCm/weightKg are required — the server enforces that.
+ * Only name/gender/age/heightCm/weightKg are required — the server enforces that.
  */
 export type Profile = Record<string, string | number | string[]>;
+export type ProfileUpdate = Profile;
 
 /** One selectable answer. `id` is stored; the labels are display-only. */
 export type ProfileOption = {
@@ -121,6 +137,13 @@ export function scenarios(): Promise<{ scenarios: Scenario[] }> {
 
 export function me(): Promise<{ user: User }> {
   return request<{ user: User }>("/api/me");
+}
+
+export function updateProfile(profile: ProfileUpdate): Promise<{ user: User }> {
+  return request<{ user: User }>("/api/profile", {
+    method: "PUT",
+    body: JSON.stringify(profile),
+  });
 }
 
 export function logout(): Promise<{ ok: boolean }> {
@@ -248,4 +271,121 @@ export function chat(messages: ChatMessage[]): Promise<{ reply: string }> {
     method: "POST",
     body: JSON.stringify({ messages }),
   });
+}
+
+// ---- 行程规划(左侧总行程图 + 右侧每天行程)----
+
+/** 停靠点类型:景点 / 交通 / 餐饮 / 住宿。 */
+export type StopKind = "spot" | "transit" | "meal" | "hotel";
+
+export type TripStop = {
+  id: string;
+  position: number;
+  kind: StopKind;
+  name: string;
+  nameEn: string;
+  startTime: string;
+  duration: string;
+  note: string;
+  noteEn: string;
+  photoQuery: string;
+  /** 后端已解析过的配图;null 表示还要去 /api/itinerary/photo 补。 */
+  photoUrl: string | null;
+  photoCredit: string | null;
+  photoSourceUrl: string | null;
+};
+
+export type TripDay = {
+  id: string;
+  dayNumber: number;
+  /** 手绘稿里的 "x.xx"。 */
+  dateLabel: string;
+  city: string;
+  cityEn: string;
+  summary: string;
+  summaryEn: string;
+  stops: TripStop[];
+};
+
+export type Trip = {
+  id: string;
+  title: string;
+  titleEn: string;
+  scenario: string;
+  departLabel: string;
+  createdAt: string;
+  days: TripDay[];
+};
+
+export type StopPhoto = {
+  imageUrl: string;
+  credit: string;
+  sourceUrl: string;
+};
+
+/** 行程列表。UI 阶段后端会在空列表时自动补一份演示行程。 */
+export function itineraryTrips(
+  scenario?: string
+): Promise<{ trips: Trip[]; photoProvider: string }> {
+  const query = scenario ? `?scenario=${encodeURIComponent(scenario)}` : "";
+  return request<{ trips: Trip[]; photoProvider: string }>(
+    `/api/itinerary/trips${query}`
+  );
+}
+
+export function itineraryTrip(
+  id: string
+): Promise<{ trip: Trip; photoProvider: string }> {
+  return request<{ trip: Trip; photoProvider: string }>(
+    `/api/itinerary/trips/${encodeURIComponent(id)}`
+  );
+}
+
+/** 补一张景点配图。查不到时 photo 为 null,卡片显示占位块。 */
+export function stopPhoto(
+  stopId: string
+): Promise<{ photo: StopPhoto | null }> {
+  return request<{ photo: StopPhoto | null }>(
+    `/api/itinerary/photo/${encodeURIComponent(stopId)}`
+  );
+}
+
+// Packing plan — shapes mirror server/packing.ts. The server owns all the
+// packing logic (AGENTS.md §3); the client only renders these and sends the
+// slider value back.
+export type PackingItem = {
+  id: string;
+  label: string;
+  labelEn: string;
+  reuse: number;
+};
+export type PackingCategory = {
+  id: string;
+  title: string;
+  titleEn: string;
+  items: PackingItem[];
+};
+export type EssentialItem = { id: string; label: string; labelEn: string };
+export type CorePiece = {
+  id: string;
+  label: string;
+  labelEn: string;
+  reuse: number;
+};
+
+export type PackingPlan = {
+  balance: number;
+  tripDays: number;
+  summary: string;
+  summaryEn: string;
+  categories: PackingCategory[];
+  essentials: EssentialItem[];
+  corePieces: CorePiece[];
+};
+
+/** balance: 0 = pack lightest, 100 = most outfit variety (US 6.3). */
+export function getPackingPlan(balance: number): Promise<{ plan: PackingPlan }> {
+  return request<{ plan: PackingPlan }>(
+    `/api/packing?balance=${encodeURIComponent(balance)}`
+  );
 }

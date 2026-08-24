@@ -32,7 +32,7 @@ const NUMERIC_KINDS: ProfileField["kind"][] = ["int", "decimal"];
  *
  * The field list and every option come from GET /api/profile-options
  * (AGENTS.md §3): this page renders the catalog and collects answers, it does
- * not own them. Only name/age/height/weight are required; the rest improve
+ * not own them. Only name/gender/age/height/weight are required; the rest improve
  * personalization (US 2.1–2.3) and never block sign-up.
  */
 export default function Questionnaire({ credentials, onAuthed, onBack }: Props) {

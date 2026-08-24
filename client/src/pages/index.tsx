@@ -8,20 +8,27 @@ type Props = {
   user: User;
   onOpenTrips: () => void;
   onOpenWardrobe: () => void;
+  onOpenItinerary: () => void;
+  onOpenPacking: () => void;
+  onOpenProfile: () => void;
 };
 
 // Placeholder navigation targets. Wire real routes here as the pages land.
 // TODO: replace with real navigation once the profile/detail pages exist.
 const TODO_LINKS = {
   weather: () => {},
-  checklist: () => {},
   dates: () => {},
   outfit: () => {},
-  itinerary: () => {},
-  profile: () => {},
 };
 
-export default function Home({ user, onOpenTrips, onOpenWardrobe }: Props) {
+export default function Home({
+  user,
+  onOpenTrips,
+  onOpenWardrobe,
+  onOpenItinerary,
+  onOpenPacking,
+  onOpenProfile,
+}: Props) {
   const { lang, t } = useLang();
   const [now, setNow] = useState(new Date());
   const [city, setCity] = useState<City>(storedCity);
@@ -121,9 +128,14 @@ export default function Home({ user, onOpenTrips, onOpenWardrobe }: Props) {
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
 
-              <button className="today-checklist" onClick={TODO_LINKS.checklist}>
+              <button className="today-checklist" onClick={onOpenPacking}>
                 <h2>{t("checklist")}</h2>
-                <span className="check-mark" aria-hidden="true" />
+                <img
+                  className="checklist-bag"
+                  src="/checklist-bag.png"
+                  alt=""
+                  aria-hidden="true"
+                />
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
             </div>
@@ -138,7 +150,7 @@ export default function Home({ user, onOpenTrips, onOpenWardrobe }: Props) {
               <span className="card-arrow" aria-hidden="true">›</span>
             </button>
 
-            <button className="today-itinerary" onClick={TODO_LINKS.itinerary}>
+            <button className="today-itinerary" onClick={onOpenItinerary}>
               <h2>{t("itinerary")}</h2>
               <span className="itinerary-timeline" aria-hidden="true" />
               <span className="card-arrow" aria-hidden="true">›</span>
@@ -156,7 +168,7 @@ export default function Home({ user, onOpenTrips, onOpenWardrobe }: Props) {
             <span className="nav-tile-mark yellow" aria-hidden="true" />
             {t("tripPlanner")}
           </button>
-          <button onClick={TODO_LINKS.profile}>
+          <button onClick={onOpenProfile}>
             <span className="nav-tile-mark blue" aria-hidden="true" />
             {t("myProfile")}
           </button>

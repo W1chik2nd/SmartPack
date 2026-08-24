@@ -5,7 +5,7 @@
 // GET /api/profile-options returns, and the future SwiftUI client will render
 // the same payload — no option list is duplicated in a front end.
 //
-// Only name/age/height/weight are required (they gate account creation).
+// Only name/gender/age/height/weight are required (they gate account creation).
 // Everything else sharpens recommendations (US 2.1–2.3: dressing preference
 // learning) but must never block sign-up, so those columns are nullable.
 
