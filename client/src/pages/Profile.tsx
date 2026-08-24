@@ -16,10 +16,10 @@ type Draft = {
   season: string;
 };
 
-function avatarForGender(gender: string | null): Avatar {
-  return gender === "man" || gender === "male" || gender === "男"
-    ? "man"
-    : "woman";
+function avatarForGender(gender: string | null): Avatar | null {
+  if (gender === "man" || gender === "male" || gender === "男") return "man";
+  if (gender === "woman" || gender === "female" || gender === "女") return "woman";
+  return null;
 }
 
 function AvatarArt({ variant }: { variant: Avatar }) {
@@ -46,8 +46,6 @@ function AvatarArt({ variant }: { variant: Avatar }) {
 
 export default function Profile({ user, onBack, onSaved }: Props) {
   const { lang, t } = useLang();
-  const initialGender = avatarForGender(user.gender);
-  const [avatar, setAvatar] = useState<Avatar>(initialGender);
   const [draft, setDraft] = useState<Draft>({
     nickname: user.name,
     gender: user.gender ?? "",
@@ -62,7 +60,8 @@ export default function Profile({ user, onBack, onSaved }: Props) {
   const [styles, setStyles] = useState<string[]>(user.stylePreferences ?? []);
   const [temperature, setTemperature] = useState(user.temperature ?? "");
   const [packingHabits, setPackingHabits] = useState<string[]>(user.packingHabits ?? []);
-  const [notice, setNotice] = useState(false);
+  const [notice, setNotice] = useState<"saved" | "error" | null>(null);
+  const avatar = avatarForGender(draft.gender);
 
   const measurements = [
     { key: "height", label: t("profileHeight"), unit: "cm" },
@@ -98,12 +97,12 @@ export default function Profile({ user, onBack, onSaved }: Props) {
 
   function update<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
-    setNotice(false);
+    setNotice(null);
   }
 
   function toggle(list: string[], value: string, setter: (next: string[]) => void) {
     setter(list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
-    setNotice(false);
+    setNotice(null);
   }
 
   async function handleSubmit(event: FormEvent) {
@@ -124,9 +123,9 @@ export default function Profile({ user, onBack, onSaved }: Props) {
         packingHabits,
       });
       onSaved(updated);
-      setNotice(true);
+      setNotice("saved");
     } catch {
-      setNotice(false);
+      setNotice("error");
     }
   }
 
@@ -140,30 +139,18 @@ export default function Profile({ user, onBack, onSaved }: Props) {
           <p className="profile-kicker">SmartPack / 03</p>
           <h1>{t("profileTitle")}</h1>
         </div>
-        <span className="profile-api-status">{t("profileApiStatus")}</span>
       </header>
 
       <form className="profile-board" onSubmit={handleSubmit}>
         <aside className="profile-identity">
           <fieldset className="avatar-picker">
             <legend>{t("profileAvatar")}</legend>
-            <div className="avatar-stage"><AvatarArt variant={avatar} /></div>
-            <div className="avatar-options">
-              {(["woman", "man"] as Avatar[]).map((option) => (
-                <button
-                  key={option}
-                  type="button"
-                  className={avatar === option ? "is-active" : ""}
-                  aria-pressed={avatar === option}
-                  aria-label={option === "woman" ? t("profileAvatarOne") : t("profileAvatarTwo")}
-                  onClick={() => {
-                    setAvatar(option);
-                    update("gender", option);
-                  }}
-                >
-                  <AvatarArt variant={option} />
-                </button>
-              ))}
+            <div className="avatar-stage">
+              {avatar ? (
+                <AvatarArt variant={avatar} />
+              ) : (
+                <span className="avatar-empty">{t("profileChoose")}</span>
+              )}
             </div>
           </fieldset>
 
@@ -178,7 +165,6 @@ export default function Profile({ user, onBack, onSaved }: Props) {
               onChange={(event) => {
                 const value = event.target.value;
                 update("gender", value);
-                if (value === "man" || value === "woman") setAvatar(value);
               }}
             >
               <option value="">—</option>
@@ -201,66 +187,79 @@ export default function Profile({ user, onBack, onSaved }: Props) {
 
           <div className="measurement-grid">
             {measurements.map((field) => (
-              <label key={field.key} className="measurement-field">
-                <span>{field.label}</span>
-                <span className="measurement-input">
-                  <input type="number" inputMode="decimal" min="1" step="0.1" value={draft[field.key]} onChange={(event) => update(field.key, event.target.value)} />
-                  <b>{field.unit}</b>
-                </span>
-              </label>
+              draft[field.key] && (
+                <label key={field.key} className="measurement-field">
+                  <span>{field.label}</span>
+                  <span className="measurement-input">
+                    <input type="number" inputMode="decimal" min="1" step="0.1" value={draft[field.key]} onChange={(event) => update(field.key, event.target.value)} />
+                    <b>{field.unit}</b>
+                  </span>
+                </label>
+              )
             ))}
-            <label className="measurement-field body-type-field">
-              <span>{t("profileBodyType")}</span>
-              <select value={draft.bodyType} onChange={(event) => update("bodyType", event.target.value)}>
-                <option value="">{t("profileChoose")}</option>
-                <option value="straight">{t("profileStraight")}</option>
-                <option value="triangle">{t("profileTriangle")}</option>
-                <option value="inverted">{t("profileInverted")}</option>
-                <option value="hourglass">{t("profileHourglass")}</option>
-              </select>
-            </label>
+            {draft.bodyType && (
+              <label className="measurement-field body-type-field">
+                <span>{t("profileBodyType")}</span>
+                <select value={draft.bodyType} onChange={(event) => update("bodyType", event.target.value)}>
+                  <option value="straight">{t("profileStraight")}</option>
+                  <option value="triangle">{t("profileTriangle")}</option>
+                  <option value="inverted">{t("profileInverted")}</option>
+                  <option value="hourglass">{t("profileHourglass")}</option>
+                </select>
+              </label>
+            )}
           </div>
 
-          <fieldset className="season-picker">
-            <legend>{t("profileSeasonType")}</legend>
-            <div>
-              {seasons.map(([value, zh, en]) => (
-                <button key={value} type="button" aria-pressed={draft.season === value} className={draft.season === value ? "is-active" : ""} onClick={() => update("season", value)}>
-                  {lang === "zh" ? zh : en}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          {draft.season && (
+            <fieldset className="season-picker">
+              <legend>{t("profileSeasonType")}</legend>
+              <div>
+                {seasons.map(([value, zh, en]) => (
+                  <button key={value} type="button" aria-pressed={draft.season === value} className={draft.season === value ? "is-active" : ""} onClick={() => update("season", value)}>
+                    {lang === "zh" ? zh : en}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          )}
 
           <div className="preference-stack">
-            <details open>
-              <summary><span>{t("profileStylePreferences")}</span><b>02</b></summary>
-              <div className="preference-options">
-                {styleOptions.map(([value, zh, en]) => (
-                  <button key={value} type="button" aria-pressed={styles.includes(value)} onClick={() => toggle(styles, value, setStyles)}>{lang === "zh" ? zh : en}</button>
-                ))}
-              </div>
-            </details>
-            <details>
-              <summary><span>{t("profileTemperature")}</span><b>03</b></summary>
-              <div className="preference-options">
-                {temperatureOptions.map(([value, zh, en]) => (
-                  <button key={value} type="button" aria-pressed={temperature === value} onClick={() => { setTemperature(value); setNotice(false); }}>{lang === "zh" ? zh : en}</button>
-                ))}
-              </div>
-            </details>
-            <details>
-              <summary><span>{t("profilePackingHabits")}</span><b>04</b></summary>
-              <div className="preference-options">
-                {packingOptions.map(([value, zh, en]) => (
-                  <button key={value} type="button" aria-pressed={packingHabits.includes(value)} onClick={() => toggle(packingHabits, value, setPackingHabits)}>{lang === "zh" ? zh : en}</button>
-                ))}
-              </div>
-            </details>
+            {styles.length > 0 && (
+              <details open>
+                <summary><span>{t("profileStylePreferences")}</span><b>02</b></summary>
+                <div className="preference-options">
+                  {styleOptions.map(([value, zh, en]) => (
+                    <button key={value} type="button" aria-pressed={styles.includes(value)} onClick={() => toggle(styles, value, setStyles)}>{lang === "zh" ? zh : en}</button>
+                  ))}
+                </div>
+              </details>
+            )}
+            {temperature && (
+              <details open>
+                <summary><span>{t("profileTemperature")}</span><b>03</b></summary>
+                <div className="preference-options">
+                  {temperatureOptions.map(([value, zh, en]) => (
+                    <button key={value} type="button" aria-pressed={temperature === value} onClick={() => { setTemperature(value); setNotice(null); }}>{lang === "zh" ? zh : en}</button>
+                  ))}
+                </div>
+              </details>
+            )}
+            {packingHabits.length > 0 && (
+              <details open>
+                <summary><span>{t("profilePackingHabits")}</span><b>04</b></summary>
+                <div className="preference-options">
+                  {packingOptions.map(([value, zh, en]) => (
+                    <button key={value} type="button" aria-pressed={packingHabits.includes(value)} onClick={() => toggle(packingHabits, value, setPackingHabits)}>{lang === "zh" ? zh : en}</button>
+                  ))}
+                </div>
+              </details>
+            )}
           </div>
 
           <div className="profile-actions">
-            <p className={notice ? "is-visible" : ""} role="status">{notice ? t("profileNotSaved") : t("profileDraftHint")}</p>
+            <p className={notice ? "is-visible" : ""} role="status">
+              {notice === "saved" ? t("profileSaved") : notice === "error" ? t("profileSaveFailed") : ""}
+            </p>
             <button className="profile-submit" type="submit">{t("profileFinish")}</button>
           </div>
         </section>
