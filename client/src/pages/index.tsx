@@ -303,7 +303,9 @@ export default function Home({
                   </div>
 
                   <button
+                    type="button"
                     className="today-outfit"
+                    aria-label={t("todaysOutfit")}
                     onClick={() => onOpenOutfit(selectedTrip.id)}
                   >
                     <h2>{t("todaysOutfit")}</h2>
