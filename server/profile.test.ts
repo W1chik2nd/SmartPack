@@ -4,6 +4,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  OTHER_ID,
   PROFILE_COLUMNS,
   PROFILE_FIELDS,
   optionLabels,
@@ -74,6 +75,80 @@ test("blank optional answers are stored as NULL, not empty values", () => {
 test("multi-select answers are stored as a JSON array", () => {
   const values = ok({ ...required, stylePrefs: ["business", "elegant"] });
   assert.equal(values.style_prefs, '["business","elegant"]');
+});
+
+test("the 'other' free text is kept only when 'other' is picked", () => {
+  // Picked with text: stored in its own column, trimmed.
+  const withText = ok({
+    ...required,
+    wearFeel: ["runs-cold", OTHER_ID],
+    wearFeelOther: "  长时间站立要舒服  ",
+  });
+  assert.equal(withText.wear_feel, '["runs-cold","other"]');
+  assert.equal(withText.wear_feel_other, "长时间站立要舒服");
+
+  // Picked without text: allowed, the column stays NULL.
+  const noText = ok({ ...required, travelHabits: [OTHER_ID] });
+  assert.equal(noText.travel_habits, '["other"]');
+  assert.equal(noText.travel_habits_other, null);
+
+  // Text without the option: dropped, so an unchecked box cannot smuggle a
+  // preference into the profile.
+  const stale = ok({
+    ...required,
+    wearFeel: ["runs-hot"],
+    wearFeelOther: "left over from unchecking",
+  });
+  assert.equal(stale.wear_feel_other, null);
+});
+
+test("the 'other' free text is length-capped", () => {
+  const field = PROFILE_FIELDS.find((f) => f.key === "wearFeel")!;
+  assert.equal(field.otherMax, 200);
+  const tooLong = validateProfile({
+    ...required,
+    wearFeel: [OTHER_ID],
+    wearFeelOther: "x".repeat(201),
+  });
+  assert.equal(tooLong.ok, false);
+});
+
+test("both habit questions offer 'other', body types use H-shape", () => {
+  for (const key of ["wearFeel", "travelHabits"]) {
+    const field = PROFILE_FIELDS.find((f) => f.key === key)!;
+    assert.ok(
+      field.options!.some((o) => o.id === OTHER_ID),
+      `${key} must offer an "other" choice`
+    );
+    assert.ok(field.otherColumn, `${key} needs a free-text column`);
+  }
+
+  const bodyTypes = PROFILE_FIELDS.find((f) => f.key === "bodyType")!.options!;
+  assert.ok(bodyTypes.some((o) => o.id === "h-shape"));
+  assert.ok(!bodyTypes.some((o) => o.id === "rectangle"));
+
+  // The catalog must tell the client how to drive the box without hardcoding.
+  const published = profileOptionsPayload().fields.find((f) => f.key === "wearFeel") as any;
+  assert.equal(published.otherId, OTHER_ID);
+  assert.equal(published.otherKey, "wearFeelOther");
+  assert.equal(published.otherMax, 200);
+});
+
+test("the prompt shows the user's own wording instead of 'Other'", () => {
+  const prompt = buildSystemPrompt({
+    ...baseProfile,
+    wear_feel: `["runs-cold","${OTHER_ID}"]`,
+    wear_feel_other: "长时间站立要舒服",
+    travel_habits: `["${OTHER_ID}"]`,
+    travel_habits_other: "只带一个双肩包",
+  });
+  assert.match(prompt, /- Comfort preferences: Feels cold easily, 长时间站立要舒服/);
+  assert.match(prompt, /- Travel and packing habits: 只带一个双肩包/);
+  assert.ok(!prompt.includes("Other (write your own)"), "generic label is useless");
+
+  // Picked with no text: fall back to the catalog label rather than blank.
+  const noText = buildSystemPrompt({ ...baseProfile, wear_feel: `["${OTHER_ID}"]` });
+  assert.match(noText, /- Comfort preferences: Other \(write your own\)/);
 });
 
 test("optional answers outside the catalog are rejected", () => {

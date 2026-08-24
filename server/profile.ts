@@ -30,13 +30,31 @@ export type FieldSpec = {
   min?: number;
   max?: number;
   options?: Option[];
+  /**
+   * Set on fields offering the OTHER option: the column holding the user's own
+   * wording. Kept in its own column rather than as a synthetic option id so the
+   * catalog stays a fixed vocabulary — free text never becomes an option id
+   * the recommendation engine has to guess at.
+   */
+  otherColumn?: string;
+  /** Max length of that free text. */
+  otherMax?: number;
 };
+
+/**
+ * The escape hatch for the two habit questions: a fixed catalog cannot cover
+ * how everyone dresses or packs, and forcing a wrong pick is worse than
+ * letting them say it themselves.
+ */
+export const OTHER_ID = "other";
+
+const OTHER: Option = { id: OTHER_ID, en: "Other (write your own)", zh: "其他(可自己填写)" };
 
 const BODY_TYPES: Option[] = [
   { id: "hourglass", en: "Hourglass", zh: "沙漏型" },
   { id: "pear", en: "Pear", zh: "梨形" },
   { id: "apple", en: "Apple", zh: "苹果型" },
-  { id: "rectangle", en: "Rectangle", zh: "矩形" },
+  { id: "h-shape", en: "H-shape", zh: "H 形" },
   { id: "inverted-triangle", en: "Inverted triangle", zh: "倒三角" },
 ];
 
@@ -71,6 +89,7 @@ const WEAR_FEEL: Option[] = [
   { id: "sensitive-skin", en: "Needs soft, non-itchy fabric", zh: "皮肤敏感,要柔软面料" },
   { id: "no-shorts", en: "Never wears shorts", zh: "从不穿短裤" },
   { id: "no-heels", en: "Never wears heels", zh: "从不穿高跟鞋" },
+  OTHER,
 ];
 
 // 出行与打包习惯 — feeds the minimal luggage plan (README core feature 6).
@@ -82,6 +101,7 @@ const TRAVEL_HABITS: Option[] = [
   { id: "shops-at-destination", en: "Shops at the destination", zh: "到当地会买衣服" },
   { id: "packs-spares", en: "Always packs a spare outfit", zh: "总带备用一套" },
   { id: "frequent-business", en: "Travels for work often", zh: "经常出差" },
+  OTHER,
 ];
 
 /**
@@ -167,6 +187,8 @@ export const PROFILE_FIELDS: FieldSpec[] = [
     required: false,
     label: "wear comfort preferences",
     options: WEAR_FEEL,
+    otherColumn: "wear_feel_other",
+    otherMax: 200,
   },
   {
     key: "travelHabits",
@@ -175,6 +197,8 @@ export const PROFILE_FIELDS: FieldSpec[] = [
     required: false,
     label: "travel and packing habits",
     options: TRAVEL_HABITS,
+    otherColumn: "travel_habits_other",
+    otherMax: 200,
   },
 ];
 
@@ -191,9 +215,11 @@ function sqlType(kind: FieldKind): string {
  * readable — prompts.ts falls back to it when style_prefs is empty.
  */
 export const PROFILE_COLUMNS: readonly (readonly [string, string])[] = [
-  ...PROFILE_FIELDS.filter((f) => f.column !== "name").map(
-    (f) => [f.column, sqlType(f.kind)] as const
-  ),
+  ...PROFILE_FIELDS.filter((f) => f.column !== "name").flatMap((f) => [
+    [f.column, sqlType(f.kind)] as const,
+    // A field offering OTHER needs its free-text column alongside it.
+    ...(f.otherColumn ? [[f.otherColumn, "TEXT"] as const] : []),
+  ]),
   ["style", "TEXT"] as const,
 ];
 
@@ -207,6 +233,11 @@ export function profileOptionsPayload() {
       ...(f.min != null ? { min: f.min } : {}),
       ...(f.max != null ? { max: f.max } : {}),
       ...(f.options ? { options: f.options } : {}),
+      // Tells the client to show a text box when OTHER is picked, and how long
+      // it may be. The id itself is published so no client hardcodes "other".
+      ...(f.otherColumn
+        ? { otherId: OTHER_ID, otherKey: `${f.key}Other`, otherMax: f.otherMax }
+        : {}),
     })),
   };
 }
@@ -262,6 +293,7 @@ export function validateProfile(body: Record<string, unknown>): ValidationResult
       // Unanswered optional fields stay NULL — "not filled in" must be
       // distinguishable from "answered with nothing".
       values[field.column] = null;
+      if (field.otherColumn) values[field.otherColumn] = null;
       continue;
     }
 
@@ -291,6 +323,22 @@ export function validateProfile(body: Record<string, unknown>): ValidationResult
     const list = checkMulti(field, raw);
     if (list === null) return invalid(field);
     values[field.column] = JSON.stringify(list);
+
+    if (field.otherColumn) {
+      // Free text counts only when OTHER is actually picked; otherwise it is
+      // leftover state from a box the user unchecked, and storing it would put
+      // a preference in the profile that the user did not select.
+      const text = body[`${field.key}Other`];
+      if (!list.includes(OTHER_ID) || blank(text)) {
+        values[field.otherColumn] = null;
+      } else if (typeof text !== "string") {
+        return invalid(field);
+      } else {
+        const trimmed = text.trim();
+        if (trimmed.length > field.otherMax!) return invalid(field);
+        values[field.otherColumn] = trimmed;
+      }
+    }
   }
 
   return { ok: true, values };

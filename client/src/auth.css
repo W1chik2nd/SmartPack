@@ -192,6 +192,33 @@
   animation: fadeIn 0.2s ease both;
 }
 
+/* Sign-up step 2 only: no side image, so the form owns the full width.
+   The option grids below get real room instead of a 440px column. */
+.quiz-page {
+  grid-template-columns: 1fr;
+}
+
+.quiz-page .auth-panel {
+  align-items: stretch;
+  padding: var(--space-4);
+}
+
+.quiz-page .auth-headline,
+.quiz-page .auth-card {
+  max-width: none;
+}
+
+/* Wider viewports: let the option blocks spread rather than stretching each
+   one across the whole screen, which would waste the width on empty space. */
+@media (min-width: 1100px) {
+  .quiz-page .style-options {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .quiz-page .field-row-3 {
+    grid-template-columns: repeat(6, 1fr);
+  }
+}
+
 /* Questionnaire style picker: radio choices as flat selectable blocks */
 .style-options {
   border: none;

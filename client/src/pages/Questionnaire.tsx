@@ -65,6 +65,8 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
   }
 
   function toggleChoice(field: ProfileField, id: string) {
+    const otherId = field.otherId;
+
     setChoices((prev) => {
       const current = prev[field.key] ?? [];
       if (field.kind === "single") {
@@ -72,18 +74,46 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
         // so there must be a way back to "not answered".
         return { ...prev, [field.key]: current[0] === id ? [] : [id] };
       }
-      return {
-        ...prev,
-        [field.key]: current.includes(id)
-          ? current.filter((v) => v !== id)
-          : [...current, id],
-      };
+
+      let next: string[];
+      if (current.includes(id)) {
+        next = current.filter((v) => v !== id);
+      } else if (id === otherId) {
+        // "Other" means "none of the above", so picking it replaces the whole
+        // selection rather than adding to it.
+        next = [id];
+      } else {
+        // Picking a listed option contradicts "none of the above", so it
+        // drops "other" instead of sitting alongside it.
+        next = [...current.filter((v) => v !== otherId), id];
+      }
+      return { ...prev, [field.key]: next };
     });
+
+    // Leaving "other" behind discards what was typed in its box: keeping it
+    // would resend that text the next time the option is checked.
+    if (otherId && field.otherKey && id === otherId) {
+      const wasPicked = (choices[field.key] ?? []).includes(otherId);
+      if (wasPicked) setValue(field.otherKey, "");
+    } else if (otherId && field.otherKey && (choices[field.key] ?? []).includes(otherId)) {
+      setValue(field.otherKey, "");
+    }
+  }
+
+  /** True when "other" is picked but the user has not written anything yet. */
+  function otherPending(field: ProfileField): boolean {
+    if (!field.otherId || !field.otherKey) return false;
+    return (
+      (choices[field.key] ?? []).includes(field.otherId) &&
+      (text[field.otherKey] ?? "").trim().length === 0
+    );
   }
 
   function answered(field: ProfileField): boolean {
     if (field.kind === "single" || field.kind === "multi") {
-      return (choices[field.key] ?? []).length > 0;
+      // Picking "other" and leaving the box empty says nothing, so it counts as
+      // unanswered — that is what makes the incomplete notice fire for it.
+      return (choices[field.key] ?? []).length > 0 && !otherPending(field);
     }
     return (text[field.key] ?? "").trim().length > 0;
   }
@@ -91,9 +121,14 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
   function buildProfile(list: ProfileField[]): Profile {
     const profile: Profile = {};
     for (const field of list) {
-      if (!answered(field)) continue;
+      if ((choices[field.key] ?? []).length === 0 && !answered(field)) continue;
       if (field.kind === "multi") {
         profile[field.key] = choices[field.key];
+        // Send the free text whenever "other" is checked; the server drops it
+        // if that option is not among the selections.
+        if (field.otherKey && (text[field.otherKey] ?? "").trim()) {
+          profile[field.otherKey] = text[field.otherKey].trim();
+        }
       } else if (field.kind === "single") {
         profile[field.key] = choices[field.key][0];
       } else if (NUMERIC_KINDS.includes(field.kind)) {
@@ -167,12 +202,10 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
   const choiceFields =
     fields?.filter((f) => f.kind === "single" || f.kind === "multi") ?? [];
 
+  // No side image here, unlike step 1 and sign-in: this form is long enough
+  // that the full width buys real layout room for the option grids.
   return (
-    <div className="auth-page">
-      <div className="auth-visual" aria-hidden="true">
-        <img src="/auth-visual.jpeg" alt="" />
-      </div>
-
+    <div className="auth-page quiz-page">
       <div className="auth-panel">
         <div className="auth-headline">
           <p className="auth-step">{t("step2")}</p>
@@ -234,6 +267,11 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
                   multiple={field.kind === "multi"}
                   onToggle={(id) => toggleChoice(field, id)}
                   hint={field.kind === "multi" ? t("pickMultiple") : undefined}
+                  otherId={field.otherId}
+                  otherMax={field.otherMax}
+                  otherLabel={t("otherPlaceholder")}
+                  otherValue={field.otherKey ? text[field.otherKey] ?? "" : ""}
+                  onOtherChange={(v) => field.otherKey && setValue(field.otherKey, v)}
                 />
               ))}
             </>
