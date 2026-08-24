@@ -132,7 +132,7 @@ export default function Home({
                 <h2>{t("checklist")}</h2>
                 <img
                   className="checklist-bag"
-                  src="/checklist-bag.jpg"
+                  src="/checklist-bag.png"
                   alt=""
                   aria-hidden="true"
                 />
