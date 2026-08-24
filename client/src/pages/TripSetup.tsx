@@ -22,6 +22,7 @@ type Props = {
   /** 从哪张场景卡片进来的(commute / travel / business / …)。 */
   scenario: string;
   onBack: () => void;
+  onSaved: () => void;
 };
 
 /** 中英都按"年月日"读得通的日期显示。 */
@@ -43,7 +44,7 @@ function nightsBetween(range: DateRange): number {
   return Math.round((end - start) / 86_400_000);
 }
 
-export default function TripSetup({ user, scenario, onBack }: Props) {
+export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   const { lang, t } = useLang();
 
   const [query, setQuery] = useState("");
@@ -53,7 +54,6 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
   const [range, setRange] = useState<DateRange | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
 
   // 没选地点时地图停在一个能看出是世界地图的位置,而不是空白海面。
   const center = place
@@ -73,7 +73,6 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
       // 不用再点一下列表。列表仍然留着,同名地点(如多个"北京")可以换选。
       if (places.length > 0) {
         setPlace(places[0]);
-        setSaved(false);
       }
     } catch (err: any) {
       // 透出后端的真实原因(未登录 / 上游 502 / 校验),而不是一律"搜索失败",
@@ -89,7 +88,6 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
   function choosePlace(p: Place) {
     setPlace(p);
     setResults(null);
-    setSaved(false);
   }
 
   async function handleSave() {
@@ -109,7 +107,8 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
         startDate: range.start,
         endDate: range.end,
       });
-      setSaved(true);
+      // API 返回成功时数据已经写入 SQLite,此时再回首页。
+      onSaved();
     } catch (err: any) {
       setError(err?.message ?? t("saveTripFailed"));
     } finally {
@@ -139,12 +138,6 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
           {error}
         </div>
       )}
-      {saved && (
-        <div className="success-banner" role="status">
-          {t("tripSaved")}
-        </div>
-      )}
-
       <div className="tripsetup-grid">
         {/* 左列:地图 + 搜索框 */}
         <section className="tripsetup-col">
@@ -198,10 +191,7 @@ export default function TripSetup({ user, scenario, onBack }: Props) {
           <div className="tripsetup-panel">
             <DateRangePicker
               value={range}
-              onChange={(r) => {
-                setRange(r);
-                setSaved(false);
-              }}
+              onChange={setRange}
             />
           </div>
 

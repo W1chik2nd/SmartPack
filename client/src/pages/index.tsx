@@ -1,8 +1,15 @@
 import { useEffect, useState } from "react";
-import { weather, type User, type Weather } from "../api";
+import {
+  listTripPlans,
+  weather,
+  type TripPlan,
+  type User,
+  type Weather,
+} from "../api";
 import ChatWidget from "../components/ChatWidget";
 import { useLang } from "../i18n/useLang";
 import { CITIES, storedCity, storeCity, type City } from "../i18n/cities";
+import { SCENARIO_LABELS } from "../i18n/strings";
 
 type Props = {
   user: User;
@@ -21,6 +28,15 @@ const TODO_LINKS = {
   profile: () => {},
 };
 
+function formatTripDay(iso: string, locale: string): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  return new Date(year, month - 1, day).toLocaleDateString(locale, {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  });
+}
+
 export default function Home({
   user,
   onOpenTrips,
@@ -32,6 +48,8 @@ export default function Home({
   const [city, setCity] = useState<City>(storedCity);
   const [wx, setWx] = useState<Weather | null>(null);
   const [wxError, setWxError] = useState(false);
+  const [latestTrip, setLatestTrip] = useState<TripPlan | null>();
+  const [tripError, setTripError] = useState(false);
 
   // Live clock: half-minute ticks keep date, time, and greeting current.
   useEffect(() => {
@@ -47,6 +65,16 @@ export default function Home({
       .then(setWx)
       .catch(() => setWxError(true));
   }, [city]);
+
+  // 保存成功回到首页时组件会重新挂载,读取数据库里最新保存的行程。
+  useEffect(() => {
+    listTripPlans()
+      .then(({ plans }) => setLatestTrip(plans[0] ?? null))
+      .catch(() => {
+        setLatestTrip(null);
+        setTripError(true);
+      });
+  }, []);
 
   function greeting(): string {
     const hour = now.getHours();
@@ -145,7 +173,41 @@ export default function Home({
 
             <button className="today-itinerary" onClick={TODO_LINKS.itinerary}>
               <h2>{t("itinerary")}</h2>
-              <span className="itinerary-timeline" aria-hidden="true" />
+              {latestTrip === undefined ? (
+                <span className="itinerary-status">{t("tripLoading")}</span>
+              ) : tripError ? (
+                <span className="itinerary-status">{t("savedTripLoadFailed")}</span>
+              ) : latestTrip ? (
+                <span className="itinerary-trip">
+                  <strong className="itinerary-destination">
+                    {latestTrip.placeName}
+                  </strong>
+                  {latestTrip.placeDetail && (
+                    <span className="itinerary-detail">
+                      {latestTrip.placeDetail}
+                    </span>
+                  )}
+                  <span className="itinerary-scenario">
+                    {SCENARIO_LABELS[latestTrip.scenario]?.[lang] ??
+                      latestTrip.scenario}
+                  </span>
+                  <span className="itinerary-dates">
+                    <time dateTime={latestTrip.startDate}>
+                      {formatTripDay(latestTrip.startDate, locale)}
+                    </time>
+                    {latestTrip.endDate !== latestTrip.startDate && (
+                      <>
+                        <span aria-hidden="true">→</span>
+                        <time dateTime={latestTrip.endDate}>
+                          {formatTripDay(latestTrip.endDate, locale)}
+                        </time>
+                      </>
+                    )}
+                  </span>
+                </span>
+              ) : (
+                <span className="itinerary-status">{t("noSavedTrips")}</span>
+              )}
               <span className="card-arrow" aria-hidden="true">›</span>
             </button>
           </div>

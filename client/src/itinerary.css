@@ -1,0 +1,97 @@
+/* Index 页行程卡片:展示数据库中最近保存的一条行程。 */
+
+.today-itinerary {
+  padding: var(--space-2);
+  display: flex;
+  flex-direction: column;
+}
+
+.itinerary-trip {
+  position: relative;
+  flex: 1;
+  min-height: 160px;
+  margin-top: var(--space-2);
+  padding: var(--space-2) 0 var(--space-3) var(--space-2);
+  border-left: 4px solid var(--black);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-1);
+}
+
+.itinerary-trip::before,
+.itinerary-trip::after {
+  content: "";
+  position: absolute;
+  left: -11px;
+  width: 14px;
+  height: 14px;
+  border: 3px solid var(--black);
+  border-radius: 50%;
+}
+
+.itinerary-trip::before {
+  top: 0;
+  background: var(--yellow);
+}
+
+.itinerary-trip::after {
+  bottom: 0;
+  background: var(--red);
+}
+
+.itinerary-destination {
+  max-width: 100%;
+  font-size: clamp(18px, 2vw, 26px);
+  font-weight: var(--weight-heavy);
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.itinerary-detail {
+  max-width: 100%;
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.itinerary-scenario {
+  padding: 3px 6px;
+  font-size: 11px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  background: var(--yellow);
+  border: 2px solid var(--black);
+}
+
+.itinerary-dates {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  line-height: 1.25;
+}
+
+.itinerary-status {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: var(--weight-bold);
+  line-height: 1.4;
+}
+
+@media (max-width: 900px) {
+  .today-itinerary {
+    grid-column: 1 / -1;
+    border-top: var(--border);
+  }
+
+  .itinerary-trip {
+    min-height: 120px;
+  }
+}

@@ -165,6 +165,25 @@ test("当天往返(起止同日)是合法的", async () => {
   assert.equal(res.status, 201);
 });
 
+test("行程含起止日最多 30 天", async () => {
+  const allowed = await save({
+    ...KYOTO,
+    startDate: "2026-04-01",
+    endDate: "2026-04-30",
+  });
+  assert.equal(allowed.status, 201, "30 天应允许保存");
+
+  const tooLong = await save({
+    ...KYOTO,
+    startDate: "2026-04-01",
+    endDate: "2026-05-01",
+  });
+  assert.equal(tooLong.status, 400, "31 天应拒绝保存");
+  assert.deepEqual(await tooLong.json(), {
+    error: "Trip must not exceed 30 days.",
+  });
+});
+
 test("/api/places 的 q 参数校验", async () => {
   assert.equal((await req("/api/places")).status, 400, "缺 q");
   assert.equal((await req("/api/places?q=")).status, 400, "q 为空");

@@ -6,6 +6,10 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { searchPlaces } from "./geocode.ts";
 import type { TripPlanStore, NewTripPlan } from "./trip-plan.ts";
+import {
+  MAX_TRIP_DAYS,
+  tripDaysInclusive,
+} from "../shared/trip-constraints.ts";
 
 type Ctx = {
   req: IncomingMessage;
@@ -108,6 +112,10 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
     }
     if (body.endDate < body.startDate) {
       json(res, 400, { error: "endDate must not precede startDate." });
+      return true;
+    }
+    if (tripDaysInclusive(body.startDate, body.endDate) > MAX_TRIP_DAYS) {
+      json(res, 400, { error: `Trip must not exceed ${MAX_TRIP_DAYS} days.` });
       return true;
     }
 
