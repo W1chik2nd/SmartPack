@@ -7,6 +7,7 @@ import Register from "./pages/Register";
 import Questionnaire from "./pages/Questionnaire";
 import Home from "./pages/index";
 import TripPlanner from "./pages/TripPlanner";
+import Itinerary from "./pages/Itinerary";
 import Wardrobe from "./pages/Wardrobe";
 import PhoneUpload from "./pages/PhoneUpload";
 import PackingList from "./pages/PackingList";
@@ -18,6 +19,7 @@ type Route =
   | "questionnaire"
   | "home"
   | "trips"
+  | "itinerary"
   | "wardrobe"
   | "packing";
 
@@ -32,6 +34,8 @@ function Shell() {
   // nothing is persisted anywhere until /api/register succeeds.
   const [pendingCreds, setPendingCreds] = useState<Credentials | null>(null);
   const [booting, setBooting] = useState(true);
+  // 从场景选择页带过来的场景 id,行程页据此请求对应行程。
+  const [scenario, setScenario] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // 手机上传页不需要登录态,跳过 me() 免得白等一次请求。
@@ -150,11 +154,26 @@ function Shell() {
           user={user}
           onOpenTrips={() => setRoute("trips")}
           onOpenWardrobe={() => setRoute("wardrobe")}
+          onOpenItinerary={() => setRoute("itinerary")}
           onOpenPacking={() => setRoute("packing")}
         />
       )}
       {route === "trips" && user && (
-        <TripPlanner user={user} onBack={() => setRoute("home")} />
+        <TripPlanner
+          user={user}
+          onBack={() => setRoute("home")}
+          onPlanTrip={(id) => {
+            setScenario(id);
+            setRoute("itinerary");
+          }}
+        />
+      )}
+      {route === "itinerary" && user && (
+        <Itinerary
+          user={user}
+          scenario={scenario}
+          onBack={() => setRoute("home")}
+        />
       )}
       {route === "wardrobe" && user && (
         <Wardrobe onBack={() => setRoute("home")} />
