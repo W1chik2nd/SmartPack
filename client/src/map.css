@@ -1,0 +1,111 @@
+/* MapView —— OSM 栅格瓦片地图。token 全部来自 theme.css(AGENTS.md §8)。 */
+
+.mapview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+/* 瓦片的定位原点。overflow 裁掉视口外的瓦片。 */
+.mapview-canvas {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  cursor: grab;
+  /* 触屏上自己处理平移,交给浏览器会变成页面滚动。 */
+  touch-action: none;
+  background: var(--bg);
+}
+
+.mapview-canvas:active {
+  cursor: grabbing;
+}
+
+.mapview-canvas:focus-visible {
+  outline: var(--border-w) solid var(--red);
+  outline-offset: -3px;
+}
+
+.mapview-tile {
+  position: absolute;
+  width: 256px;
+  height: 256px;
+  /* 瓦片接缝在某些缩放比下会露出 1px 白线,禁用拖拽并按整像素绘制可缓解。 */
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 目的地标记:红方块 + 下方指针,几何优先,不用图片。 */
+/* 经典大头针:圆角方块留右下直角,旋转 -45° 后直角朝正下方成尖端;
+   中间叠白色圆孔。尖端锚在精确坐标上(见下方 margin 的换算)。 */
+.mapview-pin {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  /* 元素中心到旋转后尖端约 √2/2·22 ≈ 15.5px。左移半宽让中心对齐 x,
+     上移(半高 + 尖端伸出)让尖端落在 y,使尖端而非中心指向坐标。 */
+  margin-left: -11px;
+  margin-top: -26px;
+  background: var(--red);
+  border: var(--border-w) solid var(--black);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  pointer-events: none;
+}
+
+/* 白色圆孔。父元素旋转了,但正圆旋转后仍是正圆,居中即可。 */
+.mapview-pin::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  background: var(--white);
+  border-radius: 50%;
+}
+
+.mapview-zoom {
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mapview-zoom button {
+  width: 32px;
+  height: 32px;
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: var(--weight-heavy);
+  line-height: 1;
+  color: var(--black);
+  background: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.mapview-zoom button:disabled {
+  cursor: not-allowed;
+  opacity: 0.4;
+}
+
+/* OSM 使用条款要求的归属声明,必须可见。 */
+.mapview-credit {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  padding: 2px 6px;
+  font-size: 11px;
+  background: var(--white);
+  border-left: 2px solid var(--black);
+  border-top: 2px solid var(--black);
+}
+
+.mapview-credit a {
+  color: var(--blue);
+}

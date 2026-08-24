@@ -11,6 +11,7 @@ import Itinerary from "./pages/Itinerary";
 import Wardrobe from "./pages/Wardrobe";
 import PhoneUpload from "./pages/PhoneUpload";
 import PackingList from "./pages/PackingList";
+import TripSetup from "./pages/TripSetup";
 import Profile from "./pages/Profile";
 
 type Route =
@@ -20,6 +21,7 @@ type Route =
   | "questionnaire"
   | "home"
   | "trips"
+  | "tripSetup"
   | "itinerary"
   | "wardrobe"
   | "profile"
@@ -36,7 +38,7 @@ function Shell() {
   // nothing is persisted anywhere until /api/register succeeds.
   const [pendingCreds, setPendingCreds] = useState<Credentials | null>(null);
   const [booting, setBooting] = useState(true);
-  // 从场景选择页带过来的场景 id,行程页据此请求对应行程。
+  // 从场景卡片带过来的出行目的:行程设置页(地图+日历)和行程计划页都用它。
   const [scenario, setScenario] = useState<string | undefined>(undefined);
 
   useEffect(() => {
@@ -171,10 +173,22 @@ function Shell() {
         <TripPlanner
           user={user}
           onBack={() => setRoute("home")}
+          onPickScenario={(id) => {
+            setScenario(id);
+            setRoute("tripSetup");
+          }}
           onPlanTrip={(id) => {
             setScenario(id);
             setRoute("itinerary");
           }}
+        />
+      )}
+      {route === "tripSetup" && user && scenario && (
+        <TripSetup
+          user={user}
+          scenario={scenario}
+          onBack={() => setRoute("trips")}
+          onSaved={() => setRoute("home")}
         />
       )}
       {route === "itinerary" && user && (

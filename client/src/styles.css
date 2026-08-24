@@ -9,6 +9,9 @@
 @import "./profile.css";
 @import "./scenarios.css";
 @import "./packing.css";
+@import "./map.css";
+@import "./calendar.css";
+@import "./tripsetup.css";
 @import "./itinerary.css";
 @import "./day-plan.css";
 
@@ -310,6 +313,7 @@ body {
   .auth-page,
   .scenarios,
   .error-banner,
+  .success-banner,
   .auth-card.shake,
   .landing {
     animation: none;

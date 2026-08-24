@@ -389,3 +389,50 @@ export function getPackingPlan(balance: number): Promise<{ plan: PackingPlan }> 
     `/api/packing?balance=${encodeURIComponent(balance)}`
   );
 }
+
+// ---- 行程计划(目的地 + 日期区间)----
+// 地点搜索走后端代理 /api/places(AGENTS.md §3):第三方地理编码服务只在
+// 服务端对接,未来 iOS 端调同一个接口。
+
+export type Place = {
+  id: string;
+  name: string;
+  detail: string;
+  lat: number;
+  lon: number;
+};
+
+export function searchPlaces(
+  query: string,
+  lang: "en" | "zh"
+): Promise<{ places: Place[] }> {
+  return request<{ places: Place[] }>(
+    `/api/places?q=${encodeURIComponent(query)}&lang=${lang}`
+  );
+}
+
+export type TripPlan = {
+  id: string;
+  scenario: string;
+  placeName: string;
+  placeDetail: string;
+  lat: number;
+  lon: number;
+  /** ISO date, YYYY-MM-DD. */
+  startDate: string;
+  endDate: string;
+  createdAt: string;
+};
+
+export type NewTripPlan = Omit<TripPlan, "id" | "createdAt">;
+
+export function saveTripPlan(plan: NewTripPlan): Promise<{ plan: TripPlan }> {
+  return request<{ plan: TripPlan }>("/api/trip-plans", {
+    method: "POST",
+    body: JSON.stringify(plan),
+  });
+}
+
+export function listTripPlans(): Promise<{ plans: TripPlan[] }> {
+  return request<{ plans: TripPlan[] }>("/api/trip-plans");
+}
