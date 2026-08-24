@@ -191,16 +191,18 @@
   min-width: 0;
 }
 
-.today-empty-state {
+.today-empty-card {
   align-items: center;
   justify-content: center;
+  width: 100%;
+  min-height: 0;
   padding: 0;
   border: none;
 }
 
-.today-empty-state .trip-empty {
+.today-empty-card .trip-empty {
   margin: 0;
-  font-size: clamp(58px, 8vw, 96px);
+  font-size: clamp(72px, 10vw, 132px);
   line-height: 1;
   font-weight: var(--weight-regular);
 }
