@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   providerErrorMessage,
+  streamedResponseText,
+  structuredResponse,
   structuredResponseRequestBody,
   tripAgentModel,
 } from "./ai.ts";
@@ -150,11 +152,18 @@ test("third-party Responses gateways omit OpenAI-only safety identifier", () => 
   };
 
   const compatible = structuredResponseRequestBody(
-    options,
+    { ...options, maxOutputTokens: 13_000 },
     "https://api.openai-next.com/v1",
     "gpt-5.6-terra"
   );
   assert.equal("safety_identifier" in compatible, false);
+  assert.equal(compatible.stream, true);
+  assert.equal(compatible.max_output_tokens, 13_000);
+  assert.deepEqual(compatible.reasoning, { effort: "low" });
+  assert.equal(
+    (compatible.text as Record<string, unknown>).verbosity,
+    "low"
+  );
 
   const official = structuredResponseRequestBody(
     options,
@@ -179,6 +188,76 @@ test("non-reasoning models omit GPT-5 controls and use their output limit", () =
   assert.equal("reasoning" in body, false);
   assert.equal("verbosity" in (body.text as Record<string, unknown>), false);
   assert.equal(body.max_output_tokens, 16_000);
+});
+
+test("streamed Responses text is assembled from output deltas", () => {
+  const raw = [
+    { type: "response.created" },
+    { type: "response.output_text.delta", delta: '{"ok":' },
+    { type: "response.output_text.delta", delta: "true}" },
+  ]
+    .map((event) => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
+    .join("");
+  assert.equal(streamedResponseText(raw), '{"ok":true}');
+});
+
+test("a transient 524 is retried and the streamed result is returned", async (t) => {
+  const previous = {
+    key: process.env.AI_API_KEY,
+    url: process.env.AI_BASE_URL,
+    model: process.env.TRIP_AGENT_MODEL,
+  };
+  process.env.AI_API_KEY = "test-key";
+  process.env.AI_BASE_URL = "https://api.openai-next.com/v1";
+  process.env.TRIP_AGENT_MODEL = "gpt-5.6-terra";
+  let calls = 0;
+  let sentBody: Record<string, unknown> | undefined;
+  t.mock.method(globalThis, "fetch", async (_input, init) => {
+    calls += 1;
+    sentBody = JSON.parse(String(init?.body));
+    if (calls === 1) {
+      return new Response(
+        JSON.stringify({ error: { message: "gateway timed out" } }),
+        {
+          status: 524,
+          headers: {
+            "Content-Type": "application/json",
+            "Retry-After": "0",
+          },
+        }
+      );
+    }
+    const stream = [
+      { type: "response.output_text.delta", delta: '{"ok":' },
+      { type: "response.output_text.delta", delta: "true}" },
+    ]
+      .map((event) => `event: ${event.type}\ndata: ${JSON.stringify(event)}\n\n`)
+      .join("");
+    return new Response(stream, {
+      status: 200,
+      headers: { "Content-Type": "text/event-stream" },
+    });
+  });
+
+  try {
+    const result = await structuredResponse<{ ok: boolean }>({
+      instructions: "Return JSON",
+      input: { destination: "Kyoto" },
+      schema: { type: "object" },
+      safetyIdentifier: "user-123",
+      maxOutputTokens: 2_000,
+    });
+    assert.deepEqual(result, { ok: true });
+    assert.equal(calls, 2);
+    assert.equal(sentBody?.stream, true);
+  } finally {
+    for (const [key, value] of Object.entries(previous)) {
+      const envKey =
+        key === "key" ? "AI_API_KEY" : key === "url" ? "AI_BASE_URL" : "TRIP_AGENT_MODEL";
+      if (value === undefined) delete process.env[envKey];
+      else process.env[envKey] = value;
+    }
+  }
 });
 
 test("trip agent reuses the chatbot model unless explicitly overridden", () => {

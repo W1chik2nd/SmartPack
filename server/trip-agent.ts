@@ -156,6 +156,9 @@ export const generateTrip: GenerateTrip = async ({ user, plan, wardrobe }) => {
     instructions: TRIP_AGENT_PROMPT,
     safetyIdentifier: user.id,
     schema: tripPlanSchema(dates.length),
+    // A two-day plan should not reserve the same 64k budget as a 30-day plan.
+    // Keeping the ceiling proportional materially shortens gateway time-to-first-byte.
+    maxOutputTokens: Math.min(56_000, 10_000 + dates.length * 1_500),
     input: {
       profile: buildProfileFacts(user),
       wardrobe: wardrobe.map((item) => ({

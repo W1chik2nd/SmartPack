@@ -30,7 +30,27 @@ type StructuredResponseOptions = {
   input: unknown;
   schema: JsonSchema;
   safetyIdentifier: string;
+  maxOutputTokens?: number;
 };
+
+const TRANSIENT_PROVIDER_STATUSES = new Set([
+  408, 429, 500, 502, 503, 504, 520, 522, 524,
+]);
+
+class ProviderRequestError extends Error {
+  readonly status: number;
+  readonly retryAfterMs: number | null;
+
+  constructor(
+    message: string,
+    status: number,
+    retryAfterMs: number | null
+  ) {
+    super(message);
+    this.status = status;
+    this.retryAfterMs = retryAfterMs;
+  }
+}
 
 /** Keep useful provider diagnostics without reflecting arbitrary response data. */
 export function providerErrorMessage(data: unknown): string | null {
@@ -63,6 +83,39 @@ export function responseText(data: unknown): string {
   throw new Error("AI provider returned no structured trip plan.");
 }
 
+/** Collect the streamed Responses API text while intermediary proxies stay alive. */
+export function streamedResponseText(raw: string): string {
+  let text = "";
+  let completed: unknown;
+  for (const block of raw.split(/\r?\n\r?\n/)) {
+    const payload = block
+      .split(/\r?\n/)
+      .filter((line) => line.startsWith("data:"))
+      .map((line) => line.slice(5).trimStart())
+      .join("\n");
+    if (!payload || payload === "[DONE]") continue;
+    const event = JSON.parse(payload) as {
+      type?: string;
+      delta?: string;
+      text?: string;
+      response?: unknown;
+      error?: { message?: string };
+    };
+    if (event.type === "response.output_text.delta" && event.delta) {
+      text += event.delta;
+    } else if (!text && event.type === "response.output_text.done" && event.text) {
+      text = event.text;
+    } else if (event.type === "response.completed") {
+      completed = event.response;
+    } else if (event.type === "response.failed") {
+      throw new Error(event.error?.message ?? "AI provider failed the trip request.");
+    }
+  }
+  if (text) return text;
+  if (completed) return responseText(completed);
+  throw new Error("AI provider returned no streamed trip plan.");
+}
+
 /**
  * OpenAI supports safety_identifier, but some Responses-compatible gateways do
  * not. Only send the optional field to an official OpenAI API hostname.
@@ -90,18 +143,20 @@ export function structuredResponseRequestBody(
     },
     // GPT-4o mini supports at most 16,384 output tokens. GPT-5 itineraries can
     // use the larger budget because reasoning tokens share this same limit.
-    max_output_tokens: /^gpt-4o(?:[.-]|$)/.test(normalizedModel)
-      ? 16_000
-      : 64_000,
+    max_output_tokens: Math.min(
+      options.maxOutputTokens ?? 64_000,
+      /^gpt-4o(?:[.-]|$)/.test(normalizedModel) ? 16_000 : 64_000
+    ),
     store: false,
+    stream: true,
   };
 
   // OpenAI exposes reasoning controls only for GPT-5 and o-series models.
   // Likewise, verbosity is a GPT-5 control; omitting unsupported optional
   // parameters keeps Responses-compatible models such as gpt-4o-mini valid.
-  if (supportsReasoning) body.reasoning = { effort: "medium" };
+  if (supportsReasoning) body.reasoning = { effort: "low" };
   if (isGpt5) {
-    (body.text as Record<string, unknown>).verbosity = "medium";
+    (body.text as Record<string, unknown>).verbosity = "low";
   }
 
   try {
@@ -115,12 +170,20 @@ export function structuredResponseRequestBody(
   return body;
 }
 
-/** Model-aware trip-planning call with web grounding and strict JSON. */
-export async function structuredResponse<T>(
-  options: StructuredResponseOptions
+function retryAfterMs(response: Response): number | null {
+  const raw = response.headers.get("retry-after");
+  if (!raw) return null;
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds)) return Math.max(0, seconds * 1_000);
+  const date = Date.parse(raw);
+  return Number.isNaN(date) ? null : Math.max(0, date - Date.now());
+}
+
+async function structuredResponseAttempt<T>(
+  options: StructuredResponseOptions,
+  baseUrl: string,
+  model: string
 ): Promise<T> {
-  const baseUrl = process.env.AI_BASE_URL ?? "https://api.openai.com/v1";
-  const model = tripAgentModel();
   const res = await fetch(`${baseUrl.replace(/\/$/, "")}/responses`, {
     method: "POST",
     headers: {
@@ -128,20 +191,54 @@ export async function structuredResponse<T>(
       Authorization: `Bearer ${process.env.AI_API_KEY}`,
     },
     body: JSON.stringify(structuredResponseRequestBody(options, baseUrl, model)),
+    signal: AbortSignal.timeout(12 * 60 * 1_000),
   });
 
   if (!res.ok) {
     const detail = providerErrorMessage(await res.json().catch(() => null));
-    throw new Error(
-      `AI trip planner request failed (${res.status})${detail ? `: ${detail}` : ""}`
+    throw new ProviderRequestError(
+      `AI trip planner request failed (${res.status})${detail ? `: ${detail}` : ""}`,
+      res.status,
+      retryAfterMs(res)
     );
   }
-  const text = responseText(await res.json());
+  const contentType = res.headers.get("content-type") ?? "";
+  const text = contentType.includes("text/event-stream")
+    ? streamedResponseText(await res.text())
+    : responseText(await res.json());
   try {
     return JSON.parse(text) as T;
   } catch {
     throw new Error("AI trip planner returned invalid JSON.");
   }
+}
+
+/** Model-aware trip-planning call with web grounding and strict JSON. */
+export async function structuredResponse<T>(
+  options: StructuredResponseOptions
+): Promise<T> {
+  const baseUrl = process.env.AI_BASE_URL ?? "https://api.openai.com/v1";
+  const model = tripAgentModel();
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      return await structuredResponseAttempt<T>(options, baseUrl, model);
+    } catch (error) {
+      const transientStatus =
+        error instanceof ProviderRequestError &&
+        TRANSIENT_PROVIDER_STATUSES.has(error.status);
+      const networkFailure =
+        error instanceof TypeError ||
+        (error instanceof DOMException && error.name === "TimeoutError");
+      if (attempt === 1 || (!transientStatus && !networkFailure)) throw error;
+      const delay =
+        error instanceof ProviderRequestError && error.retryAfterMs !== null
+          ? Math.min(error.retryAfterMs, 2_000)
+          : 750;
+      console.warn(`[trip-agent] transient provider failure; retrying once`);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error("AI trip planner request failed after retry.");
 }
 
 export async function chatCompletion(
