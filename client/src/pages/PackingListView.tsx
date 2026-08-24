@@ -1,5 +1,6 @@
 import type { PackingPlan } from "../api";
 import { useLang } from "../i18n/useLang";
+import { useLocalizedValues } from "../hooks/useLocalizedValues";
 
 // Presentational layer for the packing-list screen. Pure props in, markup out —
 // no data fetching or business logic (that stays in PackingList.tsx and, for
@@ -63,13 +64,23 @@ function Checklist({
   onToggle: (id: string) => void;
 }) {
   const { lang, t } = useLang();
+  const categoryTitles = useLocalizedValues(
+    plan.categories.map((cat) => ({ zh: cat.title, en: cat.titleEn })),
+    lang
+  );
+  const itemLabels = useLocalizedValues(
+    plan.categories.flatMap((cat) => cat.items.map((item) => ({ zh: item.label, en: item.labelEn }))),
+    lang
+  );
+  let itemLabelIndex = 0;
+  const nextItemLabel = () => itemLabels[itemLabelIndex++];
   return (
     <section className="pk-list" aria-label={t("pkListTitle")}>
       <h1 className="pk-list-title">{t("pkListTitle")}</h1>
       {plan.categories.map((cat) => (
         <div className="pk-cat" key={cat.id}>
           <h2 className="pk-cat-title">
-            {lang === "zh" ? cat.title : cat.titleEn}
+            {categoryTitles[plan.categories.indexOf(cat)]}
           </h2>
           <ul className="pk-cat-items">
             {cat.items.map((item) => (
@@ -81,7 +92,7 @@ function Checklist({
                     onChange={() => onToggle(item.id)}
                   />
                   <span className="pk-row-label">
-                    {lang === "zh" ? item.label : item.labelEn}
+                    {nextItemLabel()}
                     {(item.quantity || item.daysUsed || item.wardrobeItemId === "") && (
                       <span className="pk-row-meta">
                         {item.quantity && item.quantity > 1 && (
@@ -120,6 +131,10 @@ function Essentials({
   onToggle: (id: string) => void;
 }) {
   const { lang, t } = useLang();
+  const essentialLabels = useLocalizedValues(
+    plan.essentials.map((item) => ({ zh: item.label, en: item.labelEn })),
+    lang
+  );
   return (
     <section className="pk-essentials" aria-label={t("pkEssentials")}>
       <h2 className="pk-essentials-title">{t("pkEssentials")}</h2>
@@ -133,7 +148,7 @@ function Essentials({
                 onChange={() => onToggle(e.id)}
               />
               <span className="pk-row-label">
-                {lang === "zh" ? e.label : e.labelEn}
+                {essentialLabels[plan.essentials.indexOf(e)]}
               </span>
             </label>
           </li>
@@ -147,6 +162,10 @@ function Essentials({
     (sketch: T-shirt cards with reuse count / core piece). US 6.2, 1.3. */
 function CorePieces({ plan }: { plan: PackingPlan }) {
   const { lang, t } = useLang();
+  const coreLabels = useLocalizedValues(
+    plan.corePieces.map((piece) => ({ zh: piece.label, en: piece.labelEn })),
+    lang
+  );
   return (
     <section className="pk-core" aria-label={t("pkCore")}>
       <div className="pk-core-grid">
@@ -158,7 +177,7 @@ function CorePieces({ plan }: { plan: PackingPlan }) {
               {t("pkReuse")}:<strong>{piece.reuse}</strong>
             </p>
             <p className="pk-core-name">
-              {lang === "zh" ? piece.label : piece.labelEn}
+              {coreLabels[plan.corePieces.indexOf(piece)]}
             </p>
             <p className="pk-core-tag">{t("pkCoreTag")}</p>
           </article>

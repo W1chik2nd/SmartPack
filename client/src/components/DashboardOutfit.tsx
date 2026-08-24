@@ -1,6 +1,7 @@
 import type { OutfitDay, OutfitPiece } from "../api";
 import OutfitPieceVisual from "./OutfitPieceVisual";
 import { useLang } from "../i18n/useLang";
+import { useLocalizedValues } from "../hooks/useLocalizedValues";
 
 type Props = {
   day: OutfitDay | null;
@@ -38,9 +39,13 @@ export default function DashboardOutfit({ day, placeName }: Props) {
   const outfit = layers(day.pieces);
   const pieces = [outfit.inner, outfit.outer, outfit.bottom, outfit.shoes, outfit.accessory]
     .filter((piece): piece is OutfitPiece => Boolean(piece));
+  const labels = useLocalizedValues(
+    pieces.map((piece) => ({ zh: piece.label, en: piece.labelEn })),
+    lang
+  );
 
   return (
-    <span className="outfit-figure" aria-label={pieces.map((piece) => description(piece, lang)).join("，")}>
+    <span className="outfit-figure" aria-label={labels.join("，")}>
       <span className="dashboard-outfit-stack">
         <span className="dashboard-outfit-torso">
           {outfit.inner && (
@@ -53,8 +58,8 @@ export default function DashboardOutfit({ day, placeName }: Props) {
               className="dashboard-outfit-outer"
               aria-label={
                 lang === "zh"
-                  ? `${description(outfit.outer, lang)}，打开拉链，露出里面的${outfit.inner ? description(outfit.inner, lang) : "内搭"}`
-                  : `${description(outfit.outer, lang)}, worn open over ${outfit.inner ? description(outfit.inner, lang) : "the inner layer"}`
+                  ? `${labels[1] ?? labels[0]}，打开拉链，露出里面的${labels[0] ?? "内搭"}`
+                  : `${labels[1] ?? labels[0]}, worn open over ${labels[0] ?? "the inner layer"}`
               }
             >
               <span className="dashboard-outfit-panel dashboard-outfit-panel-left">
@@ -71,7 +76,7 @@ export default function DashboardOutfit({ day, placeName }: Props) {
         {outfit.shoes && <OutfitPieceVisual piece={outfit.shoes} compact />}
         {outfit.accessory && <OutfitPieceVisual piece={outfit.accessory} compact />}
       </span>
-      <span className="outfit-description">{pieces.map((piece) => description(piece, lang)).join(" · ")}</span>
+      <span className="outfit-description">{labels.join(" · ")}</span>
     </span>
   );
 }
