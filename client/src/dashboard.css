@@ -181,11 +181,10 @@
   border-right: var(--border) !important;
   display: flex;
   flex-direction: column;
+  background: var(--bg) !important;
 }
 
-/* Shirt + trousers drawn from rectangles: Bauhaus garment figure.
-   Same visual width and a shared vertical axis so the figure reads as one
-   outfit, not two floating shapes. Sizes scale with the card height. */
+/* 首页也复用详情页的 8-bit 造型语言：台阶轮廓 + 硬像素描边。 */
 .outfit-figure {
   flex: 1;
   display: flex;
@@ -195,26 +194,6 @@
   gap: clamp(10px, 1.6vh, 18px);
   padding: var(--space-2) 0;
   min-height: 220px;
-}
-
-.outfit-shirt {
-  width: clamp(132px, 16vh, 190px);
-  aspect-ratio: 11 / 8;
-  height: auto;
-  background: var(--red);
-  /* body + sleeves in one block: clip the top corners into a tee shape */
-  clip-path: polygon(
-    30% 0, 70% 0, 100% 18%, 92% 42%, 78% 34%, 78% 100%, 22% 100%, 22% 34%, 8% 42%, 0 18%
-  );
-}
-
-.outfit-trousers {
-  /* trouser waist == shirt body width (56% of the shirt block) */
-  width: clamp(74px, 9vh, 106px);
-  aspect-ratio: 74 / 110;
-  height: auto;
-  background: var(--blue);
-  clip-path: polygon(0 0, 100% 0, 96% 100%, 58% 100%, 50% 26%, 42% 100%, 4% 100%);
 }
 
 .today-itinerary {

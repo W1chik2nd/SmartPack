@@ -16,6 +16,7 @@ type Props = {
   onOpenItinerary: () => void;
   onOpenPacking: () => void;
   onOpenProfile: () => void;
+  onOpenOutfit: () => void;
 };
 
 // Placeholder navigation targets. Wire real routes here as the pages land.
@@ -23,7 +24,6 @@ type Props = {
 const TODO_LINKS = {
   weather: () => {},
   dates: () => {},
-  outfit: () => {},
 };
 
 export default function Home({
@@ -33,6 +33,7 @@ export default function Home({
   onOpenItinerary,
   onOpenPacking,
   onOpenProfile,
+  onOpenOutfit,
 }: Props) {
   const { lang, t } = useLang();
   const [now, setNow] = useState(new Date());
@@ -178,16 +179,15 @@ export default function Home({
                 </button>
               </div>
 
-              <button className="today-outfit" onClick={TODO_LINKS.outfit}>
+              <button className="today-outfit" onClick={onOpenOutfit}>
                 <h2>{t("todaysOutfit")}</h2>
                 {/* Geometric garment drawing (shirt + trousers), CSS only */}
                 <span className="outfit-figure" aria-hidden="true">
-                  <span className="outfit-shirt" />
-                  <span className="outfit-trousers" />
+                  <span className="outfit-shirt pixel-garment" />
+                  <span className="outfit-trousers pixel-garment" />
                 </span>
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
-
               <button
                 className="today-itinerary"
                 onClick={onOpenItinerary}
