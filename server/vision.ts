@@ -25,12 +25,14 @@ export type RecognizedItem = {
 // 细节字段不是为了展示,而是喂给后续的穿搭/打包推荐(README 的核心功能)。
 // 之前 details 太笼统("宽松设计,适合日常"),对搭配没参考价值,
 // 所以这版要求给出具体款式名和可观察的结构特征。
-const PROMPT = `你是资深服装买手,擅长精准描述服装款式。识别图片里的主要衣物单品,只输出一个 JSON 对象,不要任何其他文字或代码块标记。
+const PROMPT = `你是资深服装买手,擅长精准描述服装、鞋履和服饰配件。识别图片里的主要穿戴单品,只输出一个 JSON 对象,不要任何其他文字或代码块标记。
 
 如果图片里没有衣物、鞋履或服饰配件(例如是水杯、食物、家具、宠物、风景、人脸特写等),只输出:
 {"notClothing":true,"reason":"一句话说明图里是什么"}
 
-是衣物时输出:
+衣物、鞋履和服饰配件都属于有效的衣柜单品。服饰配件包括帽子、围巾、腰带、包袋、眼镜、手表、领带、手套和珠宝首饰;看到这些物品时必须按 category="配饰" 输出,绝不能标记为 notClothing。
+
+是有效衣柜单品时输出:
 {"title":"颜色+版型+具体款式,如 黑色宽松工装裤 / 蓝色紧身牛仔裤","category":"大类(T恤/衬衫/针织衫/卫衣/外套/裤装/裙装/鞋履/配饰 之一)","subtype":"你判断出的具体款式名","colors":["主色在前,最多3个"],"fit":"版型","material":"材质,按厚薄和垂坠感判断","seasons":["春/夏/秋/冬"],"styleTags":["风格,如 正式/通勤/休闲/运动/街头/复古"],"details":"2-3句详细描述"}
 
 要求:
@@ -38,7 +40,8 @@ const PROMPT = `你是资深服装买手,擅长精准描述服装款式。识别
 2. fit 用精确的版型词,如 紧身/修身/合身/宽松/oversize/直筒/阔腿/锥形/A字。
 3. details 必须包含可观察到的结构特征,例如:口袋数量和位置(侧贴袋/工装大口袋/斜插袋)、腰头形式(松紧/抽绳/纽扣)、裤脚或袖口(束口/开口/翻边)、领型(圆领/翻领/连帽/立领)、袖长、闭合方式(拉链/纽扣/套头)、图案或印花位置、面料厚薄与垂坠感。写你真正看到的,不要套话。
 4. 不要输出"适合日常穿着""百搭"这类没有信息量的话。
-5. 每个字段都要给出判断,不要填"未知"。实在看不清的字段按最可能的情况推测。`;
+5. 配饰没有传统服装版型时,fit 填"不适用";仍需判断材质、适用季节和可观察结构。
+6. 每个字段都要给出判断,不要填"未知"。实在看不清的字段按最可能的情况推测。`;
 
 export function visionConfigured(): boolean {
   return Boolean(process.env.VISION_API_KEY);
@@ -103,7 +106,7 @@ export async function recognizeClothing(
   const str = (v: unknown): string => (typeof v === "string" ? v : "");
   const item: RecognizedItem = {
     title: parsed.title,
-    category: parsed.category,
+    category: normalizeCategory(parsed.category),
     subtype: str(parsed.subtype),
     colors: strings(parsed.colors),
     fit: str(parsed.fit),
@@ -130,6 +133,22 @@ export class NotClothingError extends Error {
 }
 
 const UNKNOWN_RE = /^(未知|无|不确定|不明|无法识别|unknown|n\/a|-|)$/i;
+
+const CATEGORY_ALIASES: Array<[RegExp, string]> = [
+  [/^(裤子|长裤|短裤)$/, "裤装"],
+  [/^(裙子|半裙|连衣裙)$/, "裙装"],
+  [/^(鞋子|鞋类)$/, "鞋履"],
+  [
+    /^(配件|服饰配件|饰品|首饰|珠宝|包|包袋|帽子|围巾|腰带|皮带|眼镜|太阳镜|手表|领带|手套)$/,
+    "配饰",
+  ],
+];
+
+/** 把模型偶尔给出的具体品类名收敛到前后端约定的大类。 */
+function normalizeCategory(category: string): string {
+  const value = category.trim();
+  return CATEGORY_ALIASES.find(([pattern]) => pattern.test(value))?.[1] ?? value;
+}
 
 /** 关键字段基本都是“未知”时,视为没认出来。 */
 function looksUnrecognized(item: RecognizedItem): boolean {
