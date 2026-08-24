@@ -27,6 +27,7 @@
 .color-guide-result { margin-top: var(--space-2); padding: var(--space-2); border: var(--border); background: var(--bg); }
 .color-guide-result h3 { margin-bottom: var(--space-1); font-size: 20px; }
 .color-guide-result p { white-space: pre-wrap; line-height: 1.6; }
+.color-guide-auto-choice { margin-top: var(--space-2); padding-top: var(--space-2); border-top: 2px solid var(--black); color: var(--blue); font-weight: var(--weight-bold); }
 .color-guide-note { margin-top: var(--space-2); font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
 .color-guide-footer { display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-3); border-top: var(--border); }
 .color-guide-footer button { padding: 12px 18px; font: var(--weight-heavy) 15px var(--font); border: 2px solid var(--black); cursor: pointer; }
