@@ -10,6 +10,7 @@ import TripPlanner from "./pages/TripPlanner";
 import Itinerary from "./pages/Itinerary";
 import Wardrobe from "./pages/Wardrobe";
 import PhoneUpload from "./pages/PhoneUpload";
+import PackingList from "./pages/PackingList";
 
 type Route =
   | "landing"
@@ -19,7 +20,8 @@ type Route =
   | "home"
   | "trips"
   | "itinerary"
-  | "wardrobe";
+  | "wardrobe"
+  | "packing";
 
 /** ?upload=<token> 是手机扫码进来的上传页,免登录。 */
 const uploadToken = new URLSearchParams(window.location.search).get("upload");
@@ -108,6 +110,12 @@ function Shell() {
           {langToggle}
           {user ? (
             <>
+              <button
+                className="nav-link"
+                onClick={() => setRoute(route === "packing" ? "home" : "packing")}
+              >
+                {route === "packing" ? "Home" : "Packing List"}
+              </button>
               <span className="nav-user">{user.name}</span>
               <button className="nav-link" onClick={handleSignOut}>
                 {t("navSignOut")}
@@ -151,6 +159,7 @@ function Shell() {
           onOpenTrips={() => setRoute("trips")}
           onOpenWardrobe={() => setRoute("wardrobe")}
           onOpenItinerary={() => setRoute("itinerary")}
+          onOpenPacking={() => setRoute("packing")}
         />
       )}
       {route === "trips" && user && (
@@ -173,6 +182,7 @@ function Shell() {
       {route === "wardrobe" && user && (
         <Wardrobe onBack={() => setRoute("home")} />
       )}
+      {route === "packing" && user && <PackingList />}
     </>
   );
 }
