@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useLang } from "../i18n/useLang";
+import { addIsoDays, MAX_TRIP_DAYS } from "../../../shared/trip-constraints";
 
 // 日期区间选择 —— 线框图右侧的 calendar 方块。
 //
 // 第一次点击定起点,第二次点击定终点(点到早于起点的日子就重新起算)。
-// 纯 UI 状态,不含业务规则(AGENTS.md §3):合法性由后端在保存时再校验一次。
+// 前端只按共享约束控制可点击状态;后端在保存时仍会校验一次。
 //
 // 日期一律用 "YYYY-MM-DD" 字符串传递,并且只按本地年月日拼接 ——
 // 不走 Date.toISOString(),那会按 UTC 折算,东八区选 1 号会存成上个月 31 号。
@@ -79,6 +80,10 @@ export default function DateRangePicker({ value, onChange }: Props) {
   const totalDays = daysInMonth(cursor.y, cursor.m);
   const lead = firstWeekday(cursor.y, cursor.m);
   const todayIso = iso(today.getFullYear(), today.getMonth(), today.getDate());
+  const latestEnd =
+    value && value.start === value.end
+      ? addIsoDays(value.start, MAX_TRIP_DAYS - 1)
+      : null;
 
   const monthLabel =
     lang === "zh"
@@ -124,6 +129,7 @@ export default function DateRangePicker({ value, onChange }: Props) {
         {Array.from({ length: totalDays }, (_, i) => {
           const day = iso(cursor.y, cursor.m, i + 1);
           const isPast = day < todayIso;
+          const isBeyondMax = latestEnd !== null && day > latestEnd;
           const isStart = value?.start === day;
           const isEnd = value?.end === day;
           const inRange = !!value && day >= value.start && day <= value.end;
@@ -141,7 +147,7 @@ export default function DateRangePicker({ value, onChange }: Props) {
               key={day}
               type="button"
               className={classes}
-              disabled={isPast}
+              disabled={isPast || isBeyondMax}
               aria-pressed={inRange}
               aria-label={day}
               onClick={() => pick(day)}
