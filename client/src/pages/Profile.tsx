@@ -36,7 +36,7 @@ function AvatarArt({ variant }: { variant: Avatar }) {
   return (
     <img
       className="profile-avatar-image"
-      src={variant === "man" ? "/profile-male.svg" : "/profile-female.svg"}
+      src={variant === "man" ? "/profile-male.jpg" : "/profile-female.jpg"}
       alt=""
     />
   );
