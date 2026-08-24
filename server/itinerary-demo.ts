@@ -4,8 +4,12 @@
 // 只放表结构和读写逻辑,这里只放数据。
 // TODO: 接入 AI 行程生成后删掉本文件,由模型产出同样结构的数据。
 //
-// 手绘稿里的 "x.xx" 就是 dateLabel。photoQuery 用英文地名:
-// 图库(Unsplash/Openverse)对英文关键词的命中率明显更高。
+// 手绘稿里的 "x.xx" 就是 dateLabel。
+//
+// photoQuery 是可选的人工覆盖,不填也有图:photos.ts 的 photoQueries()
+// 会从名称/城市/类型推导候选词。这里保留手写值只是为了演示数据出图更稳。
+// 注:早先这里写着"英文命中率明显更高",实测(scripts/photo-hitrate-probe.mjs)
+// 是反的 —— 中文名 5/5、手写英文 4/5,图库里的原始标题本来就多是中文。
 import type { TripDay, TripStop } from "./itinerary.ts";
 
 export type DemoStop = Omit<

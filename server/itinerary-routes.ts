@@ -2,7 +2,7 @@
 // 从 app.ts 拆出来是为了守住单文件 400 行上限(AGENTS.md §7)。
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import type { ItineraryStore } from "./itinerary.ts";
-import { findPhoto, photoProvider } from "./photos.ts";
+import { findPhotoForSubject, photoProvider } from "./photos.ts";
 
 type Ctx = {
   req: IncomingMessage;
@@ -82,16 +82,22 @@ export async function handleItineraryRoutes(ctx: Ctx): Promise<boolean> {
       });
       return true;
     }
-    if (!stop.photoQuery) {
-      json(res, 200, { photo: null });
-      return true;
-    }
+    // 关键词不需要人工逐个填:photoQueries() 从名称/城市/类型推导候选词,
+    // 逐个试到出图为止。photoQuery 只是可选的人工覆盖。
     try {
-      const photo = await findPhoto(stop.photoQuery);
-      if (!photo) {
+      const found = await findPhotoForSubject({
+        name: stop.name,
+        nameEn: stop.nameEn,
+        city: stop.city,
+        cityEn: stop.cityEn,
+        kind: stop.kind,
+        photoQuery: stop.photoQuery,
+      });
+      if (!found) {
         json(res, 200, { photo: null });
         return true;
       }
+      const { photo, query } = found;
       itinerary.setStopPhoto(user.id, stopId, {
         photoUrl: photo.imageUrl,
         photoCredit: photo.credit,
@@ -104,9 +110,11 @@ export async function handleItineraryRoutes(ctx: Ctx): Promise<boolean> {
           sourceUrl: photo.sourceUrl,
         },
         cached: false,
+        // 命中靠的是哪个候选词,便于日后调关键词策略时排查。
+        query,
       });
     } catch (err: any) {
-      // 图库故障/限流:配图缺失不是错误状态,卡片显示占位块即可。
+      // 图库整体故障:配图缺失不是错误状态,卡片显示占位块即可。
       json(res, 200, { photo: null, error: err?.message ?? "photo lookup failed" });
     }
     return true;
