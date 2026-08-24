@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { uploadSessionPhoto } from "../api";
 import { toDataUrl } from "../lib/image";
 import { useLang } from "../i18n/useLang";
-import { photosSentMessage } from "../i18n/strings";
+import { photosSentMessage } from "../i18n/dynamic-strings";
 import "./PhoneUpload.css";
 
 type Status = "ready" | "uploading" | "done" | "error";
