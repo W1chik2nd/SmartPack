@@ -8,6 +8,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { LangProvider } from "../client/src/i18n/useLang";
 import TripSpine from "../client/src/components/TripSpine";
 import DayPlan from "../client/src/components/DayPlan";
+import Profile from "../client/src/pages/Profile";
 
 /** 造一趟 days 天、每天 stopsPerDay 个停靠点的假行程。 */
 function makeTrip(days, stopsPerDay) {
@@ -59,6 +60,17 @@ export function renderDay(stops) {
   return renderToStaticMarkup(
     <LangProvider>
       <DayPlan day={trip.days[0]} />
+    </LangProvider>
+  );
+}
+
+export function renderProfile() {
+  return renderToStaticMarkup(
+    <LangProvider>
+      <Profile
+        user={{ id: "user-1", email: "anna@example.com", name: "Anna" }}
+        onBack={() => {}}
+      />
     </LangProvider>
   );
 }
