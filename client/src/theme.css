@@ -14,6 +14,22 @@
   --black: #111111;
   --white: #ffffff;
 
+  /* Descriptive wardrobe colors: data-driven garment rendering only. */
+  --garment-orange: #e8751a;
+  --garment-orange-detail: #9f410b;
+  --garment-purple: #76519b;
+  --garment-purple-detail: #452d63;
+  --garment-pink: #e487a5;
+  --garment-pink-detail: #9f4664;
+  --garment-green: #4d8b57;
+  --garment-green-detail: #285c35;
+  --garment-brown: #9a6a3a;
+  --garment-brown-detail: #5c3d20;
+  --garment-gray: #7d8790;
+  --garment-gray-detail: #4d5660;
+  --garment-beige: #d8bd86;
+  --garment-beige-detail: #9a7b43;
+
   /* Roles */
   --text: var(--black);
   --text-secondary: #3d3d3d;
