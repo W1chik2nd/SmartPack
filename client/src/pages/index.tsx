@@ -144,50 +144,50 @@ export default function Home({
             </div>
           </div>
 
-          <div className="today-body">
-            <div className="today-left">
-              <button className="today-weather" onClick={TODO_LINKS.weather}>
-                <h2>{t("todaysWeather")}</h2>
-                {wx ? (
-                  <p className="weather-reading">
-                    {Math.round(wx.tempC)}°C
-                    <span className="weather-cond">{wx.condition}</span>
-                  </p>
-                ) : (
-                  <p className="weather-reading weather-pending">
-                    {wxError
-                      ? t("weatherUnavailable")
-                      : city
-                        ? t("weatherLoading")
-                        : t("weatherNoDestination")}
-                  </p>
-                )}
+          {latestTrip ? (
+            <div className="today-body">
+              <div className="today-left">
+                <button className="today-weather" onClick={TODO_LINKS.weather}>
+                  <h2>{t("todaysWeather")}</h2>
+                  {wx ? (
+                    <p className="weather-reading">
+                      {Math.round(wx.tempC)}°C
+                      <span className="weather-cond">{wx.condition}</span>
+                    </p>
+                  ) : (
+                    <p className="weather-reading weather-pending">
+                      {wxError
+                        ? t("weatherUnavailable")
+                        : city
+                          ? t("weatherLoading")
+                          : t("weatherNoDestination")}
+                    </p>
+                  )}
+                  <span className="card-arrow" aria-hidden="true">›</span>
+                </button>
+
+                <button className="today-checklist" onClick={onOpenPacking}>
+                  <h2>{t("checklist")}</h2>
+                  <img
+                    className="checklist-bag"
+                    src="/checklist-bag.png"
+                    alt=""
+                    aria-hidden="true"
+                  />
+                  <span className="card-arrow" aria-hidden="true">›</span>
+                </button>
+              </div>
+
+              <button className="today-outfit" onClick={TODO_LINKS.outfit}>
+                <h2>{t("todaysOutfit")}</h2>
+                {/* Geometric garment drawing (shirt + trousers), CSS only */}
+                <span className="outfit-figure" aria-hidden="true">
+                  <span className="outfit-shirt" />
+                  <span className="outfit-trousers" />
+                </span>
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
 
-              <button className="today-checklist" onClick={onOpenPacking}>
-                <h2>{t("checklist")}</h2>
-                <img
-                  className="checklist-bag"
-                  src="/checklist-bag.png"
-                  alt=""
-                  aria-hidden="true"
-                />
-                <span className="card-arrow" aria-hidden="true">›</span>
-              </button>
-            </div>
-
-            <button className="today-outfit" onClick={TODO_LINKS.outfit}>
-              <h2>{t("todaysOutfit")}</h2>
-              {/* Geometric garment drawing (shirt + trousers), CSS only */}
-              <span className="outfit-figure" aria-hidden="true">
-                <span className="outfit-shirt" />
-                <span className="outfit-trousers" />
-              </span>
-              <span className="card-arrow" aria-hidden="true">›</span>
-            </button>
-
-            {latestTrip ? (
               <button
                 className="today-itinerary"
                 onClick={onOpenItinerary}
@@ -209,23 +209,23 @@ export default function Home({
                 </span>
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
-            ) : (
-              <button
-                className="today-itinerary today-itinerary-empty"
-                onClick={onOpenTrips}
-                aria-label={t("tripPlanner")}
-              >
-                <span className="trip-empty" aria-hidden="true">+</span>
-                <span className="visually-hidden">
-                  {trips === null
-                    ? t("tripLoading")
-                    : tripError
-                      ? t("savedTripLoadFailed")
-                      : t("noSavedTrips")}
-                </span>
-              </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <button
+              className="today-body today-empty-state"
+              onClick={onOpenTrips}
+              aria-label={t("tripPlanner")}
+            >
+              <span className="trip-empty" aria-hidden="true">+</span>
+              <span className="visually-hidden">
+                {trips === null
+                  ? t("tripLoading")
+                  : tripError
+                    ? t("savedTripLoadFailed")
+                    : t("noSavedTrips")}
+              </span>
+            </button>
+          )}
         </section>
 
         {/* Right: primary navigation tiles */}
