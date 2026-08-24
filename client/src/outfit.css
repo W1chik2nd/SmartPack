@@ -330,16 +330,6 @@
   height: 64px;
 }
 
-.tone-red { --piece-color: var(--red); --detail-color: var(--red); }
-.tone-yellow { --piece-color: var(--yellow); --detail-color: var(--yellow); }
-.tone-blue { --piece-color: var(--blue); --detail-color: var(--blue); }
-.tone-black { --piece-color: var(--black); --detail-color: var(--black); }
-.tone-white { --piece-color: var(--white); --detail-color: var(--black); }
-.tone-green { --piece-color: #4d8b57; --detail-color: #285c35; }
-.tone-brown { --piece-color: #9a6a3a; --detail-color: #5c3d20; }
-.tone-gray { --piece-color: #7d8790; --detail-color: #4d5660; }
-.tone-beige { --piece-color: #d8bd86; --detail-color: #9a7b43; }
-
 .fit-slim.dress-piece-top { transform: scaleX(0.88); }
 .fit-relaxed.dress-piece-top { transform: scaleX(1.08); }
 .fit-slim.dress-piece-bottom { transform: scaleX(0.88); }
