@@ -130,7 +130,12 @@ export default function Home({
 
               <button className="today-checklist" onClick={onOpenPacking}>
                 <h2>{t("checklist")}</h2>
-                <span className="check-mark" aria-hidden="true" />
+                <img
+                  className="checklist-bag"
+                  src="/checklist-bag.jpg"
+                  alt=""
+                  aria-hidden="true"
+                />
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
             </div>
