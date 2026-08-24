@@ -268,9 +268,6 @@ export default function Profile({ user, onBack, onSaved }: Props) {
 
           <fieldset className="season-picker">
             <legend>{t("profileSeasonType")}</legend>
-            <button type="button" className="season-help-button" onClick={() => setColorGuideOpen(true)}>
-              不知道自己的四季型？做照片分析问卷 →
-            </button>
             <div>
               {options("seasonColorType").map((option) => (
                 <button key={option.id} type="button" aria-pressed={draft.seasonColorType === option.id} onClick={() => update("seasonColorType", draft.seasonColorType === option.id ? "" : option.id)}>
@@ -278,6 +275,9 @@ export default function Profile({ user, onBack, onSaved }: Props) {
                 </button>
               ))}
             </div>
+            <button type="button" className="season-help-button" onClick={() => setColorGuideOpen(true)}>
+              不知道自己的四季型？做照片分析问卷 →
+            </button>
           </fieldset>
 
           <div className="preference-stack">
@@ -294,7 +294,15 @@ export default function Profile({ user, onBack, onSaved }: Props) {
           </div>
         </section>
       </form>
-      {colorGuideOpen && <PersonalColorGuide onClose={() => setColorGuideOpen(false)} />}
+      {colorGuideOpen && (
+        <PersonalColorGuide
+          onClose={() => setColorGuideOpen(false)}
+          onSeasonDetected={(season) => {
+            update("seasonColorType", season);
+            setColorGuideOpen(false);
+          }}
+        />
+      )}
     </main>
   );
 }

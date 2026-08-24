@@ -223,15 +223,6 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
     const optionalMark = field.required ? "" : ` (${t("optionalMark")})`;
     return (
       <div key={field.key} className="choice-field-wrap">
-        {field.key === "seasonColorType" && (
-          <button
-            type="button"
-            className="season-help-button"
-            onClick={() => setColorGuideOpen(true)}
-          >
-            不知道自己的四季型？做照片分析问卷 →
-          </button>
-        )}
         <OptionGroup
           name={field.key}
           legend={`${label(field.key)}${optionalMark}`}
@@ -246,6 +237,11 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
           otherValue={field.otherKey ? text[field.otherKey] ?? "" : ""}
           onOtherChange={(v) => field.otherKey && setValue(field.otherKey, v)}
         />
+        {field.key === "seasonColorType" && (
+          <button type="button" className="season-help-button" onClick={() => setColorGuideOpen(true)}>
+            不知道自己的四季型？做照片分析问卷 →
+          </button>
+        )}
       </div>
     );
   }
@@ -330,7 +326,15 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
           </div>
         </form>
       </div>
-      {colorGuideOpen && <PersonalColorGuide onClose={() => setColorGuideOpen(false)} />}
+      {colorGuideOpen && (
+        <PersonalColorGuide
+          onClose={() => setColorGuideOpen(false)}
+          onSeasonDetected={(season) => {
+            setChoices((current) => ({ ...current, seasonColorType: [season] }));
+            setColorGuideOpen(false);
+          }}
+        />
+      )}
     </div>
   );
 }

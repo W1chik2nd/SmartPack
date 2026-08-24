@@ -17,11 +17,16 @@
 .color-guide-upload { min-height: 124px; display: grid; place-items: center; align-content: center; gap: 4px; margin: var(--space-3) 0; text-align: center; background: var(--bg); border: 3px dashed var(--blue); cursor: pointer; }
 .color-guide-upload input { position: absolute; width: 1px; height: 1px; opacity: 0; }
 .color-guide-upload strong { font-size: 38px; line-height: 1; color: var(--red); }
+.color-guide-upload img { width: 104px; height: 104px; object-fit: cover; border: 2px solid var(--black); }
 .color-guide-upload span { font-size: 18px; font-weight: var(--weight-heavy); }
 .color-guide-upload small { color: var(--text-secondary); }
 .color-guide-prompt { padding: var(--space-2); border: 2px solid var(--black); }
 .color-guide-prompt p { font-weight: var(--weight-heavy); line-height: 1.5; }
 .color-guide-prompt ul { display: grid; gap: 8px; margin: var(--space-2) 0 0 20px; line-height: 1.45; }
+.color-guide-error { margin-top: var(--space-2); padding: 10px; color: var(--white); background: var(--red); border: 2px solid var(--black); font-weight: var(--weight-bold); }
+.color-guide-result { margin-top: var(--space-2); padding: var(--space-2); border: var(--border); background: var(--bg); }
+.color-guide-result h3 { margin-bottom: var(--space-1); font-size: 20px; }
+.color-guide-result p { white-space: pre-wrap; line-height: 1.6; }
 .color-guide-note { margin-top: var(--space-2); font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
 .color-guide-footer { display: flex; justify-content: flex-end; gap: var(--space-2); padding: var(--space-3); border-top: var(--border); }
 .color-guide-footer button { padding: 12px 18px; font: var(--weight-heavy) 15px var(--font); border: 2px solid var(--black); cursor: pointer; }
