@@ -36,15 +36,34 @@
 }
 
 /* 目的地标记:红方块 + 下方指针,几何优先,不用图片。 */
+/* 经典大头针:圆角方块留右下直角,旋转 -45° 后直角朝正下方成尖端;
+   中间叠白色圆孔。尖端锚在精确坐标上(见下方 margin 的换算)。 */
 .mapview-pin {
   position: absolute;
-  width: 18px;
-  height: 18px;
-  margin-left: -9px;
-  margin-top: -9px;
+  width: 22px;
+  height: 22px;
+  /* 元素中心到旋转后尖端约 √2/2·22 ≈ 15.5px。左移半宽让中心对齐 x,
+     上移(半高 + 尖端伸出)让尖端落在 y,使尖端而非中心指向坐标。 */
+  margin-left: -11px;
+  margin-top: -26px;
   background: var(--red);
   border: var(--border-w) solid var(--black);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
   pointer-events: none;
+}
+
+/* 白色圆孔。父元素旋转了,但正圆旋转后仍是正圆,居中即可。 */
+.mapview-pin::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 8px;
+  height: 8px;
+  transform: translate(-50%, -50%);
+  background: var(--white);
+  border-radius: 50%;
 }
 
 .mapview-zoom {
