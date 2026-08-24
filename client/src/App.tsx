@@ -40,6 +40,7 @@ function Shell() {
   const [booting, setBooting] = useState(true);
   // 从场景卡片带过来的出行目的:行程设置页(地图+日历)和行程计划页都用它。
   const [scenario, setScenario] = useState<string | undefined>(undefined);
+  const [itineraryId, setItineraryId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     // 手机上传页不需要登录态,跳过 me() 免得白等一次请求。
@@ -164,7 +165,11 @@ function Shell() {
           user={user}
           onOpenTrips={() => setRoute("trips")}
           onOpenWardrobe={() => setRoute("wardrobe")}
-          onOpenItinerary={() => setRoute("itinerary")}
+          onOpenItinerary={(id) => {
+            setScenario("travel");
+            setItineraryId(id);
+            setRoute("itinerary");
+          }}
           onOpenPacking={() => setRoute("packing")}
           onOpenProfile={() => setRoute("profile")}
         />
@@ -175,11 +180,8 @@ function Shell() {
           onBack={() => setRoute("home")}
           onPickScenario={(id) => {
             setScenario(id);
+            setItineraryId(undefined);
             setRoute("tripSetup");
-          }}
-          onPlanTrip={(id) => {
-            setScenario(id);
-            setRoute("itinerary");
           }}
         />
       )}
@@ -195,6 +197,7 @@ function Shell() {
         <Itinerary
           user={user}
           scenario={scenario}
+          tripId={itineraryId}
           onBack={() => setRoute("home")}
         />
       )}

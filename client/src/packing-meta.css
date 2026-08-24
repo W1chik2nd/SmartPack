@@ -1,0 +1,20 @@
+.pk-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 5px;
+}
+
+.pk-row-meta > span {
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  background: var(--bg);
+  border: 1px solid var(--black);
+}
+
+.pk-row-meta .pk-gap {
+  color: var(--white);
+  background: var(--red);
+}

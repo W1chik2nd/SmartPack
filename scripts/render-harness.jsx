@@ -20,6 +20,7 @@ function makeTrip(days, stopsPerDay) {
     scenario: "travel",
     departLabel: "3.14",
     createdAt: "2024-03-14",
+    sourcePlanId: "plan-1",
     days: Array.from({ length: days }, (_, d) => ({
       id: `day-${d + 1}`,
       dayNumber: d + 1,
@@ -28,6 +29,15 @@ function makeTrip(days, stopsPerDay) {
       cityEn: "Chengdu",
       summary: "测试",
       summaryEn: "Test",
+      weatherSummary: "12–18°C，多云",
+      weatherSummaryEn: "12–18°C, cloudy",
+      weatherRisk: "午后可能降雨",
+      weatherRiskEn: "Possible afternoon rain",
+      outfit: [
+        { label: "防水外套", labelEn: "Waterproof jacket" },
+        { label: "轻便长裤", labelEn: "Light trousers" },
+      ],
+      equipment: [{ label: "折叠伞", labelEn: "Compact umbrella" }],
       stops: Array.from({ length: stopsPerDay }, (_, s) => ({
         id: `stop-${d + 1}-${s + 1}`,
         position: s,

@@ -5,7 +5,7 @@
 // 选中哪一天、收起/展开这类纯 UI 状态。
 // TODO: 现在后端在没有行程时会补一份演示数据;接上 AI 行程生成后去掉。
 import { useEffect, useState } from "react";
-import { itineraryTrips, type Trip, type User } from "../api";
+import { itineraryTrip, itineraryTrips, type Trip, type User } from "../api";
 import ChatWidget from "../components/ChatWidget";
 import TripSpine from "../components/TripSpine";
 import DayPlan from "../components/DayPlan";
@@ -15,26 +15,38 @@ type Props = {
   user: User;
   /** 从场景选择页进来时带上选中的场景 id。 */
   scenario?: string;
+  /** Dashboard card links to the exact generated itinerary. */
+  tripId?: string;
   onBack: () => void;
 };
 
-export default function Itinerary({ scenario, onBack }: Props) {
+export default function Itinerary({ scenario, tripId, onBack }: Props) {
   const { lang, t } = useLang();
   const [trip, setTrip] = useState<Trip | null>(null);
   const [activeDayId, setActiveDayId] = useState<string>("");
   const [collapsed, setCollapsed] = useState(false);
   const [provider, setProvider] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    itineraryTrips(scenario)
-      .then(({ trips, photoProvider }) => {
-        const first = trips[0] ?? null;
-        setTrip(first);
-        setActiveDayId(first?.days[0]?.id ?? "");
+    const load = tripId
+      ? itineraryTrip(tripId).then(({ trip, photoProvider }) => ({
+          trip,
+          photoProvider,
+        }))
+      : itineraryTrips(scenario).then(({ trips, photoProvider }) => ({
+          trip: trips[0] ?? null,
+          photoProvider,
+        }));
+    load
+      .then(({ trip, photoProvider }) => {
+        setTrip(trip);
+        setActiveDayId(trip?.days[0]?.id ?? "");
         setProvider(photoProvider);
       })
-      .catch(() => setError(t("itineraryError")));
+      .catch(() => setError(t("itineraryError")))
+      .finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once
   }, []);
 
@@ -70,7 +82,13 @@ export default function Itinerary({ scenario, onBack }: Props) {
         </div>
       )}
 
-      {!trip && !error && <p className="itin-subtitle">{t("itineraryLoading")}</p>}
+      {!trip && !error && loading && (
+        <p className="itin-subtitle">{t("itineraryLoading")}</p>
+      )}
+
+      {!trip && !error && !loading && (
+        <p className="itin-subtitle">{t("itineraryEmpty")}</p>
+      )}
 
       {trip && trip.days.length === 0 && (
         <p className="itin-subtitle">{t("itineraryEmpty")}</p>

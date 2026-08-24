@@ -1,3 +1,13 @@
+import type {
+  NewTripPlan,
+  PackingPlan,
+  Place,
+  StopPhoto,
+  Trip,
+  TripPlan,
+} from "./travel-types";
+export type * from "./travel-types";
+
 export type User = {
   id: string;
   email: string;
@@ -275,55 +285,7 @@ export function chat(messages: ChatMessage[]): Promise<{ reply: string }> {
 
 // ---- 行程规划(左侧总行程图 + 右侧每天行程)----
 
-/** 停靠点类型:景点 / 交通 / 餐饮 / 住宿。 */
-export type StopKind = "spot" | "transit" | "meal" | "hotel";
-
-export type TripStop = {
-  id: string;
-  position: number;
-  kind: StopKind;
-  name: string;
-  nameEn: string;
-  startTime: string;
-  duration: string;
-  note: string;
-  noteEn: string;
-  photoQuery: string;
-  /** 后端已解析过的配图;null 表示还要去 /api/itinerary/photo 补。 */
-  photoUrl: string | null;
-  photoCredit: string | null;
-  photoSourceUrl: string | null;
-};
-
-export type TripDay = {
-  id: string;
-  dayNumber: number;
-  /** 手绘稿里的 "x.xx"。 */
-  dateLabel: string;
-  city: string;
-  cityEn: string;
-  summary: string;
-  summaryEn: string;
-  stops: TripStop[];
-};
-
-export type Trip = {
-  id: string;
-  title: string;
-  titleEn: string;
-  scenario: string;
-  departLabel: string;
-  createdAt: string;
-  days: TripDay[];
-};
-
-export type StopPhoto = {
-  imageUrl: string;
-  credit: string;
-  sourceUrl: string;
-};
-
-/** 行程列表。UI 阶段后端会在空列表时自动补一份演示行程。 */
+/** 已由分析 Agent 生成并持久化的行程列表。 */
 export function itineraryTrips(
   scenario?: string
 ): Promise<{ trips: Trip[]; photoProvider: string }> {
@@ -353,54 +315,19 @@ export function stopPhoto(
 // Packing plan — shapes mirror server/packing.ts. The server owns all the
 // packing logic (AGENTS.md §3); the client only renders these and sends the
 // slider value back.
-export type PackingItem = {
-  id: string;
-  label: string;
-  labelEn: string;
-  reuse: number;
-};
-export type PackingCategory = {
-  id: string;
-  title: string;
-  titleEn: string;
-  items: PackingItem[];
-};
-export type EssentialItem = { id: string; label: string; labelEn: string };
-export type CorePiece = {
-  id: string;
-  label: string;
-  labelEn: string;
-  reuse: number;
-};
-
-export type PackingPlan = {
-  balance: number;
-  tripDays: number;
-  summary: string;
-  summaryEn: string;
-  categories: PackingCategory[];
-  essentials: EssentialItem[];
-  corePieces: CorePiece[];
-};
-
 /** balance: 0 = pack lightest, 100 = most outfit variety (US 6.3). */
-export function getPackingPlan(balance: number): Promise<{ plan: PackingPlan }> {
+export function getPackingPlan(
+  balance: number,
+  scenario = "travel"
+): Promise<{ plan: PackingPlan }> {
   return request<{ plan: PackingPlan }>(
-    `/api/packing?balance=${encodeURIComponent(balance)}`
+    `/api/packing?balance=${encodeURIComponent(balance)}&scenario=${encodeURIComponent(scenario)}`
   );
 }
 
 // ---- 行程计划(目的地 + 日期区间)----
 // 地点搜索走后端代理 /api/places(AGENTS.md §3):第三方地理编码服务只在
 // 服务端对接,未来 iOS 端调同一个接口。
-
-export type Place = {
-  id: string;
-  name: string;
-  detail: string;
-  lat: number;
-  lon: number;
-};
 
 export function searchPlaces(
   query: string,
@@ -411,26 +338,21 @@ export function searchPlaces(
   );
 }
 
-export type TripPlan = {
-  id: string;
-  scenario: string;
-  placeName: string;
-  placeDetail: string;
-  lat: number;
-  lon: number;
-  /** ISO date, YYYY-MM-DD. */
-  startDate: string;
-  endDate: string;
-  createdAt: string;
-};
-
-export type NewTripPlan = Omit<TripPlan, "id" | "createdAt">;
-
 export function saveTripPlan(plan: NewTripPlan): Promise<{ plan: TripPlan }> {
   return request<{ plan: TripPlan }>("/api/trip-plans", {
     method: "POST",
     body: JSON.stringify(plan),
   });
+}
+
+/** Run the analytical agent, then persist itinerary + outfits + packing list. */
+export function generateTripPlan(
+  plan: NewTripPlan
+): Promise<{ plan: TripPlan; itinerary: Trip; packing: PackingPlan }> {
+  return request<{ plan: TripPlan; itinerary: Trip; packing: PackingPlan }>(
+    "/api/trip-plans/generate",
+    { method: "POST", body: JSON.stringify(plan) }
+  );
 }
 
 export function listTripPlans(): Promise<{ plans: TripPlan[] }> {

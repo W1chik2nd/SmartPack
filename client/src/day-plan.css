@@ -43,6 +43,63 @@
   flex-basis: 100%;
 }
 
+.day-decisions {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr;
+  margin-bottom: var(--space-3);
+  background: var(--white);
+  border: var(--border);
+  box-shadow: 5px 5px 0 var(--black);
+}
+
+.day-decisions section {
+  min-width: 0;
+  padding: var(--space-2);
+}
+
+.day-decisions section + section {
+  border-left: var(--border);
+}
+
+.day-decisions h3 {
+  margin-bottom: var(--space-1);
+  font-size: 12px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.day-decisions strong,
+.day-decisions p {
+  display: block;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.day-decisions p {
+  margin-top: 4px;
+  color: var(--text-secondary);
+}
+
+.day-decisions ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  list-style: none;
+}
+
+.day-decisions li {
+  padding: 4px 7px;
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  background: var(--bg);
+  border: 2px solid var(--black);
+}
+
+.day-weather {
+  background: var(--yellow);
+}
+
 /* ---------- 时间轴网格:卡片 | 竖线 | 卡片 ---------- */
 
 .day-track {
@@ -228,6 +285,13 @@
 /* ---------- 响应式:窄屏改成单列,全部卡片靠右 ---------- */
 
 @media (max-width: 900px) {
+  .day-decisions {
+    grid-template-columns: 1fr;
+  }
+  .day-decisions section + section {
+    border-left: 0;
+    border-top: var(--border);
+  }
   .day-track {
     grid-template-columns: 56px 1fr;
   }

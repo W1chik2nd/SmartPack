@@ -82,6 +82,19 @@ function Checklist({
                   />
                   <span className="pk-row-label">
                     {lang === "zh" ? item.label : item.labelEn}
+                    {(item.quantity || item.daysUsed || item.wardrobeItemId === "") && (
+                      <span className="pk-row-meta">
+                        {item.quantity && item.quantity > 1 && (
+                          <span>{t("pkQuantity")} ×{item.quantity}</span>
+                        )}
+                        {item.daysUsed && (
+                          <span>{t("pkDays")} {item.daysUsed.join(" / ")}</span>
+                        )}
+                        {item.wardrobeItemId === "" && (
+                          <span className="pk-gap">{t("pkWardrobeGap")}</span>
+                        )}
+                      </span>
+                    )}
                   </span>
                   <span className="pk-row-reuse" title={t("pkReuse")}>
                     ×{item.reuse}

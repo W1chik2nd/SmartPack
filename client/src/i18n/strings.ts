@@ -170,6 +170,26 @@ export const STRINGS = {
     zh: "请先选择目的地和日期。",
   },
   saveTripFailed: { en: "Could not save the trip.", zh: "行程保存失败。" },
+  tripAgendaKicker: { en: "Agent context", zh: "Agent 上下文" },
+  tripAgendaTitle: { en: "What must this trip cover?", zh: "这趟行程必须覆盖什么?" },
+  tripAgendaHint: {
+    en: "Add meetings, reservations, activities, pace, luggage limits, or anything that changes what you wear and carry.",
+    zh: "补充会议、预约、活动、节奏、行李限制,以及任何会影响穿搭和装备的安排。",
+  },
+  tripAgendaPlaceholder: {
+    en: "Example: client meeting on day 1, museum and dinner on day 2; carry-on only; no early starts…",
+    zh: "例如:第 1 天客户会议,第 2 天博物馆和晚餐;只带登机箱;不要安排太早…",
+  },
+  generateTrip: { en: "Generate complete plan", zh: "生成完整旅行方案" },
+  generatingTrip: { en: "Agent is planning…", zh: "Agent 正在规划…" },
+  tripAgentNote: {
+    en: "Combines profile, wardrobe, scenario, agenda, destination weather, itinerary, outfits, equipment, and packing.",
+    zh: "综合个人资料、衣橱、场景、安排、当地天气,一次生成行程、穿搭、装备和清单。",
+  },
+  tripAgentWorking: {
+    en: "Checking destination weather and building a day-by-day plan. This can take a little while.",
+    zh: "正在核对目的地天气并生成逐日方案,可能需要一点时间。",
+  },
   nights: { en: "nights", zh: "晚" },
   sameDay: { en: "Day trip", zh: "当天往返" },
 
@@ -247,6 +267,9 @@ export const STRINGS = {
   pkPacked: { en: "Packed", zh: "已打包" },
   pkUpdating: { en: "updating…", zh: "更新中…" },
   pkLoadFailed: { en: "Failed to load plan.", zh: "无法加载方案。" },
+  pkQuantity: { en: "Pack", zh: "数量" },
+  pkDays: { en: "Days", zh: "使用日" },
+  pkWardrobeGap: { en: "Wardrobe gap", zh: "衣橱缺口" },
 
   // phone upload page
   phoneTitle: { en: "SmartPack Photo Upload", zh: "SmartPack 拍照上传" },
@@ -274,6 +297,9 @@ export const STRINGS = {
   expandOverview: { en: "Expand trip overview", zh: "展开总行程图" },
   pickDay: { en: "Pick a day", zh: "选择某一天" },
   dayStops: { en: "stops", zh: "个停靠点" },
+  dayWeather: { en: "Weather decision", zh: "天气决策" },
+  dayOutfit: { en: "Wear", zh: "当日穿搭" },
+  dayEquipment: { en: "Carry", zh: "随身装备" },
   stopSpot: { en: "Sight", zh: "景点" },
   stopTransit: { en: "Transit", zh: "交通" },
   stopMeal: { en: "Meal", zh: "餐饮" },
