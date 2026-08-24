@@ -1,4 +1,87 @@
 /* 各类衣物的像素细节。基础轮廓在 outfit.css，这里只描述款式差异。 */
+.tone-red { --piece-color: var(--red); --detail-color: var(--red); }
+.tone-orange { --piece-color: var(--garment-orange); --detail-color: var(--garment-orange-detail); }
+.tone-yellow { --piece-color: var(--yellow); --detail-color: var(--yellow); }
+.tone-blue { --piece-color: var(--blue); --detail-color: var(--blue); }
+.tone-purple { --piece-color: var(--garment-purple); --detail-color: var(--garment-purple-detail); }
+.tone-pink { --piece-color: var(--garment-pink); --detail-color: var(--garment-pink-detail); }
+.tone-black { --piece-color: var(--black); --detail-color: var(--black); }
+.tone-white { --piece-color: var(--white); --detail-color: var(--black); }
+.tone-green { --piece-color: var(--garment-green); --detail-color: var(--garment-green-detail); }
+.tone-brown { --piece-color: var(--garment-brown); --detail-color: var(--garment-brown-detail); }
+.tone-gray { --piece-color: var(--garment-gray); --detail-color: var(--garment-gray-detail); }
+.tone-beige { --piece-color: var(--garment-beige); --detail-color: var(--garment-beige-detail); }
+
+/* 描述中的袖长与纹样直接改变轮廓和表面，不依赖衣物照片。 */
+.sleeve-long.dress-piece-top {
+  clip-path: polygon(
+    32% 0, 68% 0, 68% 4%, 72% 4%, 72% 8%, 76% 8%,
+    76% 12%, 80% 12%, 80% 16%, 84% 16%, 84% 22%,
+    88% 22%, 88% 32%, 92% 32%, 92% 46%, 96% 46%,
+    96% 62%, 100% 62%, 100% 88%, 84% 88%, 84% 54%,
+    80% 54%, 80% 100%, 20% 100%, 20% 54%, 16% 54%,
+    16% 88%, 0 88%, 0 62%, 4% 62%, 4% 46%, 8% 46%,
+    8% 32%, 12% 32%, 12% 22%, 16% 22%, 16% 16%,
+    20% 16%, 20% 12%, 24% 12%, 24% 8%, 28% 8%, 28% 4%, 32% 4%
+  );
+}
+
+.dress-piece-top::before,
+.dress-piece-top::after { z-index: 2; }
+
+.dress-piece-pattern {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.pattern-plaid > .dress-piece-pattern::before,
+.pattern-plaid > .dress-piece-pattern::after,
+.pattern-striped > .dress-piece-pattern::before,
+.pattern-striped > .dress-piece-pattern::after,
+.pattern-printed > .dress-piece-pattern::before {
+  content: "";
+  position: absolute;
+  background: var(--detail-color);
+}
+
+.pattern-plaid > .dress-piece-pattern::before {
+  top: 0;
+  bottom: 0;
+  left: 28%;
+  width: 8%;
+}
+
+.pattern-plaid > .dress-piece-pattern::after {
+  top: 42%;
+  right: 0;
+  left: 0;
+  height: 8%;
+}
+
+.pattern-striped > .dress-piece-pattern::before,
+.pattern-striped > .dress-piece-pattern::after {
+  top: 0;
+  bottom: 0;
+  width: 8%;
+}
+
+.pattern-striped > .dress-piece-pattern::before { left: 28%; }
+.pattern-striped > .dress-piece-pattern::after { right: 28%; }
+
+.pattern-printed > .dress-piece-pattern::before {
+  top: 28%;
+  left: 32%;
+  width: 10%;
+  height: 12%;
+  box-shadow: 42px 24px 0 var(--detail-color), 8px 58px 0 var(--detail-color);
+}
+
+.dress-piece.is-compact.pattern-printed > .dress-piece-pattern::before {
+  box-shadow: 16px 10px 0 var(--detail-color), 3px 24px 0 var(--detail-color);
+}
+
 .garment-shirt::after {
   right: auto;
   bottom: 0;

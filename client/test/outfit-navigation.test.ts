@@ -36,6 +36,8 @@ test("outfit pieces always render from descriptions instead of wardrobe photos",
   assert.match(outfit, /dress-mini-clothes/);
   assert.match(outfit, /dress-featured-accessory/);
   assert.match(visual, /garment-\$\{piece\.garmentStyle\}/);
+  assert.match(visual, /pattern-\$\{piece\.pattern\}/);
+  assert.match(visual, /sleeve-\$\{piece\.sleeve\}/);
   const home = readFileSync(new URL("../src/pages/index.tsx", import.meta.url), "utf8");
   const dashboardOutfit = readFileSync(new URL("../src/components/DashboardOutfit.tsx", import.meta.url), "utf8");
   assert.match(home, /<DashboardOutfit/);
@@ -53,8 +55,13 @@ test("outfit pieces use the white pixel line-art reference style", () => {
   assert.match(outfitCss, /--detail-color/);
   assert.match(outfitCss, /\.dress-piece-top \{[\s\S]*background: var\(--piece-color\)/);
   assert.match(outfitCss, /\.dress-piece-bottom \{[\s\S]*background: var\(--piece-color\)/);
-  assert.match(outfitCss, /\.tone-green/);
-  assert.match(outfitCss, /\.tone-brown/);
+  assert.match(garmentCss, /\.tone-orange/);
+  assert.match(garmentCss, /\.tone-white/);
+  assert.match(garmentCss, /\.tone-green/);
+  assert.match(garmentCss, /\.tone-brown/);
+  assert.match(garmentCss, /\.pattern-plaid/);
+  assert.match(garmentCss, /\.sleeve-long/);
+  assert.doesNotMatch(garmentCss, /gradient/);
   assert.match(outfitCss, /\.fit-relaxed/);
   assert.match(garmentCss, /\.garment-sneakers::before/);
   assert.match(garmentCss, /inset 0 -6px 0 var\(--black\)/);

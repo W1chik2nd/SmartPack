@@ -17,11 +17,16 @@ export default function OutfitPieceVisual({ piece, compact = false }: Props) {
     : "";
   const fitClass = piece.fit ? ` fit-${piece.fit}` : "";
   const materialClass = piece.material ? ` material-${piece.material}` : "";
+  const sleeveClass = piece.sleeve ? ` sleeve-${piece.sleeve}` : "";
   return (
     <span
-      className={`dress-piece pixel-garment dress-piece-${piece.kind}${accessoryClass}${garmentClass}${fitClass}${materialClass} tone-${piece.tone}${compact ? " is-compact" : ""}`}
+      className={`dress-piece pixel-garment dress-piece-${piece.kind}${accessoryClass}${garmentClass}${fitClass}${materialClass}${sleeveClass} pattern-${piece.pattern} tone-${piece.tone}${compact ? " is-compact" : ""}`}
       role="img"
       aria-label={piece.detail ? `${label}: ${piece.detail}` : label}
-    />
+    >
+      {piece.pattern !== "solid" && (
+        <span className="dress-piece-pattern" aria-hidden="true" />
+      )}
+    </span>
   );
 }
