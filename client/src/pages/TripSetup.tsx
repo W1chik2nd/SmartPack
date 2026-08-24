@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 import {
   searchPlaces,
-  saveTripPlan,
+  generateTripPlan,
   type Place,
   type User,
 } from "../api";
@@ -53,6 +53,7 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
   const [searching, setSearching] = useState(false);
   const [place, setPlace] = useState<Place | null>(null);
   const [range, setRange] = useState<DateRange | null>(null);
+  const [agenda, setAgenda] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -102,7 +103,7 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
     setSaving(true);
     setError(null);
     try {
-      await saveTripPlan({
+      await generateTripPlan({
         scenario,
         placeName: place.name,
         placeDetail: place.detail,
@@ -110,6 +111,7 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
         lon: place.lon,
         startDate: range.start,
         endDate: range.end,
+        notes: agenda,
       });
       setSaved(true);
       // 落库成功后回主页,主页会拉取并显示这条新行程。
@@ -237,6 +239,21 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
         </section>
       </div>
 
+      <section className="tripsetup-agenda">
+        <div>
+          <p className="tripsetup-agenda-kicker">{t("tripAgendaKicker")}</p>
+          <h2>{t("tripAgendaTitle")}</h2>
+          <p>{t("tripAgendaHint")}</p>
+        </div>
+        <textarea
+          value={agenda}
+          onChange={(event) => setAgenda(event.target.value)}
+          maxLength={1200}
+          placeholder={t("tripAgendaPlaceholder")}
+          aria-label={t("tripAgendaTitle")}
+        />
+      </section>
+
       <div className="tripsetup-actions">
         <button
           type="button"
@@ -244,8 +261,11 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? t("savingTrip") : t("saveTrip")}
+          {saving ? t("generatingTrip") : t("generateTrip")}
         </button>
+        <p className="tripsetup-agent-note" aria-live="polite">
+          {saving ? t("tripAgentWorking") : t("tripAgentNote")}
+        </p>
       </div>
     </div>
   );

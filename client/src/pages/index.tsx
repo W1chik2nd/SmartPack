@@ -15,7 +15,7 @@ type Props = {
   user: User;
   onOpenTrips: () => void;
   onOpenWardrobe: () => void;
-  onOpenItinerary: () => void;
+  onOpenItinerary: (itineraryId: string) => void;
   onOpenPacking: () => void;
   onOpenProfile: () => void;
 };
@@ -85,8 +85,9 @@ export default function Home({
     minute: "2-digit",
   });
 
-  // 最新一条行程(列表已按新→旧排序),用于"行程"卡片。
-  const latestTrip = trips && trips.length > 0 ? trips[0] : null;
+  // 主页行程只展示已由 Agent 完整生成的旅行场景,其他场景不混进来。
+  const latestTrip =
+    trips?.find((trip) => trip.scenario === "travel" && trip.itineraryId) ?? null;
 
   // 一条行程的日期区间显示。按本地年月日解析,不走 UTC,免得跨时区错一天。
   function tripDates(trip: TripPlan): string {
@@ -187,7 +188,14 @@ export default function Home({
               <span className="card-arrow" aria-hidden="true">›</span>
             </button>
 
-            <button className="today-itinerary" onClick={onOpenItinerary}>
+            <button
+              className="today-itinerary"
+              onClick={() =>
+                latestTrip?.itineraryId
+                  ? onOpenItinerary(latestTrip.itineraryId)
+                  : onOpenTrips()
+              }
+            >
               <h2>{t("itinerary")}</h2>
               {latestTrip ? (
                 <span className="trip-summary">

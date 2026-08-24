@@ -247,6 +247,10 @@ for (const stops of [1, 3, 4, 5, 8]) {
   const circles = circlesOf(html);
   const cards = [...html.matchAll(/class="stop-card side-(left|right)"/g)].map((m) => m[1]);
 
+  if (!html.includes('class="day-decisions"')) fail(`${stops} stops: decision panel missing`);
+  if (!html.includes("Waterproof jacket")) fail(`${stops} stops: outfit recommendation missing`);
+  if (!html.includes("Compact umbrella")) fail(`${stops} stops: equipment recommendation missing`);
+
   if (!vb) { fail(`${stops} stops: no viewBox`); continue; }
   if (vb.h !== stops * ROW_H) fail(`${stops} stops: spine height ${vb.h} != ${stops * ROW_H}`);
   if (circles.length !== stops) fail(`${stops} stops: expected ${stops} nodes, got ${circles.length}`);

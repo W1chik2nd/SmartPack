@@ -20,20 +20,17 @@ export async function handleItineraryRoutes(ctx: Ctx): Promise<boolean> {
   const method = req.method;
   const path = url.pathname;
 
-  // 行程列表 + 当前行程。UI 阶段:用户还没有行程时自动造一份演示数据,
-  // 否则页面空着没东西看。接入 AI 生成后这里改成只读。
-  // TODO: 去掉 seedDemoTrip,由行程生成流程写入。
+  // 行程列表:只读 AI 已生成的数据;没有时返回空数组,不伪造演示行程。
   if (method === "GET" && path === "/api/itinerary/trips") {
     const user = userFromHeader();
     if (!user) {
       json(res, 401, { error: "Not signed in." });
       return true;
     }
-    let trips = itinerary.list(user.id);
-    if (trips.length === 0) {
-      const scenario = url.searchParams.get("scenario") ?? "travel";
-      trips = [itinerary.seedDemoTrip(user.id, scenario)];
-    }
+    const scenario = url.searchParams.get("scenario");
+    const trips = itinerary
+      .list(user.id)
+      .filter((trip) => !scenario || trip.scenario === scenario);
     json(res, 200, { trips, photoProvider: photoProvider() });
     return true;
   }
