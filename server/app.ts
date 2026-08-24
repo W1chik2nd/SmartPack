@@ -39,10 +39,36 @@ type UserRow = {
   height_cm: number | null;
   weight_kg: number | null;
   style: string | null;
+  gender: string | null;
+  chest_cm: number | null;
+  waist_cm: number | null;
+  hips_cm: number | null;
+  body_type: string | null;
+  season_type: string | null;
+  style_preferences: string | null;
+  temperature: string | null;
+  packing_habits: string | null;
 };
 
 function publicUser(u: UserRow) {
-  return { id: u.id, email: u.email, name: u.name };
+  return {
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    age: u.age,
+    heightCm: u.height_cm,
+    weightKg: u.weight_kg,
+    style: u.style,
+    gender: u.gender,
+    chestCm: u.chest_cm,
+    waistCm: u.waist_cm,
+    hipsCm: u.hips_cm,
+    bodyType: u.body_type,
+    season: u.season_type,
+    stylePreferences: u.style_preferences ? JSON.parse(u.style_preferences) : [],
+    temperature: u.temperature,
+    packingHabits: u.packing_habits ? JSON.parse(u.packing_habits) : [],
+  };
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,6 +91,15 @@ export function createApp(dbPath: string): App {
       height_cm   REAL,
       weight_kg   REAL,
       style       TEXT,
+      gender      TEXT,
+      chest_cm    REAL,
+      waist_cm    REAL,
+      hips_cm     REAL,
+      body_type   TEXT,
+      season_type TEXT,
+      style_preferences TEXT NOT NULL DEFAULT '[]',
+      temperature TEXT,
+      packing_habits TEXT NOT NULL DEFAULT '[]',
       created_at  TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS sessions (
@@ -91,6 +126,15 @@ export function createApp(dbPath: string): App {
     ["height_cm", "REAL"],
     ["weight_kg", "REAL"],
     ["style", "TEXT"],
+    ["gender", "TEXT"],
+    ["chest_cm", "REAL"],
+    ["waist_cm", "REAL"],
+    ["hips_cm", "REAL"],
+    ["body_type", "TEXT"],
+    ["season_type", "TEXT"],
+    ["style_preferences", "TEXT NOT NULL DEFAULT '[]'"],
+    ["temperature", "TEXT"],
+    ["packing_habits", "TEXT NOT NULL DEFAULT '[]'"],
   ] as const) {
     if (!existing.has(col)) db.exec(`ALTER TABLE users ADD COLUMN ${col} ${type}`);
   }
@@ -100,7 +144,7 @@ export function createApp(dbPath: string): App {
       "Content-Type": "application/json; charset=utf-8",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
     });
     res.end(JSON.stringify(body));
   }
@@ -294,6 +338,46 @@ export function createApp(dbPath: string): App {
       const token = bearerToken(req);
       if (token) db.prepare(`DELETE FROM sessions WHERE token = ?`).run(token);
       json(res, 200, { ok: true });
+      return;
+    }
+
+    if (req.method === "PUT" && url.pathname === "/api/profile") {
+      const user = userForToken(bearerToken(req));
+      if (!user) {
+        json(res, 401, { error: "Not signed in." });
+        return;
+      }
+      const body = await readBody(req);
+      const values = {
+        name: typeof body.name === "string" ? body.name.trim() : user.name,
+        gender: typeof body.gender === "string" ? body.gender : "",
+        heightCm: body.heightCm == null ? null : Number(body.heightCm),
+        weightKg: body.weightKg == null ? null : Number(body.weightKg),
+        chestCm: body.chestCm == null ? null : Number(body.chestCm),
+        waistCm: body.waistCm == null ? null : Number(body.waistCm),
+        hipsCm: body.hipsCm == null ? null : Number(body.hipsCm),
+        bodyType: typeof body.bodyType === "string" ? body.bodyType : "",
+        season: typeof body.season === "string" ? body.season : "",
+        stylePreferences: Array.isArray(body.stylePreferences) ? body.stylePreferences : [],
+        temperature: typeof body.temperature === "string" ? body.temperature : "",
+        packingHabits: Array.isArray(body.packingHabits) ? body.packingHabits : [],
+      };
+      if (!values.name) {
+        json(res, 400, { error: "Name is required." });
+        return;
+      }
+      db.prepare(`
+        UPDATE users SET name = ?, gender = ?, height_cm = ?, weight_kg = ?,
+          chest_cm = ?, waist_cm = ?, hips_cm = ?, body_type = ?, season_type = ?,
+          style_preferences = ?, temperature = ?, packing_habits = ? WHERE id = ?
+      `).run(
+        values.name, values.gender, values.heightCm, values.weightKg,
+        values.chestCm, values.waistCm, values.hipsCm, values.bodyType, values.season,
+        JSON.stringify(values.stylePreferences), values.temperature,
+        JSON.stringify(values.packingHabits), user.id
+      );
+      const updated = db.prepare(`SELECT * FROM users WHERE id = ?`).get(user.id) as UserRow;
+      json(res, 200, { user: publicUser(updated) });
       return;
     }
 

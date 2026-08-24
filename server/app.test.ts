@@ -50,6 +50,18 @@ async function get(path: string, token?: string) {
   return { status: res.status, body: await res.json() };
 }
 
+async function put(path: string, body: unknown, token?: string) {
+  const res = await fetch(base + path, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  return { status: res.status, body: await res.json() };
+}
+
 // A complete sign-up payload: account fields plus the style questionnaire.
 const annaProfile = {
   name: "Anna",
@@ -213,6 +225,40 @@ test("scenarios requires auth and returns the catalog", async () => {
     assert.equal(typeof s.label, "string");
     assert.equal(typeof s.image, "string");
   }
+});
+
+test("profile update persists measurements, gender, and preferences", async () => {
+  const login = await post("/api/login", {
+    email: "anna@example.com",
+    password: "correct-horse",
+  });
+  const update = await put("/api/profile", {
+    name: "Anna Updated",
+    gender: "woman",
+    heightCm: 168,
+    weightKg: 55,
+    chestCm: 88,
+    waistCm: 68,
+    hipsCm: 94,
+    bodyType: "hourglass",
+    season: "autumn",
+    stylePreferences: ["minimal", "elegant"],
+    temperature: "cold",
+    packingHabits: ["light"],
+  }, login.body.token);
+  assert.equal(update.status, 200);
+  assert.equal(update.body.user.gender, "woman");
+  assert.equal(update.body.user.chestCm, 88);
+  assert.deepEqual(update.body.user.stylePreferences, ["minimal", "elegant"]);
+  const current = await get("/api/me", login.body.token);
+  assert.equal(current.body.user.name, "Anna Updated");
+  assert.equal(current.body.user.bodyType, "hourglass");
+  assert.deepEqual(current.body.user.packingHabits, ["light"]);
+});
+
+test("profile update requires authentication", async () => {
+  const response = await put("/api/profile", { name: "Nobody" });
+  assert.equal(response.status, 401);
 });
 
 test("logout invalidates the session token", async () => {
