@@ -158,7 +158,7 @@ export default function TripPlanner({
   return (
     <div className="scenarios">
       <header className="scenarios-head">
-        <button type="button" className="scenarios-back" onClick={onBack}>
+        <button type="button" className="scenarios-back ui-back-button" onClick={onBack}>
           ‹ {t("backToHome")}
         </button>
         <p className="scenarios-eyebrow">

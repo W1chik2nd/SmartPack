@@ -62,12 +62,12 @@
   height: 56px;
   display: grid;
   place-items: center;
-  color: #fff;
+  color: var(--white);
   background: var(--red);
-  border: 3px solid var(--text);
-  border-radius: 8px;
+  border: var(--border);
+  border-radius: var(--radius);
   cursor: pointer;
-  box-shadow: 4px 4px 0 var(--text);
+  box-shadow: var(--shadow-sm);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -78,7 +78,7 @@
 
 .wardrobe-camera:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0 var(--text);
+  box-shadow: var(--shadow-md);
 }
 
 .wardrobe-camera:active {
@@ -97,8 +97,8 @@
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  border: 3px solid var(--text);
-  background: #fff;
+  border: var(--border);
+  background: var(--white);
 }
 
 .wardrobe-cell {
@@ -111,7 +111,7 @@
   /* 标题 + 款式/版型两行文字;细节只存库不展示 */
   aspect-ratio: 1 / 1.05;
   padding: 16px 12px;
-  border: 1.5px solid var(--text);
+  border: var(--border-thin);
   color: var(--text);
 }
 
@@ -125,7 +125,7 @@
   aspect-ratio: 1 / 1;
   object-fit: cover;
   border: 2px solid var(--text);
-  border-radius: 4px;
+  border-radius: var(--radius);
 }
 
 /* 数量角标:图示的「数量 ×××」 */
@@ -261,7 +261,7 @@
   z-index: 200;
   display: grid;
   place-items: center;
-  background: rgba(29, 53, 87, 0.45);
+  background: var(--overlay);
 }
 
 .wardrobe-qr-card {
@@ -270,10 +270,10 @@
   align-items: center;
   gap: 14px;
   padding: 28px 32px;
-  background: #fff;
+  background: var(--white);
   border: 3px solid var(--text);
-  border-radius: 8px;
-  box-shadow: 6px 6px 0 var(--text);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
   max-width: 320px;
   text-align: center;
 }
@@ -321,12 +321,12 @@
   font-family: inherit;
   font-size: 15px;
   font-weight: 700;
-  color: #fff;
+  color: var(--white);
   background: var(--blue);
-  border: 3px solid var(--text);
-  border-radius: 6px;
+  border: var(--border);
+  border-radius: var(--radius);
   cursor: pointer;
-  box-shadow: 3px 3px 0 var(--text);
+  box-shadow: var(--shadow-sm);
 }
 
 .wardrobe-qr-close:hover {

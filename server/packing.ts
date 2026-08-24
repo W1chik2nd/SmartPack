@@ -149,6 +149,7 @@ const ESSENTIALS: EssentialItem[] = [
   { id: "umbrella", label: "折叠伞", labelEn: "Foldable umbrella" },
   { id: "sunscreen", label: "防晒霜", labelEn: "Sunscreen" },
   { id: "meds", label: "常备药品", labelEn: "Everyday medicine" },
+  { id: "water-bottle", label: "随身杯", labelEn: "Carry cup" },
 ];
 
 const clamp = (n: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, n));

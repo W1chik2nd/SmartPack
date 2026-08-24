@@ -97,7 +97,7 @@ html[lang="en"] .pk-slider-cap {
   background: var(--black);
 }
 
-/* Thumb: a red square with a heavy black outline — a Bauhaus block, not a dot. */
+/* Thumb: a yellow square with a heavy black outline — a Bauhaus block, not a dot. */
 .pk-range::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -105,15 +105,15 @@ html[lang="en"] .pk-slider-cap {
   height: 26px;
   margin-left: -10px; /* center the 26px block over the 6px track */
   background: var(--yellow);
-  border: 3px solid var(--black);
-  border-radius: 0;
+  border: var(--border);
+  border-radius: var(--radius);
 }
 .pk-range::-moz-range-thumb {
   width: 26px;
   height: 26px;
   background: var(--yellow);
-  border: 3px solid var(--black);
-  border-radius: 0;
+  border: var(--border);
+  border-radius: var(--radius);
 }
 
 /* Visible keyboard focus (accent replaces the native outline we removed). */

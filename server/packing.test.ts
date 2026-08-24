@@ -61,10 +61,11 @@ test("lean packing means fewer items but higher reuse than a varied plan", () =>
   assert.ok(lean.corePieces[0].reuse >= varied.corePieces[0].reuse);
 });
 
-test("essentials always include ID and passport, in that order", () => {
+test("essentials always include ID, passport, and a carry cup", () => {
   const plan = buildPackingPlan(50);
   assert.equal(plan.essentials[0].label, "身份证");
   assert.equal(plan.essentials[1].label, "护照");
+  assert.ok(plan.essentials.some((item) => item.label === "随身杯"));
   assert.ok(plan.essentials.length >= 5);
 });
 

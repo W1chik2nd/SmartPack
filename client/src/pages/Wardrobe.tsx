@@ -193,7 +193,7 @@ export default function Wardrobe({ onBack }: Props) {
   return (
     <main className="wardrobe">
       <div className="wardrobe-backbar">
-        <button type="button" className="wardrobe-back" onClick={onBack}>
+        <button type="button" className="wardrobe-back ui-back-button" onClick={onBack}>
           ‹ {t("backToHome")}
         </button>
       </div>

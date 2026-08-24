@@ -56,7 +56,7 @@ export default function Itinerary({ scenario, tripId, onBack }: Props) {
     <div className="itinerary-page">
       <header className="itin-head">
         <div className="itin-head-left">
-          <button type="button" className="itin-back" onClick={onBack}>
+          <button type="button" className="itin-back ui-back-button" onClick={onBack}>
             ‹ {t("backToHome")}
           </button>
           <h1 className="itin-title">{title || t("itineraryTitle")}</h1>

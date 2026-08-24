@@ -21,11 +21,22 @@
   --disabled-text: #6b6b6b;
   --disabled-surface: #d9d9d9;
   --danger: var(--red);
+  --overlay: rgb(29 53 87 / 45%);
+  --overlay-dark: rgb(17 17 17 / 72%);
 
   /* Geometry: thick borders, right angles. No gradients, no soft shadows. */
   --border-w: 3px;
   --border: var(--border-w) solid var(--black);
+  --border-thin: 2px solid var(--black);
   --radius: 0;
+  --shadow-sm: 4px 4px 0 var(--black);
+  --shadow-md: 6px 6px 0 var(--black);
+  --shadow-lg: 8px 8px 0 var(--black);
+
+  /* Controls share one rhythm across every page. */
+  --control-h-sm: 40px;
+  --control-h-md: 48px;
+  --control-h-lg: 52px;
 
   /* Type: sans-serif, strong weight contrast, left-aligned */
   --font: "Helvetica Neue", Helvetica, Arial, -apple-system, sans-serif;

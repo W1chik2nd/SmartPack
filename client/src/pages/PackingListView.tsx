@@ -187,7 +187,7 @@ export default function PackingLayout({
 
       <div className="pk-main">
         <div className="pk-backbar">
-          <button type="button" className="pk-back" onClick={onBack}>
+          <button type="button" className="pk-back ui-back-button" onClick={onBack}>
             ‹ {t("backToHome")}
           </button>
         </div>

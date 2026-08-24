@@ -38,7 +38,97 @@ body {
   font-family: var(--font);
   background: var(--bg);
   color: var(--text);
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+select {
+  border-radius: var(--radius);
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+::selection {
+  color: var(--white);
+  background: var(--blue);
+}
+
+/* Shared page structure keeps navigation clearance, width and hierarchy stable. */
+.page-shell {
+  min-height: 100vh;
+  padding: 88px var(--space-4) var(--space-4);
+  background: var(--bg);
+}
+
+.ui-back-button {
+  min-height: var(--control-h-sm);
+  padding: 8px var(--space-2);
+  color: var(--white);
+  background: var(--blue);
+  border: var(--border);
+  font-weight: var(--weight-bold);
+  cursor: pointer;
+}
+
+.ui-back-button:hover {
+  color: var(--black);
+  background: var(--yellow);
+}
+
+.ui-button {
+  min-height: var(--control-h-md);
+  padding: 10px var(--space-2);
+  border: var(--border);
+  font-family: inherit;
+  font-weight: var(--weight-heavy);
+  cursor: pointer;
+}
+
+.ui-button-primary {
+  color: var(--white);
+  background: var(--blue);
+}
+
+.ui-button-primary:hover:not(:disabled) {
+  color: var(--black);
+  background: var(--yellow);
+}
+
+.ui-button-danger {
+  color: var(--white);
+  background: var(--red);
+  box-shadow: var(--shadow-sm);
+}
+
+.ui-button-danger:hover:not(:disabled) {
+  color: var(--black);
+  background: var(--yellow);
+}
+
+.ui-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.ui-surface {
+  background: var(--surface);
+  border: var(--border);
+  box-shadow: var(--shadow-md);
 }
 
 /* ---------- motion ----------

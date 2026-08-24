@@ -13,8 +13,8 @@
   padding: 0 12px;
   color: var(--text);
   background: var(--yellow);
-  border: 3px solid var(--text);
-  box-shadow: 4px 4px 0 var(--text);
+  border: var(--border);
+  box-shadow: var(--shadow-sm);
   font-size: 13px;
   font-weight: var(--weight-heavy);
 }
@@ -35,7 +35,7 @@
   color: var(--text);
   background: var(--white);
   border: 2px solid var(--text);
-  border-radius: 0;
+  border-radius: var(--radius);
   cursor: pointer;
 }
 

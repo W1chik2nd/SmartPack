@@ -189,7 +189,7 @@ export default function Profile({ user, onBack, onSaved }: Props) {
   }
 
   return (
-    <main className="profile-page">
+    <main className="profile-page page-shell">
       <header className="profile-heading">
         <button className="profile-back" type="button" onClick={onBack}>
           <span aria-hidden="true">←</span> {t("backToHome")}
@@ -290,7 +290,7 @@ export default function Profile({ user, onBack, onSaved }: Props) {
             <p className={notice ? "is-visible" : ""} role="status">
               {notice === "saved" ? t("profileSaved") : notice === "options" ? t("optionsLoadError") : notice === "error" ? t("profileSaveFailed") : ""}
             </p>
-            <button className="profile-submit" type="submit" disabled={!fields}>{t("profileFinish")}</button>
+            <button className="profile-submit ui-button ui-button-primary" type="submit" disabled={!fields}>{t("profileFinish")}</button>
           </div>
         </section>
       </form>

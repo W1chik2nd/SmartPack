@@ -64,7 +64,7 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
   if (error) {
     return (
       <main className="dress-page dress-state">
-        <button type="button" className="dress-back" onClick={onBack}>‹ {t("backToHome")}</button>
+        <button type="button" className="dress-back ui-back-button" onClick={onBack}>‹ {t("backToHome")}</button>
         <p role="alert">{t("outfitLoadFailed")}</p>
       </main>
     );
@@ -87,7 +87,7 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
     <main className="dress-page">
       <header className="dress-head">
         <div>
-          <button type="button" className="dress-back" onClick={onBack}>‹ {t("backToHome")}</button>
+          <button type="button" className="dress-back ui-back-button" onClick={onBack}>‹ {t("backToHome")}</button>
           <h1>{t("outfitOverviewTitle")}</h1>
         </div>
         <span className="dress-day-badge">Day {activeDay.dayNumber} / {plan.days.length}</span>

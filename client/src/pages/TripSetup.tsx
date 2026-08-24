@@ -216,7 +216,7 @@ export default function TripSetup({
   return (
     <div className="tripsetup">
       <header className="tripsetup-head">
-        <button type="button" className="tripsetup-back" onClick={onBack}>
+        <button type="button" className="tripsetup-back ui-back-button" onClick={onBack}>
           ‹ {t("backToScenarios")}
         </button>
         <p className="tripsetup-eyebrow">
@@ -375,7 +375,7 @@ export default function TripSetup({
       <div className="tripsetup-actions">
         <button
           type="button"
-          className="tripsetup-save"
+          className="tripsetup-save ui-button ui-button-danger"
           onClick={generation ? onSaved : handleSave}
           disabled={saving || isGenerating}
         >

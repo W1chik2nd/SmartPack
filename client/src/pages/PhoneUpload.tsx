@@ -62,7 +62,7 @@ export default function PhoneUpload({ uploadToken }: { uploadToken: string }) {
       {status === "error" && <p className="phone-upload-err">{error}</p>}
 
       <button
-        className="phone-upload-btn"
+        className="phone-upload-btn ui-button ui-button-danger"
         onClick={() => fileInputRef.current?.click()}
       >
         {status === "done" ? t("phoneAnother") : t("phoneTake")}
