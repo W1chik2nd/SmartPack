@@ -188,7 +188,11 @@ function Shell() {
         <Wardrobe onBack={() => setRoute("home")} />
       )}
       {route === "profile" && user && (
-        <Profile user={user} onBack={() => setRoute("home")} />
+        <Profile
+          user={user}
+          onBack={() => setRoute("home")}
+          onSaved={(updated) => setUser(updated)}
+        />
       )}
       {route === "packing" && user && (
         <PackingList onBack={() => setRoute("home")} />

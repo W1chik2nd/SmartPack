@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from "react";
-import type { User } from "../api";
+import { updateProfile, type User } from "../api";
 import { useLang } from "../i18n/useLang";
 
-type Props = { user: User; onBack: () => void };
+type Props = { user: User; onBack: () => void; onSaved: (user: User) => void };
 type Avatar = "woman" | "man";
 type Draft = {
   nickname: string;
@@ -15,6 +15,12 @@ type Draft = {
   bodyType: string;
   season: string;
 };
+
+function avatarForGender(gender: string | null): Avatar {
+  return gender === "man" || gender === "male" || gender === "男"
+    ? "man"
+    : "woman";
+}
 
 function AvatarArt({ variant }: { variant: Avatar }) {
   if (variant === "man") {
@@ -38,23 +44,24 @@ function AvatarArt({ variant }: { variant: Avatar }) {
   );
 }
 
-export default function Profile({ user, onBack }: Props) {
+export default function Profile({ user, onBack, onSaved }: Props) {
   const { lang, t } = useLang();
-  const [avatar, setAvatar] = useState<Avatar>("woman");
+  const initialGender = avatarForGender(user.gender);
+  const [avatar, setAvatar] = useState<Avatar>(initialGender);
   const [draft, setDraft] = useState<Draft>({
     nickname: user.name,
-    gender: "",
-    height: "",
-    weight: "",
-    chest: "",
-    waist: "",
-    hips: "",
-    bodyType: "",
-    season: "",
+    gender: user.gender ?? "",
+    height: user.heightCm?.toString() ?? "",
+    weight: user.weightKg?.toString() ?? "",
+    chest: user.chestCm?.toString() ?? "",
+    waist: user.waistCm?.toString() ?? "",
+    hips: user.hipsCm?.toString() ?? "",
+    bodyType: user.bodyType ?? "",
+    season: user.season ?? "",
   });
-  const [styles, setStyles] = useState<string[]>([]);
-  const [temperature, setTemperature] = useState("");
-  const [packingHabits, setPackingHabits] = useState<string[]>([]);
+  const [styles, setStyles] = useState<string[]>(user.stylePreferences ?? []);
+  const [temperature, setTemperature] = useState(user.temperature ?? "");
+  const [packingHabits, setPackingHabits] = useState<string[]>(user.packingHabits ?? []);
   const [notice, setNotice] = useState(false);
 
   const measurements = [
@@ -99,11 +106,28 @@ export default function Profile({ user, onBack }: Props) {
     setNotice(false);
   }
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    // TODO: replace this preview notice with GET/PUT /api/profile once the
-    // profile database contract is agreed. Never imply persistence before it exists.
-    setNotice(true);
+    try {
+      const { user: updated } = await updateProfile({
+        name: draft.nickname,
+        gender: draft.gender,
+        heightCm: draft.height ? Number(draft.height) : null,
+        weightKg: draft.weight ? Number(draft.weight) : null,
+        chestCm: draft.chest ? Number(draft.chest) : null,
+        waistCm: draft.waist ? Number(draft.waist) : null,
+        hipsCm: draft.hips ? Number(draft.hips) : null,
+        bodyType: draft.bodyType,
+        season: draft.season,
+        stylePreferences: styles,
+        temperature,
+        packingHabits,
+      });
+      onSaved(updated);
+      setNotice(true);
+    } catch {
+      setNotice(false);
+    }
   }
 
   return (
@@ -132,7 +156,10 @@ export default function Profile({ user, onBack }: Props) {
                   className={avatar === option ? "is-active" : ""}
                   aria-pressed={avatar === option}
                   aria-label={option === "woman" ? t("profileAvatarOne") : t("profileAvatarTwo")}
-                  onClick={() => { setAvatar(option); setNotice(false); }}
+                  onClick={() => {
+                    setAvatar(option);
+                    update("gender", option);
+                  }}
                 >
                   <AvatarArt variant={option} />
                 </button>
@@ -146,7 +173,14 @@ export default function Profile({ user, onBack }: Props) {
           </label>
           <label className="profile-text-field">
             <span>{t("profileGender")}</span>
-            <select value={draft.gender} onChange={(event) => update("gender", event.target.value)}>
+            <select
+              value={draft.gender}
+              onChange={(event) => {
+                const value = event.target.value;
+                update("gender", value);
+                if (value === "man" || value === "woman") setAvatar(value);
+              }}
+            >
               <option value="">—</option>
               <option value="woman">{t("profileWoman")}</option>
               <option value="man">{t("profileMan")}</option>

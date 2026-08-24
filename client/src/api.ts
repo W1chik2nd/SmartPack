@@ -2,6 +2,34 @@ export type User = {
   id: string;
   email: string;
   name: string;
+  age: number | null;
+  heightCm: number | null;
+  weightKg: number | null;
+  style: string | null;
+  gender: string | null;
+  chestCm: number | null;
+  waistCm: number | null;
+  hipsCm: number | null;
+  bodyType: string | null;
+  season: string | null;
+  stylePreferences: string[];
+  temperature: string | null;
+  packingHabits: string[];
+};
+
+export type ProfileUpdate = {
+  name: string;
+  gender: string;
+  heightCm: number | null;
+  weightKg: number | null;
+  chestCm: number | null;
+  waistCm: number | null;
+  hipsCm: number | null;
+  bodyType: string;
+  season: string;
+  stylePreferences: string[];
+  temperature: string;
+  packingHabits: string[];
 };
 
 type AuthResponse = { token: string; user: User };
@@ -96,6 +124,13 @@ export function scenarios(): Promise<{ scenarios: Scenario[] }> {
 
 export function me(): Promise<{ user: User }> {
   return request<{ user: User }>("/api/me");
+}
+
+export function updateProfile(profile: ProfileUpdate): Promise<{ user: User }> {
+  return request<{ user: User }>("/api/profile", {
+    method: "PUT",
+    body: JSON.stringify(profile),
+  });
 }
 
 export function logout(): Promise<{ ok: boolean }> {
