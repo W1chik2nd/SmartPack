@@ -37,6 +37,16 @@ export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
 
+export function translateTexts(
+  texts: string[],
+  target: "en" | "zh"
+): Promise<{ translations: string[] }> {
+  return request<{ translations: string[] }>("/api/translate", {
+    method: "POST",
+    body: JSON.stringify({ texts, target }),
+  });
+}
+
 export function setToken(token: string | null): void {
   if (token) localStorage.setItem(TOKEN_KEY, token);
   else localStorage.removeItem(TOKEN_KEY);
