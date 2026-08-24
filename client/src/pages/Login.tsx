@@ -33,13 +33,7 @@ export default function Login({ onAuthed, onSwitch }: Props) {
   }
 
   return (
-    <div className="auth-page">
-      {/* Left visual panel; hidden on mobile (auth.css). Decorative only,
-          so the image carries no alt text for screen readers. */}
-      <div className="auth-visual" aria-hidden="true">
-        <img src="/login-visual.jpg" alt="" />
-      </div>
-
+    <div className="auth-page scenic-auth-page login-page">
       <div className="auth-panel">
         <div className="auth-headline">
           <h1>{t("loginTitle")}</h1>
