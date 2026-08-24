@@ -152,7 +152,7 @@ console.log("=== 首页物品清单(真实渲染) ===");
 
 console.log("\n=== 个人档案页(真实渲染) ===");
 {
-  const html = harness.renderProfile();
+  const html = harness.renderProfile("female");
   const inputs = [...html.matchAll(/<input/g)].length;
   const selects = [...html.matchAll(/<select/g)].length;
   const sections = [...html.matchAll(/<details/g)].length;
@@ -162,6 +162,20 @@ console.log("\n=== 个人档案页(真实渲染) ===");
   if (sections !== 3) fail(`profile: expected 3 preference sections, got ${sections}`);
   if (avatars !== 1) fail(`profile: expected 1 gender portrait, got ${avatars}`);
   if (!html.includes("Anna")) fail("profile: user name was not prefilled");
+  if (!html.includes('src="/profile-female.jpg"')) {
+    fail("profile: female registration did not select the female portrait");
+  }
+
+  const male = harness.renderProfile("male");
+  if (!male.includes('src="/profile-male.jpg"')) {
+    fail("profile: male registration did not select the male portrait");
+  }
+  for (const gender of ["non-binary", "undisclosed"]) {
+    const other = harness.renderProfile(gender);
+    if (other.includes('class="profile-avatar-image"')) {
+      fail(`profile: ${gender} must not render a portrait`);
+    }
+  }
   console.log(`  inputs ${inputs}  selects ${selects}  preferences ${sections}  portrait ${avatars}`);
 }
 

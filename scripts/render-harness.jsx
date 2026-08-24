@@ -65,7 +65,7 @@ export function renderDay(stops) {
   );
 }
 
-export function renderProfile() {
+export function renderProfile(gender = "female") {
   return renderToStaticMarkup(
     <LangProvider>
       <Profile
@@ -76,16 +76,18 @@ export function renderProfile() {
           age: 28,
           heightCm: 168,
           weightKg: 56,
-          style: "minimal",
-          gender: "woman",
-          chestCm: 84,
+          style: null,
+          gender,
+          bustCm: 84,
           waistCm: 66,
-          hipsCm: 90,
+          hipCm: 90,
           bodyType: "hourglass",
-          season: "spring",
-          stylePreferences: ["minimal"],
-          temperature: "average",
-          packingHabits: ["light"],
+          seasonColorType: "spring",
+          stylePrefs: ["minimalist"],
+          wearFeel: ["runs-cold"],
+          wearFeelOther: null,
+          travelHabits: ["packs-light"],
+          travelHabitsOther: null,
         }}
         onBack={() => {}}
         onSaved={() => {}}

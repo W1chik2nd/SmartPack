@@ -221,31 +221,33 @@
 /* Six squares per row on the questionnaire. Narrower viewports step down so
    the tiles never shrink below a readable size. */
 .quiz-page .style-options {
-  grid-template-columns: repeat(6, 1fr);
+  min-width: 0;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .quiz-page .field-row-3 {
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 @media (max-width: 1200px) {
   .quiz-page .style-options {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 760px) {
   .quiz-page .style-options {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
   .quiz-page .field-row-3 {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 /* Questionnaire style picker: radio choices as flat selectable blocks */
 .style-options {
   border: none;
+  min-inline-size: 0;
 }
 
 .style-options legend {
@@ -272,6 +274,7 @@
    a square has vertical room that a single text row does not. */
 .style-option {
   position: relative;
+  min-width: 0;
   display: flex;
   align-items: flex-end;
   justify-content: center;
@@ -281,6 +284,7 @@
   font-weight: var(--weight-bold);
   line-height: 1.25;
   text-align: center;
+  overflow-wrap: anywhere;
   border: 2px solid var(--black);
   /* Same value as the page background: the border carries the shape, not a
      contrasting fill. */

@@ -37,7 +37,7 @@ export default function Login({ onAuthed, onSwitch }: Props) {
       {/* Left visual panel; hidden on mobile (auth.css). Decorative only,
           so the image carries no alt text for screen readers. */}
       <div className="auth-visual" aria-hidden="true">
-        <img src="/auth-visual.jpeg" alt="" />
+        <img src="/login-visual.jpg" alt="" />
       </div>
 
       <div className="auth-panel">

@@ -6,6 +6,6 @@
   "scripts": {
     "dev": "node --experimental-strip-types --use-env-proxy --env-file-if-exists=.env index.ts",
     "start": "node --experimental-strip-types --use-env-proxy --env-file-if-exists=.env index.ts",
-    "test": "node --experimental-strip-types --test app.test.ts profile.test.ts integrations.test.ts upload-session.test.ts wardrobe.test.ts vision.test.ts packing.test.ts itinerary.test.ts trip-plan.test.ts trip-plan-routes.test.ts"
+    "test": "node --experimental-strip-types --test app.test.ts profile.test.ts profile-api.test.ts integrations.test.ts upload-session.test.ts wardrobe.test.ts vision.test.ts packing.test.ts itinerary.test.ts trip-plan.test.ts trip-plan-routes.test.ts"
   }
 }
