@@ -21,7 +21,7 @@ export async function chatCompletion(
   messages: ChatMessage[]
 ): Promise<string> {
   const baseUrl = process.env.AI_BASE_URL ?? "https://api.openai.com/v1";
-  const model = process.env.AI_MODEL ?? "gpt-4o-mini";
+  const model = process.env.AI_MODEL ?? "gpt-5.6-terra";
 
   const res = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
     method: "POST",

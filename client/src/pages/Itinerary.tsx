@@ -6,7 +6,6 @@
 // TODO: 现在后端在没有行程时会补一份演示数据;接上 AI 行程生成后去掉。
 import { useEffect, useState } from "react";
 import { itineraryTrips, type Trip, type User } from "../api";
-import ChatWidget from "../components/ChatWidget";
 import TripSpine from "../components/TripSpine";
 import DayPlan from "../components/DayPlan";
 import { useLang } from "../i18n/useLang";
@@ -43,8 +42,6 @@ export default function Itinerary({ scenario, onBack }: Props) {
 
   return (
     <div className="itinerary-page">
-      <ChatWidget />
-
       <header className="itin-head">
         <div className="itin-head-left">
           <button type="button" className="itin-back" onClick={onBack}>
