@@ -11,11 +11,12 @@ import {
 } from "../api";
 import TripSwitcher from "../components/TripSwitcher";
 import DashboardOutfit from "../components/DashboardOutfit";
+import DashboardSky from "../components/DashboardSky";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/dynamic-strings";
 import {
   dashboardTrips, formatDashboardClock, formatTripDates,
-  greetingKey, tripAfterDeletionId,
+  greetingKey, isDashboardDaytime, tripAfterDeletionId, weatherIconPath,
 } from "../lib/trip-dashboard";
 
 type Props = {
@@ -93,7 +94,6 @@ export default function Home({
     };
   }, []);
 
-  // Keep selection stable as background status updates replace the trip list.
   useEffect(() => {
     if (selectedTrip && selectedTrip.id !== selectedTripId) {
       setSelectedTripId(selectedTrip.id);
@@ -187,22 +187,19 @@ export default function Home({
     onOpenTrips();
   }
 
-  const { locale, dateLong, timeShort } = formatDashboardClock(now, lang);
+  const { locale, dateLong } = formatDashboardClock(now, lang);
+  const isDaytime = isDashboardDaytime(now.getHours());
 
   return (
     <div className="home dashboard">
-      {/* Greeting bar */}
-      <header className="dash-greeting">
+      <header className={`dash-greeting ${isDaytime ? "is-day" : "is-night"}`}>
         <h1>
           {t(greetingKey(now.getHours()))}, {user.name}.
         </h1>
-        <p>
-          {dateLong} · {timeShort}
-        </p>
+        <DashboardSky />
       </header>
 
       <div className="dash-layout">
-        {/* Left: today card, laid out after the wireframe */}
         <div className="today-card-shell">
           {selectedTrip ? (
             <>
@@ -240,8 +237,12 @@ export default function Home({
                       <h2>{t("destinationWeatherToday")}</h2>
                       {wx ? (
                         <p className="weather-reading">
-                          {Math.round(wx.tempC)}°C
-                          <span className="weather-cond">{wx.condition}</span>
+                          <span>{Math.round(wx.tempC)}°C</span>
+                          <img
+                            className="weather-icon"
+                            src={weatherIconPath(wx.condition)}
+                            alt={wx.condition}
+                          />
                         </p>
                       ) : (
                         <p className="weather-reading weather-pending">
@@ -379,7 +380,6 @@ export default function Home({
           )}
         </div>
 
-        {/* Right: primary navigation tiles */}
         <nav className="dash-nav" aria-label="Sections">
           <button onClick={onOpenWardrobe}>
             <span className="nav-tile-mark red" aria-hidden="true" />

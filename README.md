@@ -1,14 +1,14 @@
-# SmartPack — An AI Scenario Wardrobe
+# WearRoute — An AI Scenario Wardrobe
 
 > Leave the itinerary to the weather. Leave the outfits and luggage to AI.
 
-SmartPack is an AI-powered wardrobe and packing assistant built around one promise: **no thinking required, nothing packed wrong**.
+WearRoute is an AI-powered wardrobe and packing assistant built around one promise: **no thinking required, nothing packed wrong**.
 
 ## What It Does
 
-Most weather apps tell you the temperature. Most fashion apps suggest generic outfits. SmartPack goes further: it combines your **personal wardrobe**, **dressing preferences**, **trip scenarios**, **destination weather**, and **luggage constraints** to generate outfit plans and packing lists you can follow as-is.
+Most weather apps tell you the temperature. Most fashion apps suggest generic outfits. WearRoute goes further: it combines your **personal wardrobe**, **dressing preferences**, **trip scenarios**, **destination weather**, and **luggage constraints** to generate outfit plans and packing lists you can follow as-is.
 
-Before a business trip, enter your destination and itinerary, and SmartPack produces in one pass:
+Before a business trip, enter your destination and itinerary, and WearRoute produces in one pass:
 
 - Complete daily outfit combinations covering meetings, commuting, dinners, and other scenarios
 - Adjustment plans for temperature swings, rain, and strong sun
@@ -41,7 +41,7 @@ For detailed personas and per-feature user stories, see [docs/personas-and-user-
 
 ## Business Model
 
-SmartPack integrates weather alerts, outfit recommendations, and packing lists into a single personalized decision service.
+WearRoute integrates weather alerts, outfit recommendations, and packing lists into a single personalized decision service.
 
 - **Subscription**: core features are free; advanced features (multi-trip management, family members, deeper personalization, unlimited plan generation) require a membership
 - **Targeted recommendations**: when the app identifies a genuine gap in the user's wardrobe or travel kit, it recommends purchasable products and earns commission — recommendations appear only when relevant and are clearly labeled
