@@ -1,0 +1,246 @@
+/* 行程计划页 —— 左:总行程图(蛇形曲线,每天一个节点);右:某一天的行程
+   (中间一条略带波形的竖线,停靠点左右交替挂在线上)。照手绘稿排布。
+   颜色/线宽/间距全部走 theme.css 的 token(AGENTS.md §8)。
+
+   几何约定:左侧 SVG 用固定尺寸(不缩放),HTML 标签用同一批常量定位,
+   这样节点圆点和文字块永远对齐 —— 用 preserveAspectRatio="none" 拉伸会
+   把圆点压成椭圆,所以不那么做。常量见 TripSpine.tsx / DayPlan.tsx 顶部。 */
+
+.itinerary-page {
+  padding: 88px var(--space-3) var(--space-4);
+  max-width: 1400px;
+  margin: 0 auto;
+  animation: fadeIn 0.3s ease both;
+}
+
+/* ---------- 页头 ---------- */
+
+.itin-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.itin-head-left {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  align-items: flex-start;
+}
+
+.itin-back {
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  background: var(--white);
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+
+.itin-back:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+.itin-back:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.itin-title {
+  font-size: 40px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+}
+
+.itin-subtitle {
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+}
+
+/* 图片来源标注:Unsplash 许可要求署名,这里标供应商 */
+.itin-photo-source {
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+  background: var(--white);
+  border: 2px solid var(--black);
+  padding: 6px 10px;
+}
+
+/* ---------- 主体:左总览 | 分隔线 | 右当天 ---------- */
+
+.itin-layout {
+  display: grid;
+  /* 左栏宽度 = TripSpine 的 SVG 固定宽度(见 SPINE_W),不缩放 */
+  grid-template-columns: 360px 0px 1fr;
+  border: var(--border);
+  background: var(--white);
+  align-items: stretch;
+}
+
+/* 收起左栏:手绘稿中间那个 ⟨⟩ 开关就是干这个的 */
+.itin-layout.is-collapsed {
+  grid-template-columns: 0px 0px 1fr;
+}
+
+.itin-overview {
+  overflow: hidden;
+  border-right: var(--border);
+}
+
+.itin-layout.is-collapsed .itin-overview {
+  border-right: none;
+}
+
+/* 分隔线上的开关:压在两栏交界处 */
+.itin-divider {
+  position: relative;
+}
+
+.itin-toggle {
+  position: absolute;
+  top: var(--space-4);
+  left: 0;
+  transform: translateX(-50%);
+  z-index: 3;
+  width: 28px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: var(--weight-heavy);
+  color: var(--white);
+  background: var(--blue);
+  border: var(--border);
+  cursor: pointer;
+}
+
+.itin-toggle:hover {
+  background: var(--red);
+}
+
+.itin-toggle:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+/* ---------- 左:总行程图 ---------- */
+
+.spine-head {
+  padding: var(--space-2);
+  border-bottom: var(--border);
+  font-size: 14px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* 曲线画布 + 覆盖在上面的日期标签,同一套坐标常量 */
+/* 高度由 TripSpine 按天数算好后内联给出(已含上下留白),
+   所以这里不能再加 padding —— box-sizing: border-box 下那会把画布压扁。 */
+.spine-canvas {
+  position: relative;
+}
+
+.spine-curve {
+  display: block;
+}
+
+/* 出发标注,贴在曲线起点右侧 */
+.spine-depart {
+  position: absolute;
+  font-size: 13px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--black);
+  background: var(--yellow);
+  border: 2px solid var(--black);
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+/* 标签容器只作定位参照,本身不占位 */
+.spine-days {
+  list-style: none;
+}
+
+/* 每天一个标签块。left/top 由 TripSpine 的 labelBox() 从曲线形状算出,
+   给的就是盒子左上角,所以这里不能再用 transform 偏移。
+   宽高必须与 TripSpine.tsx 的 LABEL_W / LABEL_H 一致 —— 摆位算法按这个
+   尺寸避让曲线,尺寸一漂,标签就会压到线上。 */
+.spine-day {
+  position: absolute;
+  box-sizing: border-box;
+  width: 122px;
+  height: 72px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 10px;
+  font-family: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--white);
+  border: 2px solid var(--black);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+/* 标签在曲线左侧时文字右对齐,视觉上朝曲线收拢 */
+.spine-day.align-left {
+  align-items: flex-end;
+  text-align: right;
+}
+
+.spine-day:hover {
+  background: var(--bg);
+}
+
+.spine-day:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.spine-day.is-active {
+  background: var(--blue);
+  color: var(--white);
+  box-shadow: 4px 4px 0 var(--black);
+}
+
+.spine-day.is-active .spine-day-city {
+  color: var(--white);
+}
+
+.spine-day-number {
+  font-size: 20px;
+  font-weight: var(--weight-heavy);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.spine-day-date {
+  font-size: 13px;
+  font-weight: var(--weight-heavy);
+}
+
+.spine-day-city {
+  font-size: 12px;
+  font-weight: var(--weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-secondary);
+}

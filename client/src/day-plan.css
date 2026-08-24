@@ -1,0 +1,255 @@
+/* 行程计划页 —— 右栏:某一天的行程。
+   中间一条略带波形的竖线,停靠点左右交替挂在线上,短横线连到卡片(照手绘稿)。
+   拆成独立文件是为了守住单文件 400 行上限(AGENTS.md §7);
+   页面与左栏样式在 itinerary.css。
+
+   几何约定:竖线 SVG 用固定宽度(DayPlan.tsx 里的 SPINE_W),行高固定
+   (ROW_H),节点 y = ROW_H/2 + i*ROW_H,所以圆点和卡片天然对齐。 */
+
+.day-plan {
+  padding: var(--space-3);
+}
+
+.day-plan-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.day-plan-title {
+  font-size: 34px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.015em;
+  line-height: 1;
+}
+
+.day-plan-date {
+  font-size: 14px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--black);
+  background: var(--yellow);
+  border: 2px solid var(--black);
+  padding: 4px 8px;
+}
+
+.day-plan-summary {
+  font-size: 15px;
+  font-weight: var(--weight-bold);
+  color: var(--text-secondary);
+  flex-basis: 100%;
+}
+
+/* ---------- 时间轴网格:卡片 | 竖线 | 卡片 ---------- */
+
+.day-track {
+  display: grid;
+  /* 中间列宽度必须与 DayPlan.tsx 的 SPINE_W 一致 */
+  grid-template-columns: 1fr 150px 1fr;
+  /* 行高固定,且必须与 DayPlan.tsx 的 ROW_H 一致 —— 竖线 SVG 的高度按
+     ROW_H × 停靠点数算,行高一旦漂移,圆点就对不上卡片。
+     156 是量出来的:配图 84px 撑起卡片下限,最长文案实测约 140px
+     (见 scripts/layout-probe.mjs),留一点余量避免贴死。 */
+  grid-auto-rows: 156px;
+  align-items: center;
+}
+
+.day-spine {
+  grid-column: 2;
+  grid-row: 1 / -1;
+  align-self: stretch;
+  position: relative;
+}
+
+.day-spine svg {
+  display: block;
+}
+
+/* 停靠点卡片:图片 + 文字,横向排布 */
+/* 卡片必须塞进固定行高(见 .day-track 的 grid-auto-rows)。
+   行高不能改成自适应:竖线 SVG 的圆点是按 ROW_H 算 y 的,行一变高,
+   圆点就和卡片错位。所以这里给卡片封顶,让内容去适应行,而不是反过来。
+   max-height 是兜底:字号/内边距/文案长度任何一处变动,最坏也只是内容被裁,
+   不会溢出去撞相邻那一行。改动后请跑 `npm run check:layout` 复量。 */
+.stop-card {
+  display: flex;
+  gap: var(--space-2);
+  width: 100%;
+  max-width: 330px;
+  max-height: 140px;
+  overflow: hidden;
+  padding: 10px;
+  font-family: inherit;
+  text-align: left;
+  color: var(--text);
+  background: var(--white);
+  border: var(--border);
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stop-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 6px 6px 0 var(--black);
+}
+
+.stop-card:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+/* 左侧的卡片靠右贴线,右侧的卡片靠左贴线 */
+.stop-card.side-left {
+  grid-column: 1;
+  justify-self: end;
+  flex-direction: row-reverse;
+  text-align: right;
+}
+
+.stop-card.side-right {
+  grid-column: 3;
+  justify-self: start;
+}
+
+/* 配图:方块缩略图,加载中/无图时是平涂占位块 */
+.stop-photo {
+  flex: 0 0 auto;
+  width: 84px;
+  height: 84px;
+  border: 2px solid var(--black);
+  background: var(--bg);
+  overflow: hidden;
+  position: relative;
+}
+
+.stop-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* 占位:几何色块,不用 loading 动画(§8 不加装饰) */
+.stop-photo-empty {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: var(--weight-bold);
+  text-align: center;
+  line-height: 1.2;
+  padding: 4px;
+  color: var(--text-secondary);
+}
+
+.stop-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stop-kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.stop-card.side-left .stop-kind {
+  flex-direction: row-reverse;
+}
+
+/* 类型标记:红/黄/蓝三原色小方块,圆形代表景点 */
+.stop-kind-mark {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--black);
+  flex-shrink: 0;
+}
+
+.stop-kind-mark.spot {
+  background: var(--red);
+  border-radius: 50%;
+}
+
+.stop-kind-mark.transit {
+  background: var(--blue);
+}
+
+.stop-kind-mark.meal {
+  background: var(--yellow);
+}
+
+.stop-kind-mark.hotel {
+  background: var(--white);
+}
+
+.stop-name {
+  font-size: 17px;
+  font-weight: var(--weight-heavy);
+  line-height: 1.15;
+}
+
+.stop-time {
+  font-size: 13px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.02em;
+}
+
+.stop-note {
+  font-size: 12px;
+  font-weight: var(--weight-regular);
+  color: var(--text-secondary);
+  line-height: 1.3;
+}
+
+/* 图片署名:Unsplash/Openverse 的许可都要求署名 */
+.stop-credit {
+  font-size: 10px;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.stop-credit:hover {
+  text-decoration: underline;
+}
+
+/* ---------- 响应式:窄屏改成单列,全部卡片靠右 ---------- */
+
+@media (max-width: 900px) {
+  .day-track {
+    grid-template-columns: 56px 1fr;
+  }
+  .day-spine {
+    grid-column: 1;
+  }
+  .stop-card.side-left,
+  .stop-card.side-right {
+    grid-column: 2;
+    justify-self: start;
+    flex-direction: row;
+    text-align: left;
+  }
+  .stop-card.side-left .stop-kind {
+    flex-direction: row;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stop-card,
+  .stop-card:hover {
+    transition: none;
+    transform: none;
+  }
+}
