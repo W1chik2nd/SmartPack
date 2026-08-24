@@ -123,11 +123,14 @@ export default function DateRangePicker({ value, onChange }: Props) {
 
         {Array.from({ length: totalDays }, (_, i) => {
           const day = iso(cursor.y, cursor.m, i + 1);
+          // 过去的日子不能选:出行日期不会在今天之前。ISO 串按字典序比较即可。
+          const isPast = day < todayIso;
           const isStart = value?.start === day;
           const isEnd = value?.end === day;
           const inRange = !!value && day >= value.start && day <= value.end;
           const classes = [
             "calendar-day",
+            isPast ? "is-past" : "",
             inRange ? "is-in-range" : "",
             isStart || isEnd ? "is-edge" : "",
             day === todayIso ? "is-today" : "",
@@ -142,6 +145,7 @@ export default function DateRangePicker({ value, onChange }: Props) {
               className={classes}
               aria-pressed={inRange}
               aria-label={day}
+              disabled={isPast}
               onClick={() => pick(day)}
             >
               {i + 1}
