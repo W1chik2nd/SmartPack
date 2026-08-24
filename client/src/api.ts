@@ -7,29 +7,16 @@ export type User = {
   weightKg: number | null;
   style: string | null;
   gender: string | null;
-  chestCm: number | null;
+  bustCm: number | null;
   waistCm: number | null;
-  hipsCm: number | null;
+  hipCm: number | null;
   bodyType: string | null;
-  season: string | null;
-  stylePreferences: string[];
-  temperature: string | null;
-  packingHabits: string[];
-};
-
-export type ProfileUpdate = {
-  name: string;
-  gender: string;
-  heightCm: number | null;
-  weightKg: number | null;
-  chestCm: number | null;
-  waistCm: number | null;
-  hipsCm: number | null;
-  bodyType: string;
-  season: string;
-  stylePreferences: string[];
-  temperature: string;
-  packingHabits: string[];
+  seasonColorType: string | null;
+  stylePrefs: string[];
+  wearFeel: string[];
+  wearFeelOther: string | null;
+  travelHabits: string[];
+  travelHabitsOther: string | null;
 };
 
 type AuthResponse = { token: string; user: User };
@@ -79,14 +66,40 @@ export type Credentials = {
   password: string;
 };
 
-/** The style questionnaire — registration is only accepted with all of it. */
-export type Profile = {
-  name: string;
-  age: number;
-  heightCm: number;
-  weightKg: number;
-  style: string;
+/**
+ * The profile questionnaire payload. Keyed by the field keys the server
+ * publishes via /api/profile-options rather than typed field by field: the
+ * form is built from that catalog, so a new question needs no client change.
+ * Only name/gender/age/heightCm/weightKg are required — the server enforces that.
+ */
+export type Profile = Record<string, string | number | string[]>;
+export type ProfileUpdate = Profile;
+
+/** One selectable answer. `id` is stored; the labels are display-only. */
+export type ProfileOption = {
+  id: string;
+  en: string;
+  zh: string;
 };
+
+export type ProfileField = {
+  key: string;
+  kind: "text" | "int" | "decimal" | "single" | "multi";
+  required: boolean;
+  min?: number;
+  max?: number;
+  options?: ProfileOption[];
+  /** Present when this field offers a free-text "other" choice. */
+  otherId?: string;
+  /** The payload key the free text is sent under. */
+  otherKey?: string;
+  otherMax?: number;
+};
+
+/** The questionnaire catalog. Unauthenticated: needed during sign-up step 2. */
+export function profileOptions(): Promise<{ fields: ProfileField[] }> {
+  return request<{ fields: ProfileField[] }>("/api/profile-options");
+}
 
 export function checkEmail(email: string): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("/api/check-email", {

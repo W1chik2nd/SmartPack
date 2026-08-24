@@ -1,24 +1,34 @@
-import { useState, type FormEvent } from "react";
-import { updateProfile, type User } from "../api";
+import { useEffect, useState, type FormEvent } from "react";
+import {
+  profileOptions,
+  updateProfile,
+  type ProfileField,
+  type ProfileOption,
+  type ProfileUpdate,
+  type User,
+} from "../api";
 import { useLang } from "../i18n/useLang";
 
 type Props = { user: User; onBack: () => void; onSaved: (user: User) => void };
 type Avatar = "woman" | "man";
 type Draft = {
-  nickname: string;
+  name: string;
   gender: string;
+  age: string;
   height: string;
   weight: string;
-  chest: string;
+  bust: string;
   waist: string;
-  hips: string;
+  hip: string;
   bodyType: string;
-  season: string;
+  seasonColorType: string;
+  wearFeelOther: string;
+  travelHabitsOther: string;
 };
 
 function avatarForGender(gender: string | null): Avatar | null {
-  if (gender === "man" || gender === "male" || gender === "男") return "man";
-  if (gender === "woman" || gender === "female" || gender === "女") return "woman";
+  if (gender === "male") return "man";
+  if (gender === "female") return "woman";
   return null;
 }
 
@@ -34,87 +44,146 @@ function AvatarArt({ variant }: { variant: Avatar }) {
 
 export default function Profile({ user, onBack, onSaved }: Props) {
   const { lang, t } = useLang();
+  const [fields, setFields] = useState<ProfileField[] | null>(null);
   const [draft, setDraft] = useState<Draft>({
-    nickname: user.name,
+    name: user.name,
     gender: user.gender ?? "",
+    age: user.age?.toString() ?? "",
     height: user.heightCm?.toString() ?? "",
     weight: user.weightKg?.toString() ?? "",
-    chest: user.chestCm?.toString() ?? "",
+    bust: user.bustCm?.toString() ?? "",
     waist: user.waistCm?.toString() ?? "",
-    hips: user.hipsCm?.toString() ?? "",
+    hip: user.hipCm?.toString() ?? "",
     bodyType: user.bodyType ?? "",
-    season: user.season ?? "",
+    seasonColorType: user.seasonColorType ?? "",
+    wearFeelOther: user.wearFeelOther ?? "",
+    travelHabitsOther: user.travelHabitsOther ?? "",
   });
-  const [styles, setStyles] = useState<string[]>(user.stylePreferences ?? []);
-  const [temperature, setTemperature] = useState(user.temperature ?? "");
-  const [packingHabits, setPackingHabits] = useState<string[]>(user.packingHabits ?? []);
-  const [notice, setNotice] = useState<"saved" | "error" | null>(null);
+  const [styles, setStyles] = useState(user.stylePrefs);
+  const [wearFeel, setWearFeel] = useState(user.wearFeel);
+  const [travelHabits, setTravelHabits] = useState(user.travelHabits);
+  const [notice, setNotice] = useState<"saved" | "error" | "options" | null>(null);
   const avatar = avatarForGender(draft.gender);
 
+  useEffect(() => {
+    profileOptions()
+      .then(({ fields: current }) => setFields(current))
+      .catch(() => setNotice("options"));
+  }, []);
+
+  const field = (key: string) => fields?.find((item) => item.key === key);
+  const options = (key: string) => field(key)?.options ?? [];
+  const optionLabel = (option: ProfileOption) => lang === "zh" ? option.zh : option.en;
+  const otherId = (key: string) => field(key)?.otherId;
+
   const measurements = [
-    { key: "height", label: t("profileHeight"), unit: "cm" },
-    { key: "weight", label: t("profileWeight"), unit: "kg" },
-    { key: "chest", label: t("profileChest"), unit: "cm" },
-    { key: "waist", label: t("profileWaist"), unit: "cm" },
-    { key: "hips", label: t("profileHips"), unit: "cm" },
+    { key: "age", apiKey: "age", label: t("profileAge"), unit: "" },
+    { key: "height", apiKey: "heightCm", label: t("profileHeight"), unit: "cm" },
+    { key: "weight", apiKey: "weightKg", label: t("profileWeight"), unit: "kg" },
+    { key: "bust", apiKey: "bustCm", label: t("profileBust"), unit: "cm" },
+    { key: "waist", apiKey: "waistCm", label: t("profileWaist"), unit: "cm" },
+    { key: "hip", apiKey: "hipCm", label: t("profileHip"), unit: "cm" },
   ] as const;
-  const styleOptions = [
-    ["minimal", "极简", "Minimal"],
-    ["business", "商务", "Business"],
-    ["casual", "休闲", "Casual"],
-    ["street", "街头", "Streetwear"],
-    ["outdoor", "户外", "Outdoor"],
-    ["elegant", "优雅", "Elegant"],
-  ];
-  const temperatureOptions = [
-    ["cold", "怕冷", "Runs cold"],
-    ["average", "正常", "Average"],
-    ["warm", "怕热", "Runs warm"],
-  ];
-  const packingOptions = [
-    ["light", "轻装优先", "Pack light"],
-    ["variety", "造型优先", "More variety"],
-    ["essentials", "总带必需品", "Always-bring list"],
-  ];
-  const seasons = [
-    ["spring", "春", "Spring"],
-    ["summer", "夏", "Summer"],
-    ["autumn", "秋", "Autumn"],
-    ["winter", "冬", "Winter"],
-  ];
 
   function update<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
     setNotice(null);
   }
 
-  function toggle(list: string[], value: string, setter: (next: string[]) => void) {
-    setter(list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
+  function toggle(
+    list: string[],
+    value: string,
+    setter: (next: string[]) => void,
+    key: "wearFeel" | "travelHabits" | "stylePrefs"
+  ) {
+    const other = otherId(key);
+    let next: string[];
+    if (list.includes(value)) next = list.filter((item) => item !== value);
+    else if (value === other) next = [value];
+    else next = [...list.filter((item) => item !== other), value];
+    setter(next);
+    if (key === "wearFeel" && !next.includes(other ?? "")) update("wearFeelOther", "");
+    if (key === "travelHabits" && !next.includes(other ?? "")) update("travelHabitsOther", "");
     setNotice(null);
+  }
+
+  function optionalNumber(key: keyof Pick<Draft, "bust" | "waist" | "hip">) {
+    return draft[key] ? Number(draft[key]) : undefined;
   }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    const payload: ProfileUpdate = {
+      name: draft.name.trim(),
+      gender: draft.gender,
+      age: Number(draft.age),
+      heightCm: Number(draft.height),
+      weightKg: Number(draft.weight),
+      stylePrefs: styles,
+      wearFeel,
+      travelHabits,
+    };
+    const optional = {
+      bustCm: optionalNumber("bust"),
+      waistCm: optionalNumber("waist"),
+      hipCm: optionalNumber("hip"),
+      bodyType: draft.bodyType || undefined,
+      seasonColorType: draft.seasonColorType || undefined,
+      wearFeelOther: draft.wearFeelOther.trim() || undefined,
+      travelHabitsOther: draft.travelHabitsOther.trim() || undefined,
+    };
+    for (const [key, value] of Object.entries(optional)) {
+      if (value !== undefined) payload[key] = value;
+    }
+
     try {
-      const { user: updated } = await updateProfile({
-        name: draft.nickname,
-        gender: draft.gender,
-        heightCm: draft.height ? Number(draft.height) : null,
-        weightKg: draft.weight ? Number(draft.weight) : null,
-        chestCm: draft.chest ? Number(draft.chest) : null,
-        waistCm: draft.waist ? Number(draft.waist) : null,
-        hipsCm: draft.hips ? Number(draft.hips) : null,
-        bodyType: draft.bodyType,
-        season: draft.season,
-        stylePreferences: styles,
-        temperature,
-        packingHabits,
-      });
+      const { user: updated } = await updateProfile(payload);
       onSaved(updated);
       setNotice("saved");
     } catch {
       setNotice("error");
     }
+  }
+
+  function preference(
+    key: "stylePrefs" | "wearFeel" | "travelHabits",
+    title: string,
+    number: string,
+    selected: string[],
+    setter: (next: string[]) => void
+  ) {
+    const other = otherId(key);
+    const otherValue = key === "wearFeel" ? draft.wearFeelOther : draft.travelHabitsOther;
+    return (
+      <details open>
+        <summary><span>{title}</span><b>{number}</b></summary>
+        <div className="preference-options">
+          {options(key).map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              aria-pressed={selected.includes(option.id)}
+              onClick={() => toggle(selected, option.id, setter, key)}
+            >
+              {optionLabel(option)}
+            </button>
+          ))}
+        </div>
+        {other && selected.includes(other) && key !== "stylePrefs" && (
+          <label className="profile-choice-other">
+            <span>{t("otherPlaceholder")}</span>
+            <input
+              value={otherValue}
+              maxLength={field(key)?.otherMax}
+              onChange={(event) => update(
+                key === "wearFeel" ? "wearFeelOther" : "travelHabitsOther",
+                event.target.value
+              )}
+            />
+          </label>
+        )}
+      </details>
+    );
   }
 
   return (
@@ -149,22 +218,15 @@ export default function Profile({ user, onBack, onSaved }: Props) {
 
           <label className="profile-text-field">
             <span>{t("profileNickname")}</span>
-            <input value={draft.nickname} onChange={(event) => update("nickname", event.target.value)} autoComplete="nickname" />
+            <input required value={draft.name} onChange={(event) => update("name", event.target.value)} autoComplete="name" />
           </label>
           <label className="profile-text-field">
             <span>{t("profileGender")}</span>
-            <select
-              value={draft.gender}
-              onChange={(event) => {
-                const value = event.target.value;
-                update("gender", value);
-              }}
-            >
-              <option value="">—</option>
-              <option value="woman">{t("profileWoman")}</option>
-              <option value="man">{t("profileMan")}</option>
-              <option value="other">{t("profileOther")}</option>
-              <option value="private">{t("profilePrivate")}</option>
+            <select required value={draft.gender} onChange={(event) => update("gender", event.target.value)}>
+              <option value="">{t("profileChoose")}</option>
+              {options("gender").map((option) => (
+                <option key={option.id} value={option.id}>{optionLabel(option)}</option>
+              ))}
             </select>
           </label>
         </aside>
@@ -179,23 +241,34 @@ export default function Profile({ user, onBack, onSaved }: Props) {
           </div>
 
           <div className="measurement-grid">
-            {measurements.map((field) => (
-              <label key={field.key} className="measurement-field">
-                <span>{field.label}</span>
-                <span className="measurement-input">
-                  <input type="number" inputMode="decimal" min="1" step="0.1" value={draft[field.key]} onChange={(event) => update(field.key, event.target.value)} />
-                  <b>{field.unit}</b>
-                </span>
-              </label>
-            ))}
+            {measurements.map((item) => {
+              const spec = field(item.apiKey);
+              return (
+                <label key={item.key} className="measurement-field">
+                  <span>{item.label}</span>
+                  <span className="measurement-input">
+                    <input
+                      type="number"
+                      inputMode={spec?.kind === "int" ? "numeric" : "decimal"}
+                      min={spec?.min}
+                      max={spec?.max}
+                      step={spec?.kind === "int" ? 1 : 0.1}
+                      required={spec?.required}
+                      value={draft[item.key]}
+                      onChange={(event) => update(item.key, event.target.value)}
+                    />
+                    <b>{item.unit}</b>
+                  </span>
+                </label>
+              );
+            })}
             <label className="measurement-field body-type-field">
               <span>{t("profileBodyType")}</span>
               <select value={draft.bodyType} onChange={(event) => update("bodyType", event.target.value)}>
                 <option value="">{t("profileChoose")}</option>
-                <option value="straight">{t("profileStraight")}</option>
-                <option value="triangle">{t("profileTriangle")}</option>
-                <option value="inverted">{t("profileInverted")}</option>
-                <option value="hourglass">{t("profileHourglass")}</option>
+                {options("bodyType").map((option) => (
+                  <option key={option.id} value={option.id}>{optionLabel(option)}</option>
+                ))}
               </select>
             </label>
           </div>
@@ -203,50 +276,25 @@ export default function Profile({ user, onBack, onSaved }: Props) {
           <fieldset className="season-picker">
             <legend>{t("profileSeasonType")}</legend>
             <div>
-              {seasons.map(([value, zh, en]) => (
-                <button key={value} type="button" aria-pressed={draft.season === value} className={draft.season === value ? "is-active" : ""} onClick={() => update("season", value)}>
-                  {lang === "zh" ? zh : en}
+              {options("seasonColorType").map((option) => (
+                <button key={option.id} type="button" aria-pressed={draft.seasonColorType === option.id} onClick={() => update("seasonColorType", option.id)}>
+                  {optionLabel(option)}
                 </button>
               ))}
             </div>
           </fieldset>
 
           <div className="preference-stack">
-            <details open>
-              <summary><span>{t("profileStylePreferences")}</span><b>02</b></summary>
-              <div className="preference-options">
-                {styleOptions.map(([value, zh, en]) => (
-                  <button key={value} type="button" aria-pressed={styles.includes(value)} onClick={() => toggle(styles, value, setStyles)}>{lang === "zh" ? zh : en}</button>
-                ))}
-              </div>
-            </details>
-            {temperature && (
-              <details open>
-                <summary><span>{t("profileTemperature")}</span><b>03</b></summary>
-                <div className="preference-options">
-                  {temperatureOptions.map(([value, zh, en]) => (
-                    <button key={value} type="button" aria-pressed={temperature === value} onClick={() => { setTemperature(value); setNotice(null); }}>{lang === "zh" ? zh : en}</button>
-                  ))}
-                </div>
-              </details>
-            )}
-            {packingHabits.length > 0 && (
-              <details open>
-                <summary><span>{t("profilePackingHabits")}</span><b>04</b></summary>
-                <div className="preference-options">
-                  {packingOptions.map(([value, zh, en]) => (
-                    <button key={value} type="button" aria-pressed={packingHabits.includes(value)} onClick={() => toggle(packingHabits, value, setPackingHabits)}>{lang === "zh" ? zh : en}</button>
-                  ))}
-                </div>
-              </details>
-            )}
+            {preference("stylePrefs", t("profileStylePreferences"), "02", styles, setStyles)}
+            {preference("wearFeel", t("profileWearFeel"), "03", wearFeel, setWearFeel)}
+            {preference("travelHabits", t("profileTravelHabits"), "04", travelHabits, setTravelHabits)}
           </div>
 
           <div className="profile-actions">
             <p className={notice ? "is-visible" : ""} role="status">
-              {notice === "saved" ? t("profileSaved") : notice === "error" ? t("profileSaveFailed") : ""}
+              {notice === "saved" ? t("profileSaved") : notice === "options" ? t("optionsLoadError") : notice === "error" ? t("profileSaveFailed") : ""}
             </p>
-            <button className="profile-submit" type="submit">{t("profileFinish")}</button>
+            <button className="profile-submit" type="submit" disabled={!fields}>{t("profileFinish")}</button>
           </div>
         </section>
       </form>

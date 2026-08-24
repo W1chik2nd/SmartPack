@@ -17,6 +17,11 @@ import { handleItineraryRoutes } from "./itinerary-routes.ts";
 import { handleAssistantRoutes } from "./assistant-routes.ts";
 import { handleCatalogRoutes } from "./catalog-routes.ts";
 import { dirname, join } from "node:path";
+import {
+  PROFILE_COLUMNS,
+  profileOptionsPayload,
+  validateProfile,
+} from "./profile.ts";
 // ai / prompts / weather 的 import 已随路由拆分挪进 assistant-routes.ts
 // 和 catalog-routes.ts,这里只留 packing 还在本文件处理的那一个。
 import { buildPackingPlan } from "./packing.ts";
@@ -35,19 +40,26 @@ type UserRow = {
   name: string;
   pass_salt: string;
   pass_hash: string;
+  gender: string | null;
   age: number | null;
   height_cm: number | null;
   weight_kg: number | null;
-  style: string | null;
-  gender: string | null;
-  chest_cm: number | null;
+  bust_cm: number | null;
   waist_cm: number | null;
-  hips_cm: number | null;
+  hip_cm: number | null;
   body_type: string | null;
-  season_type: string | null;
-  style_preferences: string | null;
-  temperature: string | null;
-  packing_habits: string | null;
+  season_color_type: string | null;
+  /** JSON array of style option ids. */
+  style_prefs: string | null;
+  /** JSON array of wear-comfort option ids. */
+  wear_feel: string | null;
+  /** The user's own wording when they picked "other". */
+  wear_feel_other: string | null;
+  /** JSON array of travel-habit option ids. */
+  travel_habits: string | null;
+  travel_habits_other: string | null;
+  /** Pre-questionnaire single choice; still read as a fallback. */
+  style: string | null;
 };
 
 function publicUser(u: UserRow) {
@@ -60,14 +72,16 @@ function publicUser(u: UserRow) {
     weightKg: u.weight_kg,
     style: u.style,
     gender: u.gender,
-    chestCm: u.chest_cm,
+    bustCm: u.bust_cm,
     waistCm: u.waist_cm,
-    hipsCm: u.hips_cm,
+    hipCm: u.hip_cm,
     bodyType: u.body_type,
-    season: u.season_type,
-    stylePreferences: u.style_preferences ? JSON.parse(u.style_preferences) : [],
-    temperature: u.temperature,
-    packingHabits: u.packing_habits ? JSON.parse(u.packing_habits) : [],
+    seasonColorType: u.season_color_type,
+    stylePrefs: u.style_prefs ? JSON.parse(u.style_prefs) : [],
+    wearFeel: u.wear_feel ? JSON.parse(u.wear_feel) : [],
+    wearFeelOther: u.wear_feel_other,
+    travelHabits: u.travel_habits ? JSON.parse(u.travel_habits) : [],
+    travelHabitsOther: u.travel_habits_other,
   };
 }
 
@@ -92,14 +106,16 @@ export function createApp(dbPath: string): App {
       weight_kg   REAL,
       style       TEXT,
       gender      TEXT,
-      chest_cm    REAL,
+      bust_cm     REAL,
       waist_cm    REAL,
-      hips_cm     REAL,
+      hip_cm      REAL,
       body_type   TEXT,
-      season_type TEXT,
-      style_preferences TEXT NOT NULL DEFAULT '[]',
-      temperature TEXT,
-      packing_habits TEXT NOT NULL DEFAULT '[]',
+      season_color_type TEXT,
+      style_prefs TEXT,
+      wear_feel TEXT,
+      wear_feel_other TEXT,
+      travel_habits TEXT,
+      travel_habits_other TEXT,
       created_at  TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS sessions (
@@ -116,26 +132,14 @@ export function createApp(dbPath: string): App {
 
   // Dev databases created before the questionnaire existed lack the profile
   // columns; CREATE TABLE IF NOT EXISTS won't add them, so patch in place.
+  // The column list comes from profile.ts, so adding a questionnaire field
+  // there migrates existing databases without touching this loop.
   const existing = new Set(
     (db.prepare(`PRAGMA table_info(users)`).all() as { name: string }[]).map(
       (c) => c.name
     )
   );
-  for (const [col, type] of [
-    ["age", "INTEGER"],
-    ["height_cm", "REAL"],
-    ["weight_kg", "REAL"],
-    ["style", "TEXT"],
-    ["gender", "TEXT"],
-    ["chest_cm", "REAL"],
-    ["waist_cm", "REAL"],
-    ["hips_cm", "REAL"],
-    ["body_type", "TEXT"],
-    ["season_type", "TEXT"],
-    ["style_preferences", "TEXT NOT NULL DEFAULT '[]'"],
-    ["temperature", "TEXT"],
-    ["packing_habits", "TEXT NOT NULL DEFAULT '[]'"],
-  ] as const) {
+  for (const [col, type] of PROFILE_COLUMNS) {
     if (!existing.has(col)) db.exec(`ALTER TABLE users ADD COLUMN ${col} ${type}`);
   }
 
@@ -221,13 +225,24 @@ export function createApp(dbPath: string): App {
       return;
     }
 
+    // The questionnaire catalog. Deliberately unauthenticated: it is asked for
+    // during sign-up step 2, before any account or session exists. It carries
+    // no user data — only the option lists and their validation bounds — so
+    // there is nothing here to protect.
+    if (req.method === "GET" && url.pathname === "/api/profile-options") {
+      json(res, 200, profileOptionsPayload());
+      return;
+    }
+
     if (req.method === "POST" && url.pathname === "/api/register") {
-      // Registration is a single atomic call: account fields AND the style
+      // Registration is a single atomic call: account fields AND the
       // questionnaire together. The client collects them across two screens,
       // but nothing touches the database until the questionnaire is done —
       // an abandoned sign-up leaves no trace (product rule, enforced here).
-      const { email, password, name, age, heightCm, weightKg, style } =
-        await readBody(req);
+      // Only the fields marked required by the current questionnaire gate
+      // account creation; every optional answer may remain null.
+      const body = await readBody(req);
+      const { email, password } = body;
       if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
         json(res, 400, { error: "Please enter a valid email address." });
         return;
@@ -236,24 +251,9 @@ export function createApp(dbPath: string): App {
         json(res, 400, { error: "Password must be at least 8 characters." });
         return;
       }
-      if (typeof name !== "string" || name.trim().length < 1) {
-        json(res, 400, { error: "Please enter your name." });
-        return;
-      }
-      if (!Number.isInteger(age) || age < 1 || age > 120) {
-        json(res, 400, { error: "Please enter a valid age." });
-        return;
-      }
-      if (!Number.isFinite(heightCm) || heightCm <= 0) {
-        json(res, 400, { error: "Please enter a valid height in cm." });
-        return;
-      }
-      if (!Number.isFinite(weightKg) || weightKg <= 0) {
-        json(res, 400, { error: "Please enter a valid weight in kg." });
-        return;
-      }
-      if (typeof style !== "string" || style.trim().length < 1) {
-        json(res, 400, { error: "Please choose a preferred style." });
+      const profile = validateProfile(body);
+      if (!profile.ok) {
+        json(res, 400, { error: profile.error });
         return;
       }
       const exists = db
@@ -266,19 +266,16 @@ export function createApp(dbPath: string): App {
       const id = randomUUID();
       const salt = randomBytes(16).toString("hex");
       const hash = hashPassword(password, salt).toString("hex");
+      const columns = Object.keys(profile.values);
       db.prepare(
-        `INSERT INTO users (id, email, name, pass_salt, pass_hash, age, height_cm, weight_kg, style)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO users (id, email, pass_salt, pass_hash, ${columns.join(", ")})
+         VALUES (?, ?, ?, ?, ${columns.map(() => "?").join(", ")})`
       ).run(
         id,
         email.trim(),
-        name.trim(),
         salt,
         hash,
-        age,
-        heightCm,
-        weightKg,
-        style.trim()
+        ...columns.map((c) => profile.values[c])
       );
 
       const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(id) as UserRow;
@@ -348,34 +345,15 @@ export function createApp(dbPath: string): App {
         return;
       }
       const body = await readBody(req);
-      const values = {
-        name: typeof body.name === "string" ? body.name.trim() : user.name,
-        gender: typeof body.gender === "string" ? body.gender : "",
-        heightCm: body.heightCm == null ? null : Number(body.heightCm),
-        weightKg: body.weightKg == null ? null : Number(body.weightKg),
-        chestCm: body.chestCm == null ? null : Number(body.chestCm),
-        waistCm: body.waistCm == null ? null : Number(body.waistCm),
-        hipsCm: body.hipsCm == null ? null : Number(body.hipsCm),
-        bodyType: typeof body.bodyType === "string" ? body.bodyType : "",
-        season: typeof body.season === "string" ? body.season : "",
-        stylePreferences: Array.isArray(body.stylePreferences) ? body.stylePreferences : [],
-        temperature: typeof body.temperature === "string" ? body.temperature : "",
-        packingHabits: Array.isArray(body.packingHabits) ? body.packingHabits : [],
-      };
-      if (!values.name) {
-        json(res, 400, { error: "Name is required." });
+      const profile = validateProfile(body);
+      if (!profile.ok) {
+        json(res, 400, { error: profile.error });
         return;
       }
-      db.prepare(`
-        UPDATE users SET name = ?, gender = ?, height_cm = ?, weight_kg = ?,
-          chest_cm = ?, waist_cm = ?, hips_cm = ?, body_type = ?, season_type = ?,
-          style_preferences = ?, temperature = ?, packing_habits = ? WHERE id = ?
-      `).run(
-        values.name, values.gender, values.heightCm, values.weightKg,
-        values.chestCm, values.waistCm, values.hipsCm, values.bodyType, values.season,
-        JSON.stringify(values.stylePreferences), values.temperature,
-        JSON.stringify(values.packingHabits), user.id
-      );
+      const columns = Object.keys(profile.values);
+      db.prepare(
+        `UPDATE users SET ${columns.map((column) => `${column} = ?`).join(", ")} WHERE id = ?`
+      ).run(...columns.map((column) => profile.values[column]), user.id);
       const updated = db.prepare(`SELECT * FROM users WHERE id = ?`).get(user.id) as UserRow;
       json(res, 200, { user: publicUser(updated) });
       return;
