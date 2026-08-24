@@ -3,7 +3,7 @@
 
 .tripsetup {
   min-height: 100vh;
-  padding: var(--space-3) var(--space-4) var(--space-4);
+  padding: calc(56px + var(--space-3)) var(--space-4) var(--space-4);
   background: var(--bg);
   font-family: var(--font);
   color: var(--text);
