@@ -11,26 +11,29 @@ const garmentCss = readFileSync(new URL("../src/outfit-garments.css", import.met
 const accessoryCss = readFileSync(new URL("../src/outfit-accessories.css", import.meta.url), "utf8");
 
 test("today outfit tile opens the outfit overview route", () => {
-  assert.match(home, /className="today-outfit" onClick=\{onOpenOutfit\}/);
-  assert.match(app, /onOpenOutfit=\{\(\) => setRoute\("outfit"\)\}/);
+  assert.match(home, /className="today-outfit"/);
+  assert.match(home, /onClick=\{\(\) => onOpenOutfit\(selectedTrip\.id\)\}/);
+  assert.match(home, /getOutfitPlan\(selectedTrip\.id\)/);
+  assert.match(app, /onOpenOutfit=\{\(tripPlanId\) =>/);
   assert.match(app, /route === "outfit"/);
-  assert.match(app, /<OutfitOverview onBack=\{\(\) => setRoute\("home"\)\} \/>/);
-  assert.match(dashboardCss, /\.today-outfit \{[\s\S]*background: var\(--bg\) !important;/);
+  assert.match(app, /tripPlanId=\{outfitTripPlanId\}/);
+  assert.match(dashboardCss, /\.today-outfit \{[\s\S]*background: var\(--white\) !important;/);
 });
 
 test("generated garments and wardrobe photos share the pixel-art treatment", () => {
-  assert.match(outfit, /pixel-garment dress-piece-photo/);
-  assert.match(outfit, /is-accessory-photo/);
-  assert.match(outfit, /pixel-garment dress-piece-\$\{piece\.kind\}/);
+  const visual = readFileSync(new URL("../src/components/OutfitPieceVisual.tsx", import.meta.url), "utf8");
+  assert.match(visual, /pixel-garment dress-piece-photo/);
+  assert.match(visual, /is-accessory-photo/);
+  assert.match(visual, /pixel-garment dress-piece-\$\{piece\.kind\}/);
   assert.match(outfitCss, /image-rendering: pixelated/);
   assert.match(outfitCss, /background: var\(--bg\)/);
   assert.match(outfitCss, /width: 48px;\s+height: 36px;/);
   assert.match(outfitCss, /--pixel-outline/);
   assert.match(outfitCss, /dress-piece-shoes::before/);
-  assert.match(outfit, /piece\.kind === "accessory"/);
+  assert.match(visual, /piece\.kind === "accessory"/);
   assert.match(outfit, /dress-mini-clothes/);
   assert.match(outfit, /dress-featured-accessory/);
-  assert.match(outfit, /garment-\$\{piece\.garmentStyle\}/);
+  assert.match(visual, /garment-\$\{piece\.garmentStyle\}/);
 });
 
 test("outfit pieces use the white pixel line-art reference style", () => {

@@ -10,33 +10,12 @@ import {
 } from "../api";
 import { SCENARIO_LABELS } from "../i18n/strings";
 import { useLang } from "../i18n/useLang";
+import OutfitPieceVisual from "../components/OutfitPieceVisual";
 
-type Props = { onBack: () => void };
+type Props = { onBack: () => void; tripPlanId?: string };
 
 function PieceVisual({ piece, compact = false }: { piece: OutfitPiece; compact?: boolean }) {
-  const label = piece.label;
-  const isAccessory = piece.kind === "accessory";
-  if (piece.hasPhoto && piece.wardrobeItemId) {
-    return (
-      <span className={`dress-piece pixel-garment dress-piece-photo${isAccessory ? " is-accessory-photo" : ""}${compact ? " is-compact" : ""}`}>
-        <img src={wardrobePhotoUrl(piece.wardrobeItemId)} alt={label} />
-      </span>
-    );
-  }
-  const accessoryClass =
-    isAccessory
-      ? ` accessory-${piece.accessoryStyle ?? "bag"}`
-      : "";
-  const garmentClass = piece.garmentStyle
-    ? ` garment-${piece.garmentStyle}`
-    : "";
-  return (
-    <span
-      className={`dress-piece pixel-garment dress-piece-${piece.kind}${accessoryClass}${garmentClass} tone-${piece.tone}${compact ? " is-compact" : ""}`}
-      role="img"
-      aria-label={label}
-    />
-  );
+  return <OutfitPieceVisual piece={piece} compact={compact} />;
 }
 
 function MiniOutfit({ day }: { day: OutfitDay }) {
@@ -56,7 +35,7 @@ function MiniOutfit({ day }: { day: OutfitDay }) {
   );
 }
 
-export default function OutfitOverview({ onBack }: Props) {
+export default function OutfitOverview({ onBack, tripPlanId }: Props) {
   const { lang, t } = useLang();
   const [plan, setPlan] = useState<OutfitPlan | null>(null);
   const [wx, setWx] = useState<Weather | null>(null);
@@ -65,13 +44,13 @@ export default function OutfitOverview({ onBack }: Props) {
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    getOutfitPlan()
+    getOutfitPlan(tripPlanId)
       .then(({ plan: next }) => {
         setPlan(next);
         weather(next.lat, next.lon).then(setWx).catch(() => setWxError(true));
       })
       .catch(() => setError(true));
-  }, []);
+  }, [tripPlanId]);
 
   const locale = lang === "zh" ? "zh-CN" : "en-GB";
   const fmtDate = (iso: string, short = false) => {
