@@ -375,13 +375,14 @@ export type TripGenerationEstimate = {
 };
 
 export function generateTripPlan(
-  plan: NewTripPlan
+  plan: NewTripPlan,
+  replaceFailedPlanId?: string
 ): Promise<{ plan: TripPlan; estimate: TripGenerationEstimate }> {
   return request<{ plan: TripPlan; estimate: TripGenerationEstimate }>(
     "/api/trip-plans/generate",
     {
       method: "POST",
-      body: JSON.stringify(plan),
+      body: JSON.stringify({ ...plan, replaceFailedPlanId }),
     }
   );
 }
