@@ -39,6 +39,7 @@
 .dash-layout {
   /* Absorb all remaining viewport height */
   flex: 1;
+  min-width: 0;
   min-height: 0;
   display: grid;
   /* Wireframe: left card ≈ 710, right rail ≈ 600 → 1.18 : 1 */
@@ -49,7 +50,14 @@
 
 /* ---------- today card (left) ---------- */
 
+.today-card-shell {
+  min-width: 0;
+  min-height: 0;
+}
+
 .today-card {
+  min-width: 0;
+  min-height: 0;
   border: var(--border);
   background: var(--white);
   box-shadow: 6px 6px 0 var(--black);
@@ -166,6 +174,9 @@
 }
 
 .today-outfit {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   padding: var(--space-2);
   border-right: var(--border) !important;
   display: flex;
@@ -190,111 +201,110 @@
   transform-origin: center center;
 }
 
-.layered-outfit {
-  position: relative;
+.dashboard-outfit-stack {
   display: flex;
+  flex: 1 1 auto;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: min(100%, 190px);
-  height: 100%;
-  min-height: 210px;
-  gap: 0;
+  width: 100%;
+  max-width: 180px;
+  min-height: 0;
+  overflow: hidden;
 }
 
-.layered-torso {
+.dashboard-outfit-torso {
   position: relative;
-  z-index: 2;
   display: grid;
   place-items: center;
-  width: 100%;
-  min-height: 78px;
+  width: 150px;
+  height: 82px;
+  flex: 0 0 82px;
 }
 
-.layered-torso > .dress-piece-top {
+.dashboard-outfit-torso > .dress-piece-top {
   grid-area: 1 / 1;
 }
 
-.layered-outer-open {
+.dashboard-outfit-outer {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
 }
 
-.layered-outer-open > .dress-piece-top {
-  transform: scaleX(1.04);
+.dashboard-outfit-outer > .dress-piece-top {
+  transform: scaleX(0.94);
   clip-path: polygon(
-    0 32%, 12% 32%, 12% 22%, 22% 22%, 22% 14%,
-    34% 14%, 34% 0, 42% 0, 42% 100%, 28% 100%,
-    28% 62%, 20% 62%, 20% 70%, 8% 70%, 8% 58%, 0 58%,
-    58% 58%, 58% 70%, 70% 70%, 70% 62%, 62% 62%,
-    62% 100%, 100% 100%, 100% 0, 58% 0, 58% 14%,
-    66% 14%, 66% 22%, 78% 22%, 78% 32%, 100% 32%, 100% 58%,
-    92% 58%, 92% 70%, 80% 70%, 80% 62%, 72% 62%, 72% 100%,
-    28% 100%, 28% 62%, 20% 62%, 20% 70%, 8% 70%, 8% 58%, 0 58%
+    0 34%, 16% 34%, 16% 20%, 30% 20%, 30% 8%, 42% 8%,
+    42% 100%, 26% 100%, 26% 62%, 12% 62%, 12% 74%, 0 74%,
+    58% 74%, 58% 100%, 74% 100%, 74% 62%, 88% 62%, 88% 74%,
+    100% 74%, 100% 34%, 84% 34%, 84% 20%, 70% 20%, 70% 8%,
+    58% 8%, 58% 100%, 42% 100%, 42% 8%, 30% 8%, 30% 20%,
+    16% 20%, 16% 34%, 0 34%
   );
 }
 
-.layered-zip-gap {
+.dashboard-outfit-zip {
   position: absolute;
   z-index: 3;
-  width: 4px;
-  height: 78%;
+  width: 3px;
+  height: 68px;
   background: var(--black);
-  opacity: 0.8;
+  opacity: 0.85;
 }
 
-.layered-outfit > .dress-piece-bottom {
-  z-index: 1;
-  margin-top: -8px;
+.dashboard-outfit-stack > .dress-piece-bottom {
+  margin-top: -3px;
 }
 
-.layered-outfit > .dress-piece-shoes {
-  z-index: 1;
-  margin-top: -2px;
+.dashboard-outfit-stack > .dress-piece-shoes {
+  margin-top: -1px;
 }
 
-.layered-outfit > .dress-piece-accessory {
+.dashboard-outfit-stack > .dress-piece-accessory {
   position: absolute;
   z-index: 4;
-  right: 0;
-  top: 22%;
+  transform: translateX(68px) translateY(-26px) scale(0.72);
 }
 
 .outfit-figure .dress-piece-top.is-compact {
-  width: clamp(92px, 13vw, 142px);
-  height: auto;
-  aspect-ratio: 176 / 126;
+  width: 110px;
+  height: 79px;
 }
 
 .outfit-figure .dress-piece-bottom.is-compact {
-  width: clamp(64px, 9vw, 96px);
-  height: auto;
-  aspect-ratio: 118 / 156;
+  width: 74px;
+  height: 98px;
   margin-top: -2px;
 }
 
 .outfit-figure .dress-piece-shoes.is-compact {
-  width: clamp(72px, 10vw, 112px);
-  height: auto;
-  aspect-ratio: 152 / 72;
+  width: 92px;
+  height: 44px;
 }
 
-.outfit-figure .dress-piece-accessory.is-compact {
-  position: absolute;
-  transform: translateX(clamp(52px, 6vw, 82px)) translateY(clamp(-18px, -2vw, -8px));
+.outfit-figure .dress-piece-shoes.is-compact::before {
+  width: 50px;
+  height: 34px;
+}
+
+.outfit-figure .dress-piece-shoes.is-compact::after {
+  width: 57px;
+  height: 39px;
 }
 
 .outfit-description {
   display: block;
+  width: 100%;
   max-width: 100%;
-  margin-top: 4px;
+  min-height: 15px;
+  margin-top: 2px;
   overflow: hidden;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: var(--weight-bold);
-  line-height: 1.25;
+  line-height: 1.2;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -305,6 +315,8 @@
   display: flex;
   flex-direction: column;
   min-width: 0;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .today-empty-card {
@@ -327,12 +339,17 @@
 
 /* Three equal tiles filling exactly the today-card height (stretch grid) */
 .dash-nav {
+  min-width: 0;
+  min-height: 0;
   display: grid;
-  grid-template-rows: repeat(3, 1fr);
+  grid-template-rows: repeat(3, minmax(0, 1fr));
   gap: var(--space-3);
 }
 
 .dash-nav button {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: var(--space-3);
@@ -343,6 +360,7 @@
   text-transform: uppercase;
   letter-spacing: 0.02em;
   text-align: left;
+  white-space: normal;
   color: var(--text);
   background: var(--white);
   border: var(--border);

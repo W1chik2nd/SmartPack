@@ -21,7 +21,7 @@ function description(piece: OutfitPiece): string {
   return piece.detail ? `${piece.label}（${piece.detail}）` : piece.label;
 }
 
-/** Compose one centered outfit; a second top is shown as an opened outer layer. */
+/** Compact dashboard illustration; never changes the dashboard grid dimensions. */
 export default function DashboardOutfit({ day, placeName }: Props) {
   if (!day) {
     return (
@@ -37,20 +37,17 @@ export default function DashboardOutfit({ day, placeName }: Props) {
     .filter((piece): piece is OutfitPiece => Boolean(piece));
 
   return (
-    <span
-      className="outfit-figure"
-      aria-label={pieces.map(description).join("，")}
-    >
-      <span className="layered-outfit">
-        <span className="layered-torso">
+    <span className="outfit-figure" aria-label={pieces.map(description).join("，")}>
+      <span className="dashboard-outfit-stack">
+        <span className="dashboard-outfit-torso">
           {outfit.inner && <OutfitPieceVisual piece={outfit.inner} compact />}
           {outfit.outer && (
             <span
-              className="layered-outer-open"
+              className="dashboard-outfit-outer"
               aria-label={`${description(outfit.outer)}，打开拉链，露出里面的${outfit.inner ? description(outfit.inner) : "内搭"}`}
             >
               <OutfitPieceVisual piece={outfit.outer} compact />
-              <span className="layered-zip-gap" aria-hidden="true" />
+              <span className="dashboard-outfit-zip" aria-hidden="true" />
             </span>
           )}
         </span>
@@ -58,9 +55,7 @@ export default function DashboardOutfit({ day, placeName }: Props) {
         {outfit.shoes && <OutfitPieceVisual piece={outfit.shoes} compact />}
         {outfit.accessory && <OutfitPieceVisual piece={outfit.accessory} compact />}
       </span>
-      <span className="outfit-description">
-        {pieces.map(description).join(" · ")}
-      </span>
+      <span className="outfit-description">{pieces.map(description).join(" · ")}</span>
     </span>
   );
 }
