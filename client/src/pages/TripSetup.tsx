@@ -10,7 +10,6 @@ import {
 } from "../api";
 import MapView from "../components/MapView";
 import DateRangePicker, { type DateRange } from "../components/DateRangePicker";
-import ChatWidget from "../components/ChatWidget";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/strings";
 
@@ -191,8 +190,6 @@ export default function TripSetup({ user, scenario, onBack, onSaved }: Props) {
 
   return (
     <div className="tripsetup">
-      <ChatWidget />
-
       <header className="tripsetup-head">
         <button type="button" className="tripsetup-back" onClick={onBack}>
           ‹ {t("backToScenarios")}

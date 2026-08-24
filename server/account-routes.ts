@@ -5,6 +5,7 @@ import {
   PROFILE_COLUMNS,
   profileOptionsPayload,
   validateProfile,
+  type ProfileValues,
 } from "./profile.ts";
 
 export type UserRow = {
@@ -43,12 +44,13 @@ export type AccountService = {
   ) => Promise<boolean>;
   userForRequest: (req: IncomingMessage) => UserRow | null;
   userForToken: (token: string | undefined) => UserRow | null;
+  updateProfile: (userId: string, values: ProfileValues) => PublicUser;
 };
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const hashPassword = (password: string, salt: string) => scryptSync(password, salt, 64);
 
-function publicUser(u: UserRow) {
+export function publicUser(u: UserRow) {
   return {
     id: u.id,
     email: u.email,
@@ -70,6 +72,8 @@ function publicUser(u: UserRow) {
     travelHabitsOther: u.travel_habits_other,
   };
 }
+
+export type PublicUser = ReturnType<typeof publicUser>;
 
 export function createAccountService(db: DatabaseSync): AccountService {
   db.exec(`
@@ -117,6 +121,16 @@ export function createAccountService(db: DatabaseSync): AccountService {
     const token = randomBytes(32).toString("hex");
     db.prepare(`INSERT INTO sessions (token, user_id) VALUES (?, ?)`).run(token, userId);
     return token;
+  }
+
+  function updateProfile(userId: string, values: ProfileValues): PublicUser {
+    const columns = Object.keys(values);
+    db.prepare(
+      `UPDATE users SET ${columns.map((column) => `${column} = ?`).join(", ")}
+        WHERE id = ?`
+    ).run(...columns.map((column) => values[column]), userId);
+    const updated = db.prepare(`SELECT * FROM users WHERE id = ?`).get(userId) as UserRow;
+    return publicUser(updated);
   }
 
   async function handle(
@@ -235,13 +249,7 @@ export function createAccountService(db: DatabaseSync): AccountService {
         json(res, 400, { error: profile.error });
         return true;
       }
-      const columns = Object.keys(profile.values);
-      db.prepare(
-        `UPDATE users SET ${columns.map((column) => `${column} = ?`).join(", ")}
-          WHERE id = ?`
-      ).run(...columns.map((column) => profile.values[column]), user.id);
-      const updated = db.prepare(`SELECT * FROM users WHERE id = ?`).get(user.id) as UserRow;
-      json(res, 200, { user: publicUser(updated) });
+      json(res, 200, { user: updateProfile(user.id, profile.values) });
       return true;
     }
 
@@ -252,5 +260,6 @@ export function createAccountService(db: DatabaseSync): AccountService {
     handle,
     userForRequest: (req) => userForToken(bearerToken(req)),
     userForToken,
+    updateProfile,
   };
 }

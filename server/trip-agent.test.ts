@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   providerErrorMessage,
   structuredResponseRequestBody,
+  tripAgentModel,
 } from "./ai.ts";
 import { tripPlanSchema } from "./trip-agent-prompt.ts";
 import { normalizeGeneratedTrip } from "./trip-agent.ts";
@@ -138,4 +139,15 @@ test("third-party Responses gateways omit OpenAI-only safety identifier", () => 
     "gpt-5.6-terra"
   );
   assert.equal(official.safety_identifier, "user-123");
+});
+
+test("trip agent reuses the chatbot model unless explicitly overridden", () => {
+  assert.equal(tripAgentModel({ AI_MODEL: "shared-model" }), "shared-model");
+  assert.equal(
+    tripAgentModel({
+      AI_MODEL: "shared-model",
+      TRIP_AGENT_MODEL: "analytical-model",
+    }),
+    "analytical-model"
+  );
 });

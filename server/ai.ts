@@ -18,6 +18,13 @@ export function aiConfigured(): boolean {
 
 export type JsonSchema = Record<string, unknown>;
 
+/** The Agent shares AI_MODEL unless an explicit per-agent model is requested. */
+export function tripAgentModel(
+  env: Record<string, string | undefined> = process.env
+): string {
+  return env.TRIP_AGENT_MODEL ?? env.AI_MODEL ?? "gpt-5.6-terra";
+}
+
 type StructuredResponseOptions = {
   instructions: string;
   input: unknown;
@@ -102,7 +109,7 @@ export async function structuredResponse<T>(
   options: StructuredResponseOptions
 ): Promise<T> {
   const baseUrl = process.env.AI_BASE_URL ?? "https://api.openai.com/v1";
-  const model = process.env.TRIP_AGENT_MODEL ?? "gpt-5.6-terra";
+  const model = tripAgentModel();
   const res = await fetch(`${baseUrl.replace(/\/$/, "")}/responses`, {
     method: "POST",
     headers: {
@@ -131,7 +138,7 @@ export async function chatCompletion(
   messages: ChatMessage[]
 ): Promise<string> {
   const baseUrl = process.env.AI_BASE_URL ?? "https://api.openai.com/v1";
-  const model = process.env.AI_MODEL ?? "gpt-4o-mini";
+  const model = process.env.AI_MODEL ?? "gpt-5.6-terra";
 
   const res = await fetch(`${baseUrl.replace(/\/$/, "")}/chat/completions`, {
     method: "POST",
