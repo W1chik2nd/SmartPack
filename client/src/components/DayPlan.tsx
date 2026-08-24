@@ -7,6 +7,7 @@
 import type { TripDay } from "../api";
 import { useLang } from "../i18n/useLang";
 import StopCard from "./StopCard";
+import { wardrobePhotoUrl, type TripOutfitItem } from "../api";
 
 const SPINE_W = 150;
 const ROW_H = 156;
@@ -74,10 +75,17 @@ export default function DayPlan({ day }: Props) {
         </section>
         <section>
           <h3>{t("dayOutfit")}</h3>
-          <ul>
+          <ul className="day-outfit-list">
             {outfit.map((item, index) => (
               <li key={`${item.labelEn}-${index}`}>
-                {lang === "zh" ? item.label : item.labelEn}
+                {item.wardrobeItemId && item.hasPhoto ? (
+                  <img
+                    src={wardrobePhotoUrl(item.wardrobeItemId)}
+                    alt=""
+                    className="day-outfit-photo"
+                  />
+                ) : null}
+                <span>{lang === "zh" ? item.label : item.labelEn}</span>
               </li>
             ))}
           </ul>

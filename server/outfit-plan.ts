@@ -4,6 +4,7 @@
 // 渲染同一个结果。当前算法刻意简单：按品类轮换真实衣橱单品；某一品类为空
 // 时给出明确的基础建议，而不是伪造一个属于用户衣橱的单品。
 import type { TripPlan } from "./trip-plan.ts";
+import type { BilingualItem } from "./trip-agent-types.ts";
 import type { WardrobeItem } from "./wardrobe.ts";
 import { DEFAULT_COORDS } from "./weather.ts";
 
@@ -160,6 +161,69 @@ function fromWardrobe(item: WardrobeItem, kind: OutfitPieceKind): Candidate {
   };
 }
 
+function kindFromLabel(label: string): OutfitPieceKind {
+  const text = label.toLowerCase();
+  for (const kind of ["top", "bottom", "shoes", "accessory"] as const) {
+    if (CATEGORY_WORDS[kind].some((word) => text.includes(word))) return kind;
+  }
+  return "accessory";
+}
+
+function agentPiece(
+  recommendation: BilingualItem,
+  wardrobeById: Map<string, WardrobeItem>
+): OutfitPiece {
+  const owned = recommendation.wardrobeItemId
+    ? wardrobeById.get(recommendation.wardrobeItemId)
+    : undefined;
+  const kind = (recommendation.kind as OutfitPieceKind | undefined) ??
+    (owned ? kindOf(owned) : null) ??
+    kindFromLabel(`${recommendation.label} ${recommendation.labelEn}`);
+  if (owned) return fromWardrobe(owned, kind);
+  const fallback = piece(
+    `agent-${kind}-${recommendation.labelEn || recommendation.label}`,
+    kind,
+    recommendation.label,
+    recommendation.labelEn,
+    "blue",
+    kind === "accessory"
+      ? { accessoryStyle: accessoryStyleFromLabel(recommendation.label) }
+      : { garmentStyle: garmentStyleFromLabel(recommendation.label, kind) }
+  );
+  return fallback;
+}
+
+function accessoryStyleFromLabel(label: string): AccessoryStyle {
+  const text = label.toLowerCase();
+  if (/hat|cap|帽/.test(text)) return "hat";
+  if (/glass|眼镜/.test(text)) return "glasses";
+  if (/scarf|围巾/.test(text)) return "scarf";
+  if (/watch|手表|腕表/.test(text)) return "watch";
+  if (/necklace|jewel|项链|首饰/.test(text)) return "necklace";
+  return "bag";
+}
+
+function garmentStyleFromLabel(
+  label: string,
+  kind: OutfitPieceKind
+): GarmentStyle | null {
+  const text = label.toLowerCase();
+  if (kind === "top") {
+    if (/shirt|blouse|衬衫/.test(text)) return "shirt";
+    if (/knit|sweater|针织|毛衣/.test(text)) return "knit";
+    return "tee";
+  }
+  if (kind === "bottom") {
+    if (/skirt|裙/.test(text)) return "skirt";
+    if (/jean|denim|牛仔/.test(text)) return "jeans";
+    return "trousers";
+  }
+  if (kind === "shoes") {
+    return /sneaker|trainer|运动鞋/.test(text) ? "sneakers" : "loafers";
+  }
+  return null;
+}
+
 function isoToday(now: Date): string {
   return now.toISOString().slice(0, 10);
 }
@@ -178,7 +242,8 @@ function datesBetween(start: string, end: string): string[] {
 export function buildOutfitPlan(
   trip: TripPlan | null,
   wardrobe: WardrobeItem[],
-  now = new Date()
+  now = new Date(),
+  agentDays?: { date: string; place: string; scene: string; outfit: BilingualItem[] }[]
 ): OutfitPlan {
   const today = isoToday(now);
   const startDate = trip?.startDate ?? today;
@@ -198,17 +263,24 @@ export function buildOutfitPlan(
   const dates = datesBetween(startDate, endDate);
   const destination = trip?.placeName ?? "当前位置";
   const scenario = trip?.scenario ?? "commute";
-  const days = dates.map((date, index) => ({
-    id: `outfit-day-${index + 1}`,
-    dayNumber: index + 1,
-    date,
-    place: destination,
-    scene: scenario,
-    pieces: (["top", "bottom", "accessory", "shoes"] as const).map((kind) => {
-      const choices = pools[kind].length > 0 ? pools[kind] : FALLBACKS[kind];
-      return choices[index % choices.length];
-    }),
-  }));
+  const wardrobeById = new Map(wardrobe.map((item) => [item.id, item]));
+  const days = dates.map((date, index) => {
+    const agentDay = agentDays?.find((day) => day.date === date);
+    const pieces = agentDay?.outfit?.length
+      ? agentDay.outfit.map((item) => agentPiece(item, wardrobeById))
+      : (["top", "bottom", "accessory", "shoes"] as const).map((kind) => {
+          const choices = pools[kind].length > 0 ? pools[kind] : FALLBACKS[kind];
+          return choices[index % choices.length];
+        });
+    return {
+      id: `outfit-day-${index + 1}`,
+      dayNumber: index + 1,
+      date,
+      place: agentDay?.place ?? destination,
+      scene: agentDay?.scene ?? scenario,
+      pieces,
+    };
+  });
 
   return {
     destination,

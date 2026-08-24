@@ -6,7 +6,7 @@ import { SCENARIO_LABELS } from "../i18n/strings";
 type Props = {
   user: User;
   onBack: () => void;
-  /** 选好场景后进入行程设置页(地图 + 日历),带上场景 id。 */
+  /** 选中场景后直接进入对应的生成计划页。 */
   onPickScenario: (scenario: string) => void;
 };
 
@@ -132,8 +132,9 @@ export default function TripPlanner({
           aria-pressed={selected === s.id}
           tabIndex={isClone ? -1 : undefined}
           onClick={() => {
-            // 点卡片只做选中;选好后下方出现两个入口(行程设置 / 行程计划)。
+            // 点击场景后直接进入地点和日期设置，不再要求用户额外点击确认按钮。
             setSelected(s.id);
+            onPickScenario(s.id);
           }}
         >
           {/* 图片区:图片加载失败时留下纯色占位块,不影响卡片结构 */}
@@ -203,18 +204,7 @@ export default function TripPlanner({
         </button>
       </div>
 
-      {/* 先给齐地点、日期和安排,再由 Agent 生成可执行方案。 */}
-      {selected && (
-        <div className="scenarios-actions">
-          <button
-            type="button"
-            className="scenarios-continue"
-            onClick={() => onPickScenario(selected)}
-          >
-            {t("continueToSetup")} ›
-          </button>
-        </div>
-      )}
+      {/* 点击场景卡片后已直接进入设置页，保留底部区域的空间不再显示重复确认按钮。 */}
     </div>
   );
 }
