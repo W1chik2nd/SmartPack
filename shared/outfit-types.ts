@@ -2,8 +2,11 @@ export type OutfitPieceKind = "top" | "bottom" | "shoes" | "accessory";
 
 export type OutfitTone =
   | "red"
+  | "orange"
   | "yellow"
   | "blue"
+  | "purple"
+  | "pink"
   | "black"
   | "white"
   | "green"
@@ -11,6 +14,8 @@ export type OutfitTone =
   | "gray"
   | "beige";
 
+export type OutfitPattern = "solid" | "plaid" | "striped" | "printed";
+export type OutfitSleeve = "short" | "long" | null;
 export type OutfitFit = "slim" | "regular" | "relaxed";
 export type OutfitMaterial =
   | "cotton"
@@ -43,6 +48,8 @@ export type OutfitPiece = {
   label: string;
   labelEn: string;
   tone: OutfitTone;
+  pattern: OutfitPattern;
+  sleeve: OutfitSleeve;
   garmentStyle: GarmentStyle | null;
   accessoryStyle: AccessoryStyle | null;
   fit: OutfitFit | null;

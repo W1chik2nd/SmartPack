@@ -73,6 +73,63 @@ test("real wardrobe items use descriptions without exposing their photos", () =>
   assert.equal(plan.usesWardrobe, true);
 });
 
+test("the title color and concrete garment description win over conflicting metadata", () => {
+  const describedWardrobe: WardrobeItem[] = [
+    {
+      ...wardrobe[0],
+      id: "orange-shirt",
+      title: "橙色格纹长袖衬衫",
+      subtype: "长袖衬衫",
+      colors: ["绿色"],
+      styleTags: ["格纹"],
+      details: "灰色内衬",
+    },
+    {
+      ...wardrobe[0],
+      id: "white-tee",
+      title: "白色纯棉基础短袖T恤",
+      subtype: "T恤",
+      colors: ["灰色"],
+      details: "绿色缝线",
+    },
+  ];
+  const plan = buildOutfitPlan(trip, describedWardrobe);
+  const orange = plan.days[0].pieces[0];
+  const white = plan.days[1].pieces[0];
+
+  assert.equal(orange.tone, "orange");
+  assert.equal(orange.garmentStyle, "shirt");
+  assert.equal(orange.pattern, "plaid");
+  assert.equal(orange.sleeve, "long");
+  assert.equal(white.tone, "white");
+  assert.equal(white.garmentStyle, "tee");
+  assert.equal(white.pattern, "solid");
+  assert.equal(white.sleeve, "short");
+});
+
+test("AI-suggested wardrobe gaps derive their appearance from the recommendation", () => {
+  const plan = buildOutfitPlan(trip, [], undefined, [
+    {
+      date: trip.startDate,
+      place: "香港",
+      scene: "travel",
+      outfit: [
+        {
+          label: "橙色格纹长袖衬衫",
+          labelEn: "Orange plaid long-sleeve shirt",
+          kind: "top",
+        },
+      ],
+    },
+  ]);
+  const suggested = plan.days[0].pieces[0];
+
+  assert.equal(suggested.tone, "orange");
+  assert.equal(suggested.pattern, "plaid");
+  assert.equal(suggested.sleeve, "long");
+  assert.equal(suggested.wardrobeItemId, null);
+});
+
 test("jewellery keeps a recognisable accessory style", () => {
   const watch: WardrobeItem[] = [
     {
