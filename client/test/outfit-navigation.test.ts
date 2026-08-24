@@ -38,6 +38,8 @@ test("generated garments and wardrobe photos share the pixel-art treatment", () 
   assert.match(dashboardOutfit, /dashboard-outfit-outer/);
   assert.match(dashboardOutfit, /打开拉链/);
   assert.match(dashboardOutfit, /outfit-description/);
+  assert.match(dashboardOutfit, /lang === "zh"/);
+  assert.match(outfit, /lang === "zh" \? `第\$\{activeDay\.dayNumber\}天`/);
 });
 
 test("outfit pieces use the white pixel line-art reference style", () => {

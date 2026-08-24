@@ -78,6 +78,7 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
   const activeAccessory = activeDay.pieces.find((piece) => piece.kind === "accessory");
   const activeGarments = activeDay.pieces.filter((piece) => piece.kind !== "accessory");
   const scenario = SCENARIO_LABELS[plan.scenario]?.[lang] ?? plan.scenario;
+  const dayLabel = lang === "zh" ? `第${activeDay.dayNumber}天` : `Day ${activeDay.dayNumber}`;
   const incompleteWardrobe = activeDay.pieces.some((piece) => !piece.wardrobeItemId);
   const move = (step: number) => {
     setActiveIndex((index) => (index + step + plan.days.length) % plan.days.length);
@@ -90,7 +91,7 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
           <button type="button" className="dress-back" onClick={onBack}>‹ {t("backToHome")}</button>
           <h1>{t("outfitOverviewTitle")}</h1>
         </div>
-        <span className="dress-day-badge">Day {activeDay.dayNumber} / {plan.days.length}</span>
+        <span className="dress-day-badge">{dayLabel} / {plan.days.length}</span>
       </header>
 
       <div className="dress-layout">
@@ -127,7 +128,7 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
                   onClick={() => setActiveIndex(index)}
                   aria-pressed={index === activeIndex}
                 >
-                  <span>{fmtDate(day.date, true)}</span><span>{day.place}</span><span>{SCENARIO_LABELS[day.scene]?.[lang] ?? day.scene}</span>
+                  <span>{fmtDate(day.date, true)}</span><span>{lang === "zh" ? day.place : day.placeEn || day.place}</span><span>{SCENARIO_LABELS[day.scene]?.[lang] ?? day.scene}</span>
                 </button>
               ))}
             </div>
@@ -136,7 +137,7 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
 
         <section className="dress-featured" aria-label={t("outfitSelectedDay")}>
           <header>
-            <p>Day {activeDay.dayNumber} · {fmtDate(activeDay.date)}</p>
+            <p>{dayLabel} · {fmtDate(activeDay.date)} · {lang === "zh" ? activeDay.place : activeDay.placeEn || activeDay.place}</p>
             <h2>{scenario}</h2>
           </header>
           <div className="dress-outfit-stage">
@@ -173,7 +174,7 @@ export default function OutfitOverview({ onBack, tripPlanId }: Props) {
                 onClick={() => setActiveIndex(index)}
                 aria-pressed={index === activeIndex}
               >
-                <span className="dress-card-title">Day {day.dayNumber}</span>
+                <span className="dress-card-title">{lang === "zh" ? `第${day.dayNumber}天` : `Day ${day.dayNumber}`}</span>
                 <MiniOutfit day={day} />
                 <span className="dress-card-date">{fmtDate(day.date, true)}</span>
               </button>

@@ -445,6 +445,7 @@ export type OutfitDay = {
   dayNumber: number;
   date: string;
   place: string;
+  placeEn: string;
   scene: string;
   pieces: OutfitPiece[];
 };
