@@ -121,6 +121,7 @@ const LABEL_W = 122;
 const LABEL_H = 72;
 const DEPART_W = 122;
 const DEPART_H = 27;
+const TOP_GAP = 32;
 
 let failures = 0;
 const fail = (msg) => {
@@ -156,6 +157,7 @@ for (const days of [1, 2, 3, 4, 5, 7]) {
     Math.min(...xs) >= 0 && Math.max(...xs) <= vb.w &&
     Math.min(...ys) >= 0 && Math.max(...ys) <= vb.h;
   if (!curveIn) fail(`${days}d: curve leaves viewBox`);
+  if (Math.min(...ys) < TOP_GAP) fail(`${days}d: top whitespace is too small`);
 
   for (const c of circles) {
     if (c.x - c.r < 0 || c.x + c.r > vb.w || c.y - c.r < 0 || c.y + c.r > vb.h) {
@@ -188,6 +190,7 @@ for (const days of [1, 2, 3, 4, 5, 7]) {
   if (dep && Number.isFinite(dep.left)) {
     const box = { x0: dep.left, x1: dep.left + DEPART_W, y0: dep.top, y1: dep.top + DEPART_H };
     if (hitsIn(pts, box) > 0) fail(`${days}d depart badge overlaps curve`);
+    if (box.y0 < TOP_GAP) fail(`${days}d depart badge enters top whitespace`);
     if (box.x1 > vb.w) fail(`${days}d depart badge overflows width`);
   }
 }

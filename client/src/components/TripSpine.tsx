@@ -16,8 +16,9 @@ import { useLang } from "../i18n/useLang";
 
 // 画布宽度必须与 itinerary.css 里 .itin-layout 的左栏宽度一致。
 const SPINE_W = 360;
-// 上留白要容下起笔钩和「x.xx 出发」标注。
-const PAD_TOP = 92;
+// 画布顶部先留出一段呼吸空间,再容纳起笔钩和「x.xx 出发」标注。
+const TOP_GAP = 32;
+const PAD_TOP = TOP_GAP + 92;
 const ROW_H = 132;
 // 收笔最远探到 last.y + 58,底部留白必须大于它,否则尾巴被裁掉。
 const PAD_BOTTOM = 92;
@@ -204,7 +205,10 @@ export default function TripSpine({ trip, activeDayId, onPickDay }: Props) {
         </svg>
 
         {/* 「x.xx 出发」压在起笔钩上方,对应手绘稿左上角那一行 */}
-        <span className="spine-depart" style={{ left: curve.start.x, top: 0 }}>
+        <span
+          className="spine-depart"
+          style={{ left: curve.start.x, top: TOP_GAP }}
+        >
           {trip.departLabel} {t("departs")}
         </span>
 
