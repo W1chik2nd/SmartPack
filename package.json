@@ -10,7 +10,7 @@
     "dev": "node scripts/dev.mjs",
     "build": "npm run build --workspace client",
     "start": "node scripts/dev.mjs",
-    "test": "npm test --prefix server && npm run check:render && npm run check:layout",
+    "test": "npm test --prefix server && npm test --workspace client && npm run check:render && npm run check:layout",
     "check:render": "node scripts/render-check.mjs",
     "check:layout": "node scripts/layout-probe.mjs"
   }
