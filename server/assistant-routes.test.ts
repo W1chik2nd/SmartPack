@@ -73,7 +73,7 @@ test("chat navigation action reaches the authenticated client response", async (
         body: JSON.stringify({ messages: [{ role: "user", content: "Open my wardrobe" }] }),
       });
       const body = await response.json() as any;
-      assert.equal(response.status, 200);
+      assert.equal(response.status, 200, JSON.stringify(body));
       assert.match(body.reply, /Action completed successfully/);
       assert.deepEqual(body.actions, [{ type: "navigate", page: "wardrobe" }]);
     }
@@ -93,6 +93,7 @@ test("chat wardrobe action writes to SQLite and reports completion", async () =>
         body: JSON.stringify({ messages: [{ role: "user", content: "Add a black tee" }] }),
       });
       const chatBody = await chat.json() as any;
+      assert.equal(chat.status, 200, JSON.stringify(chatBody));
       assert.match(chatBody.reply, /Action completed successfully/);
       assert.deepEqual(chatBody.actions, [{ type: "wardrobeChanged" }]);
       const wardrobe = await fetch(`${base}/api/wardrobe/items`, {

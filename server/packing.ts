@@ -21,6 +21,10 @@ export type PackingItem = {
   labelEn: string;
   /** How many trip scenarios this piece covers — the reuse count (US 6.2). */
   reuse: number;
+  quantity?: number;
+  daysUsed?: number[];
+  wardrobeItemId?: string;
+  priority?: "core" | "support" | "optional";
 };
 
 export type PackingCategory = {
@@ -55,6 +59,27 @@ export type PackingPlan = {
   categories: PackingCategory[];
   essentials: EssentialItem[];
   corePieces: CorePiece[];
+};
+
+export type StoredGeneratedPacking = {
+  summary: string;
+  summaryEn: string;
+  categories: (Omit<PackingCategory, "items"> & {
+    items: Required<
+      Pick<
+        PackingItem,
+        | "id"
+        | "label"
+        | "labelEn"
+        | "reuse"
+        | "quantity"
+        | "daysUsed"
+        | "wardrobeItemId"
+        | "priority"
+      >
+    >[];
+  })[];
+  essentials: EssentialItem[];
 };
 
 // The candidate wardrobe, per category, ordered most-versatile first. Packing
@@ -201,6 +226,44 @@ export function buildPackingPlan(balance: number, tripDays = 4): PackingPlan {
     summaryEn,
     categories,
     essentials: ESSENTIALS,
+    corePieces,
+  };
+}
+
+/**
+ * Apply the existing variety/light slider to the agent's prioritized list.
+ * The agent makes the semantic recommendation; this deterministic server rule
+ * only reveals support/optional pieces as the user asks for more variety.
+ */
+export function buildGeneratedPackingPlan(
+  source: StoredGeneratedPacking,
+  balance: number,
+  tripDays: number
+): PackingPlan {
+  const b = clamp(Math.round(balance), 0, 100);
+  const include = (priority: "core" | "support" | "optional") =>
+    priority === "core" ||
+    (priority === "support" && b >= 34) ||
+    (priority === "optional" && b >= 67);
+  const categories = source.categories
+    .map((category) => ({
+      ...category,
+      items: category.items.filter((item) => include(item.priority)),
+    }))
+    .filter((category) => category.items.length > 0);
+  const corePieces = categories
+    .flatMap((category) => category.items)
+    .sort((a, b) => b.reuse - a.reuse)
+    .slice(0, 4)
+    .map(({ id, label, labelEn, reuse }) => ({ id, label, labelEn, reuse }));
+
+  return {
+    balance: b,
+    tripDays,
+    summary: source.summary,
+    summaryEn: source.summaryEn,
+    categories,
+    essentials: source.essentials,
     corePieces,
   };
 }
