@@ -1,9 +1,17 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { analyzePersonalColor } from "../api";
 import { toDataUrl } from "../lib/image";
 import "./PersonalColorGuide.css";
 
 type Props = { onClose: () => void; onSeasonDetected: (season: string) => void };
+
+const SEASON_LABELS: Record<string, string> = {
+  spring: "春季型",
+  summer: "夏季型",
+  autumn: "秋季型",
+  winter: "冬季型",
+};
+const AUTO_CHOICE_DELAY_MS = 3_000;
 
 export default function PersonalColorGuide({ onClose, onSeasonDetected }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -12,6 +20,28 @@ export default function PersonalColorGuide({ onClose, onSeasonDetected }: Props)
   const [analysis, setAnalysis] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [countdown, setCountdown] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!countdown) return;
+    const timer = window.setInterval(() => {
+      setCountdown((value) => (value && value > 1 ? value - 1 : null));
+    }, 1_000);
+    return () => window.clearInterval(timer);
+  }, [countdown]);
+
+  const lastSeason = useRef<string | null>(null);
+  const onSeasonDetectedRef = useRef(onSeasonDetected);
+  onSeasonDetectedRef.current = onSeasonDetected;
+
+  useEffect(() => {
+    if (!analysis || !lastSeason.current) return;
+    const timer = window.setTimeout(() => {
+      setCountdown(null);
+      onSeasonDetectedRef.current(lastSeason.current!);
+    }, AUTO_CHOICE_DELAY_MS);
+    return () => window.clearTimeout(timer);
+  }, [analysis]);
 
   async function selectPhoto(file: File | undefined) {
     if (!file) return;
@@ -32,7 +62,10 @@ export default function PersonalColorGuide({ onClose, onSeasonDetected }: Props)
     try {
       const result = await analyzePersonalColor(image);
       setAnalysis(result.analysis);
-      if (result.season) onSeasonDetected(result.season);
+      if (result.season) {
+        lastSeason.current = result.season;
+        setCountdown(3);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "分析失败，请稍后重试");
     } finally {
@@ -63,7 +96,7 @@ export default function PersonalColorGuide({ onClose, onSeasonDetected }: Props)
             </ul>
           </div>}
           {error && <p className="color-guide-error" role="alert">{error}</p>}
-          {analysis && <div className="color-guide-result" role="status"><h3>你的个人色彩分析</h3><p>{analysis}</p></div>}
+          {analysis && <div className="color-guide-result" role="status"><h3>你的个人色彩分析</h3><p>{analysis}</p>{countdown && lastSeason.current && <p className="color-guide-auto-choice">报告已生成，将在 {countdown} 秒后自动选择 <strong>{SEASON_LABELS[lastSeason.current] ?? lastSeason.current}</strong>。</p>}</div>}
           <p className="color-guide-note">AI 分析会受照片光线和屏幕色差影响，重要造型决策可结合线下布诊复核。</p>
         </div>
         <footer className="color-guide-footer">
