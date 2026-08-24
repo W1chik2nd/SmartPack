@@ -10,7 +10,7 @@ import {
 } from "../api";
 import OptionGroup from "../components/OptionGroup";
 import { useLang } from "../i18n/useLang";
-import type { StringKey } from "../i18n/strings";
+import { STRINGS, type StringKey } from "../i18n/strings";
 
 type Props = {
   credentials: Credentials;
@@ -132,7 +132,11 @@ export default function Questionnaire({ credentials, onAuthed, onBack }: Props) 
 
   // Field labels are UI copy, so they stay in the client's string table; the
   // server sends language-neutral keys and option labels for both languages.
-  const label = (key: string) => t(key as StringKey);
+  // A key with no string yet falls back to the key itself: the server owns the
+  // catalog, so it can ship a new question before this table catches up, and
+  // that must degrade to an ugly label — never a crash that blocks sign-up.
+  const label = (key: string) =>
+    key in STRINGS ? t(key as StringKey) : key;
 
   function numberInput(field: ProfileField) {
     return (
