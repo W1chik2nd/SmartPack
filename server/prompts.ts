@@ -5,21 +5,79 @@
 // The assistant is personalized with the signed-in user's questionnaire
 // profile, which is why /api/chat requires a session.
 
+import { optionLabels } from "./profile.ts";
+
 export type ProfileForPrompt = {
   name: string;
   age: number | null;
   height_cm: number | null;
   weight_kg: number | null;
+  bust_cm?: number | null;
+  waist_cm?: number | null;
+  hip_cm?: number | null;
+  body_type?: string | null;
+  season_color_type?: string | null;
+  /** JSON array of style option ids — the current shape. */
+  style_prefs?: string | null;
+  wear_feel?: string | null;
+  travel_habits?: string | null;
+  /**
+   * Pre-questionnaire single style choice. Rows created before the
+   * multi-select existed only have this, so it is the fallback.
+   */
   style: string | null;
 };
 
+/** Multi-select columns hold a JSON array; anything else reads as empty. */
+function parseList(raw: string | null | undefined): string[] {
+  if (!raw) return [];
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v.map(String) : [];
+  } catch {
+    return [];
+  }
+}
+
+function labelLine(
+  heading: string,
+  key: string,
+  raw: string | null | undefined
+): string | null {
+  const ids = parseList(raw);
+  return ids.length > 0 ? `- ${heading}: ${optionLabels(key, ids).join(", ")}` : null;
+}
+
 export function buildSystemPrompt(profile: ProfileForPrompt): string {
+  const stylePrefs = parseList(profile.style_prefs);
+  const styleLine =
+    stylePrefs.length > 0
+      ? `- Preferred styles: ${optionLabels("stylePrefs", stylePrefs).join(", ")}`
+      : profile.style
+        ? `- Preferred style: ${profile.style}`
+        : null;
+
+  const measurements = [
+    profile.bust_cm != null ? `bust ${profile.bust_cm} cm` : null,
+    profile.waist_cm != null ? `waist ${profile.waist_cm} cm` : null,
+    profile.hip_cm != null ? `hip ${profile.hip_cm} cm` : null,
+  ].filter(Boolean);
+
   const facts = [
     `- Name: ${profile.name}`,
     profile.age != null ? `- Age: ${profile.age}` : null,
     profile.height_cm != null ? `- Height: ${profile.height_cm} cm` : null,
     profile.weight_kg != null ? `- Weight: ${profile.weight_kg} kg` : null,
-    profile.style ? `- Preferred style: ${profile.style}` : null,
+    measurements.length > 0 ? `- Measurements: ${measurements.join(", ")}` : null,
+    profile.body_type
+      ? `- Body type: ${optionLabels("bodyType", [profile.body_type])[0]}`
+      : null,
+    profile.season_color_type
+      ? `- Seasonal color type: ${optionLabels("seasonColorType", [profile.season_color_type])[0]}`
+      : null,
+    styleLine,
+    labelLine("Comfort preferences", "wearFeel", profile.wear_feel),
+    labelLine("Travel and packing habits", "travelHabits", profile.travel_habits),
   ]
     .filter(Boolean)
     .join("\n");
@@ -40,7 +98,7 @@ SmartPack combines five inputs to make dressing and packing decisions for the us
 ## This user
 ${facts}
 
-Use the profile to tailor fits, sizes, layering warmth, and style choices. Their preferred style is the default aesthetic unless they ask otherwise.
+Use the profile to tailor fits, sizes, layering warmth, and style choices. Their preferred styles are the default aesthetic unless they ask otherwise. The questionnaire is mostly optional, so fields may be missing — work with what is listed and ask only when a missing detail actually changes your answer.
 
 ## How to answer
 - Reply in the language the user writes in.

@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { scryptSync, randomBytes } from "node:crypto";
 import { createApp, type App } from "./app.ts";
+import { profileOptionsPayload } from "./profile.ts";
 
 let app: App;
 let server: Server;
@@ -50,13 +51,19 @@ async function get(path: string, token?: string) {
   return { status: res.status, body: await res.json() };
 }
 
-// A complete sign-up payload: account fields plus the style questionnaire.
-const annaProfile = {
-  name: "Anna",
-  age: 28,
-  heightCm: 168,
-  weightKg: 55,
-  style: "Business",
+// The required half of the questionnaire — the only part that gates sign-up.
+const annaProfile = { name: "Anna", age: 28, heightCm: 168, weightKg: 55 };
+
+// Every optional answer filled in, for the round-trip test below.
+const annaOptional = {
+  bustCm: 86,
+  waistCm: 68,
+  hipCm: 92,
+  bodyType: "hourglass",
+  seasonColorType: "winter",
+  stylePrefs: ["business", "elegant"],
+  wearFeel: ["runs-cold", "prefers-fitted"],
+  travelHabits: ["carry-on-only", "frequent-business"],
 };
 
 test("register creates an account and returns a session", async () => {
@@ -84,9 +91,9 @@ test("register rejects invalid email, short password, missing name", async () =>
   }
 });
 
-test("register without the questionnaire stores nothing", async () => {
-  // Product rule: sign-up only counts once the questionnaire is complete.
-  // Account-only payloads and partial/invalid questionnaires must all fail…
+test("register without the required questionnaire fields stores nothing", async () => {
+  // Product rule: sign-up only counts once the required answers are there.
+  // Account-only payloads and invalid required answers must all fail…
   const attempts = [
     { email: "ben@example.com", password: "long-enough-pass" },
     { email: "ben@example.com", password: "long-enough-pass", name: "Ben" },
@@ -108,12 +115,6 @@ test("register without the questionnaire stores nothing", async () => {
       ...annaProfile,
       weightKg: -5,
     },
-    {
-      email: "ben@example.com",
-      password: "long-enough-pass",
-      ...annaProfile,
-      style: "",
-    },
   ];
   for (const payload of attempts) {
     const { status } = await post("/api/register", payload);
@@ -126,6 +127,70 @@ test("register without the questionnaire stores nothing", async () => {
     password: "long-enough-pass",
   });
   assert.equal(login.status, 401);
+});
+
+test("optional answers never block sign-up and round-trip intact", async () => {
+  // Only name/age/height/weight gate the account. Unanswered optional fields
+  // stay NULL — "skipped" must stay distinguishable from "answered with
+  // nothing" — and multi-selects land as JSON arrays.
+  async function registered(email: string, payload: object) {
+    const { status } = await post("/api/register", {
+      email,
+      password: "long-enough-pass",
+      ...annaProfile,
+      ...payload,
+    });
+    assert.equal(status, 201);
+    const db = new DatabaseSync(join(dir, "test.db"));
+    const row = db.prepare(`SELECT * FROM users WHERE email = ?`).get(email);
+    db.close();
+    return row as Record<string, unknown>;
+  }
+
+  const minimal = await registered("minimal@example.com", { name: "Minimal" });
+  const optional = ["bust_cm", "waist_cm", "hip_cm", "body_type",
+    "season_color_type", "style_prefs", "wear_feel", "travel_habits"];
+  for (const col of optional) {
+    assert.equal(minimal[col], null, `${col} must stay NULL when unanswered`);
+  }
+
+  const full = await registered("full@example.com", { ...annaOptional, name: "Full" });
+  assert.equal(full.bust_cm, 86);
+  assert.equal(full.body_type, "hourglass");
+  assert.equal(full.season_color_type, "winter");
+  assert.deepEqual(JSON.parse(full.style_prefs as string), ["business", "elegant"]);
+  assert.deepEqual(JSON.parse(full.travel_habits as string), [
+    "carry-on-only",
+    "frequent-business",
+  ]);
+});
+
+test("register rejects an invalid optional answer and stores nothing", async () => {
+  // Optional does not mean unchecked. The per-field rules are covered in
+  // profile.test.ts; this proves the route enforces them and creates no row.
+  const { status, body } = await post("/api/register", {
+    email: "reject@example.com",
+    password: "long-enough-pass",
+    ...annaProfile,
+    stylePrefs: ["business", "not-a-style"],
+  });
+  assert.equal(status, 400);
+  assert.match(body.error, /style preferences/);
+
+  const login = await post("/api/login", {
+    email: "reject@example.com",
+    password: "long-enough-pass",
+  });
+  assert.equal(login.status, 401, "no account may be left behind");
+});
+
+test("profile-options serves the catalog without a session", async () => {
+  // Sign-up step 2 fetches this before any account exists, so it is public by
+  // design: option lists only, no user data. The catalog's own shape is
+  // asserted in profile.test.ts; here it only has to reach an anonymous caller.
+  const { status, body } = await get("/api/profile-options");
+  assert.equal(status, 200);
+  assert.deepEqual(body, JSON.parse(JSON.stringify(profileOptionsPayload())));
 });
 
 test("check-email flags duplicates without creating anything", async () => {
@@ -238,7 +303,7 @@ test("passwords are stored hashed, never in plain text", async () => {
     password: "plain-text-secret",
     ...annaProfile,
     name: "Chloe",
-    style: "Streetwear",
+    stylePrefs: ["streetwear"],
   });
   assert.equal(reg.status, 201);
   const serialized = JSON.stringify(reg.body);

@@ -29,6 +29,11 @@ import { dirname, join } from "node:path";
 import { aiConfigured, chatCompletion, type ChatMessage } from "./ai.ts";
 import { buildSystemPrompt } from "./prompts.ts";
 import { currentWeather, DEFAULT_COORDS } from "./weather.ts";
+import {
+  PROFILE_COLUMNS,
+  profileOptionsPayload,
+  validateProfile,
+} from "./profile.ts";
 
 // Password hashing (AGENTS.md §5): passwords require a password-specific KDF,
 // not a general-purpose hash like SHA256. We use scrypt because it is a
@@ -48,6 +53,18 @@ type UserRow = {
   age: number | null;
   height_cm: number | null;
   weight_kg: number | null;
+  bust_cm: number | null;
+  waist_cm: number | null;
+  hip_cm: number | null;
+  body_type: string | null;
+  season_color_type: string | null;
+  /** JSON array of style option ids. */
+  style_prefs: string | null;
+  /** JSON array of wear-comfort option ids. */
+  wear_feel: string | null;
+  /** JSON array of travel-habit option ids. */
+  travel_habits: string | null;
+  /** Pre-questionnaire single choice; still read as a fallback. */
   style: string | null;
 };
 
@@ -103,17 +120,14 @@ export function createApp(dbPath: string): App {
 
   // Dev databases created before the questionnaire existed lack the profile
   // columns; CREATE TABLE IF NOT EXISTS won't add them, so patch in place.
+  // The column list comes from profile.ts, so adding a questionnaire field
+  // there migrates existing databases without touching this loop.
   const existing = new Set(
     (db.prepare(`PRAGMA table_info(users)`).all() as { name: string }[]).map(
       (c) => c.name
     )
   );
-  for (const [col, type] of [
-    ["age", "INTEGER"],
-    ["height_cm", "REAL"],
-    ["weight_kg", "REAL"],
-    ["style", "TEXT"],
-  ] as const) {
+  for (const [col, type] of PROFILE_COLUMNS) {
     if (!existing.has(col)) db.exec(`ALTER TABLE users ADD COLUMN ${col} ${type}`);
   }
 
@@ -199,13 +213,23 @@ export function createApp(dbPath: string): App {
       return;
     }
 
+    // The questionnaire catalog. Deliberately unauthenticated: it is asked for
+    // during sign-up step 2, before any account or session exists. It carries
+    // no user data — only the option lists and their validation bounds — so
+    // there is nothing here to protect.
+    if (req.method === "GET" && url.pathname === "/api/profile-options") {
+      json(res, 200, profileOptionsPayload());
+      return;
+    }
+
     if (req.method === "POST" && url.pathname === "/api/register") {
-      // Registration is a single atomic call: account fields AND the style
+      // Registration is a single atomic call: account fields AND the
       // questionnaire together. The client collects them across two screens,
       // but nothing touches the database until the questionnaire is done —
       // an abandoned sign-up leaves no trace (product rule, enforced here).
-      const { email, password, name, age, heightCm, weightKg, style } =
-        await readBody(req);
+      // Only name/age/height/weight are mandatory; the rest may be null.
+      const body = await readBody(req);
+      const { email, password } = body;
       if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
         json(res, 400, { error: "Please enter a valid email address." });
         return;
@@ -214,24 +238,9 @@ export function createApp(dbPath: string): App {
         json(res, 400, { error: "Password must be at least 8 characters." });
         return;
       }
-      if (typeof name !== "string" || name.trim().length < 1) {
-        json(res, 400, { error: "Please enter your name." });
-        return;
-      }
-      if (!Number.isInteger(age) || age < 1 || age > 120) {
-        json(res, 400, { error: "Please enter a valid age." });
-        return;
-      }
-      if (!Number.isFinite(heightCm) || heightCm <= 0) {
-        json(res, 400, { error: "Please enter a valid height in cm." });
-        return;
-      }
-      if (!Number.isFinite(weightKg) || weightKg <= 0) {
-        json(res, 400, { error: "Please enter a valid weight in kg." });
-        return;
-      }
-      if (typeof style !== "string" || style.trim().length < 1) {
-        json(res, 400, { error: "Please choose a preferred style." });
+      const profile = validateProfile(body);
+      if (!profile.ok) {
+        json(res, 400, { error: profile.error });
         return;
       }
       const exists = db
@@ -244,19 +253,16 @@ export function createApp(dbPath: string): App {
       const id = randomUUID();
       const salt = randomBytes(16).toString("hex");
       const hash = hashPassword(password, salt).toString("hex");
+      const columns = Object.keys(profile.values);
       db.prepare(
-        `INSERT INTO users (id, email, name, pass_salt, pass_hash, age, height_cm, weight_kg, style)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO users (id, email, pass_salt, pass_hash, ${columns.join(", ")})
+         VALUES (?, ?, ?, ?, ${columns.map(() => "?").join(", ")})`
       ).run(
         id,
         email.trim(),
-        name.trim(),
         salt,
         hash,
-        age,
-        heightCm,
-        weightKg,
-        style.trim()
+        ...columns.map((c) => profile.values[c])
       );
 
       const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(id) as UserRow;

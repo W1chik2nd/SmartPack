@@ -141,6 +141,57 @@
   gap: var(--space-2);
 }
 
+/* Three measurements (bust / waist / hip) in one row */
+.field-row-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Questionnaire block divider: required answers above, optional below.
+   A solid bar, not a decorative rule — it separates two obligations. */
+.form-section {
+  margin: var(--space-3) 0 var(--space-2);
+  padding-left: var(--space-1);
+  border-left: 10px solid var(--blue);
+  font-size: 13px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.form-section:first-child {
+  margin-top: 0;
+}
+
+/* "(optional)" marker inside a label — normal weight so the label still reads
+   as the primary text */
+.field-optional {
+  font-weight: var(--weight-regular);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+}
+
+.option-hint {
+  grid-column: 1 / -1;
+  margin-bottom: var(--space-1);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Incomplete-profile notice under the submit button. Yellow, not red: the
+   first click did not fail, it asked for confirmation. */
+.incomplete-warning {
+  margin-top: var(--space-2);
+  padding: 12px var(--space-2);
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--black);
+  background: var(--yellow);
+  border: var(--border);
+  border-radius: var(--radius);
+  animation: fadeIn 0.2s ease both;
+}
+
 /* Questionnaire style picker: radio choices as flat selectable blocks */
 .style-options {
   border: none;

@@ -51,14 +51,34 @@ export type Credentials = {
   password: string;
 };
 
-/** The style questionnaire — registration is only accepted with all of it. */
-export type Profile = {
-  name: string;
-  age: number;
-  heightCm: number;
-  weightKg: number;
-  style: string;
+/**
+ * The profile questionnaire payload. Keyed by the field keys the server
+ * publishes via /api/profile-options rather than typed field by field: the
+ * form is built from that catalog, so a new question needs no client change.
+ * Only name/age/heightCm/weightKg are required — the server enforces that.
+ */
+export type Profile = Record<string, string | number | string[]>;
+
+/** One selectable answer. `id` is stored; the labels are display-only. */
+export type ProfileOption = {
+  id: string;
+  en: string;
+  zh: string;
 };
+
+export type ProfileField = {
+  key: string;
+  kind: "text" | "int" | "decimal" | "single" | "multi";
+  required: boolean;
+  min?: number;
+  max?: number;
+  options?: ProfileOption[];
+};
+
+/** The questionnaire catalog. Unauthenticated: needed during sign-up step 2. */
+export function profileOptions(): Promise<{ fields: ProfileField[] }> {
+  return request<{ fields: ProfileField[] }>("/api/profile-options");
+}
 
 export function checkEmail(email: string): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("/api/check-email", {
