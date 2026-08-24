@@ -7,11 +7,18 @@ const app = readFileSync(new URL("../src/App.tsx", import.meta.url), "utf8");
 
 // Regression coverage for the empty dashboard state: no saved plan must be an
 // obvious creation affordance, while an existing plan keeps the itinerary path.
-test("empty trip rectangle shows only a plus and opens the trip planner", () => {
-  assert.match(home, /className="today-itinerary today-itinerary-empty"/);
+test("empty dashboard rectangle shows only a plus and opens the trip planner", () => {
+  assert.match(home, /className="today-body today-empty-state"/);
   assert.match(home, /onClick=\{onOpenTrips\}/);
   assert.match(home, /<span className="trip-empty" aria-hidden="true">\+<\/span>/);
   assert.match(home, /latestTrip \? \(/);
+});
+
+test("saved trip keeps the connected today dashboard panels", () => {
+  assert.match(home, /className="today-left"/);
+  assert.match(home, /className="today-outfit"/);
+  assert.match(home, /className="today-itinerary"/);
+  assert.match(home, /onClick=\{onOpenItinerary\}/);
 });
 
 test("dashboard destination and weather use the saved trip coordinates", () => {

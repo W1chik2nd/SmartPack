@@ -109,11 +109,6 @@
   border-right: var(--border) !important;
 }
 
-.today-location {
-  display: flex;
-  align-items: center;
-}
-
 /* The destination is read-only on the dashboard; Trip Planner owns it. */
 .today-location {
   padding: 0 var(--space-2);
@@ -228,13 +223,14 @@
   flex-direction: column;
 }
 
-.today-itinerary-empty {
+.today-empty-state {
   align-items: center;
   justify-content: center;
   padding: 0;
+  border: none;
 }
 
-.today-itinerary-empty .trip-empty {
+.today-empty-state .trip-empty {
   margin: 0;
 }
 
