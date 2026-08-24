@@ -7,6 +7,8 @@ import { SCENARIO_LABELS } from "../i18n/strings";
 type Props = {
   user: User;
   onBack: () => void;
+  /** 选好场景后进入行程设置页(地图 + 日历),带上场景 id。 */
+  onPickScenario: (scenario: string) => void;
   /** 选好场景后进入行程计划页,带上场景 id。 */
   onPlanTrip: (scenario: string) => void;
 };
@@ -22,7 +24,12 @@ type Props = {
  * 改 scrollLeft(那会和浏览器惯性/吸附打架,产生抖动虚影);箭头翻页则先把位置
  * 归到中间份再走一格,保证左右两个方向永远有余量,不会卡死。纯展示逻辑,留在前端。
  */
-export default function TripPlanner({ user, onBack, onPlanTrip }: Props) {
+export default function TripPlanner({
+  user,
+  onBack,
+  onPickScenario,
+  onPlanTrip,
+}: Props) {
   const { lang, t } = useLang();
   const [items, setItems] = useState<Scenario[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -128,7 +135,10 @@ export default function TripPlanner({ user, onBack, onPlanTrip }: Props) {
           className={`scenario-card${selected === s.id ? " is-selected" : ""}`}
           aria-pressed={selected === s.id}
           tabIndex={isClone ? -1 : undefined}
-          onClick={() => setSelected(s.id)}
+          onClick={() => {
+            // 点卡片只做选中;选好后下方出现两个入口(行程设置 / 行程计划)。
+            setSelected(s.id);
+          }}
         >
           {/* 图片区:图片加载失败时留下纯色占位块,不影响卡片结构 */}
           <span className="scenario-image" aria-hidden="true">
@@ -199,9 +209,16 @@ export default function TripPlanner({ user, onBack, onPlanTrip }: Props) {
         </button>
       </div>
 
-      {/* 选中场景后才出现:进入行程计划页。 */}
+      {/* 选中场景后才出现:两个入口 —— 设目的地和日期(地图+日历)/ 规划行程。 */}
       {selected && (
         <div className="scenarios-actions">
+          <button
+            type="button"
+            className="scenarios-continue"
+            onClick={() => onPickScenario(selected)}
+          >
+            {t("continueToSetup")} ›
+          </button>
           <button
             type="button"
             className="scenarios-continue"
