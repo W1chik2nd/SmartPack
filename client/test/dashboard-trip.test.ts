@@ -17,6 +17,8 @@ test("planned dashboard keeps switching and shows the selected plan", () => {
   assert.match(home, /<TripSwitcher/);
   assert.match(home, /selectedTrip\.placeName/);
   assert.match(home, /weather\(selectedTrip\.lat, selectedTrip\.lon\)/);
+  assert.match(home, /onOpenWeather\(selectedTrip\.id\)/);
+  assert.match(app, /setRoute\("weather"\)/);
   assert.match(home, /onOpenItinerary\(selectedTrip\.itineraryId\)/);
   assert.match(home, /className="today-itinerary"/);
   assert.doesNotMatch(home, /<select[\s\S]*today-location/);

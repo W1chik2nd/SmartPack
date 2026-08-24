@@ -26,6 +26,141 @@
   display: block;
 }
 
+/* Sign-in and sign-up use one uninterrupted image instead of a split layout.
+   The source artwork is deliberately enlarged and right-anchored: its globe
+   then lands in the left third while the form keeps a quiet area on the right. */
+.scenic-auth-page {
+  grid-template-columns: minmax(0, 1.15fr) minmax(440px, 0.85fr);
+  background-color: var(--blue);
+  background-image: url("/login-background.png");
+  background-repeat: no-repeat;
+  background-position: right center;
+  background-size: 125% auto;
+}
+
+.scenic-auth-page .auth-panel {
+  grid-column: 2;
+  padding-inline: clamp(var(--space-3), 4vw, var(--space-5));
+}
+
+/* The old white module is removed. A restrained blue/cyan hierarchy keeps the
+   controls legible while letting the watercolor remain the dominant surface. */
+.scenic-auth-page .auth-card {
+  max-width: 480px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.scenic-auth-page .auth-headline {
+  max-width: 480px;
+}
+
+/* Sign-up has one extra field and a progress badge. Tighten only its vertical
+   rhythm so the complete form still fits a common 720px-tall laptop window. */
+.register-page .auth-panel {
+  padding-block: var(--space-2);
+}
+
+.register-page .auth-headline {
+  margin-bottom: var(--space-2);
+}
+
+.register-page .field {
+  margin-bottom: 12px;
+}
+
+.scenic-auth-page .auth-headline h1 {
+  width: 100%;
+  padding: 14px 16px;
+  color: var(--white);
+  background: var(--blue);
+  border: 0;
+  border-left: 10px solid var(--bg);
+}
+
+.scenic-auth-page .auth-headline h1::after {
+  display: none;
+}
+
+.scenic-auth-page .auth-headline > p:not(.auth-step) {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-1);
+  padding: 10px 14px;
+  color: var(--white);
+  background: var(--blue);
+  border: 0;
+  border-left: 10px solid var(--bg);
+  font-weight: var(--weight-bold);
+}
+
+.scenic-auth-page .auth-step {
+  color: var(--blue);
+  background: var(--bg);
+  border: 0;
+  margin-bottom: var(--space-1);
+}
+
+.scenic-auth-page .field label {
+  display: table;
+  padding: 5px 10px;
+  color: var(--white);
+  background: var(--blue);
+  border: 0;
+  border-left: 6px solid var(--bg);
+}
+
+.scenic-auth-page .field input {
+  color: var(--blue);
+  background: var(--bg);
+  border-color: var(--blue);
+}
+
+.scenic-auth-page .field input:focus {
+  outline-color: var(--white);
+  border-color: var(--bg);
+}
+
+.scenic-auth-page .field-hint {
+  padding: 4px 10px;
+  color: var(--white);
+  background: var(--blue);
+  border-left: 6px solid var(--bg);
+}
+
+.scenic-auth-page .btn-primary {
+  color: var(--white);
+  background: var(--blue);
+  border-color: var(--bg);
+}
+
+.scenic-auth-page .btn-primary:hover:not(:disabled) {
+  color: var(--black);
+  background: var(--bg);
+}
+
+.scenic-auth-page .auth-switch {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-2);
+  padding: 10px 14px;
+  color: var(--white);
+  background: var(--blue);
+  border: 0;
+  border-left: 10px solid var(--bg);
+}
+
+.scenic-auth-page .auth-switch button {
+  color: var(--bg);
+  border-bottom-color: var(--bg);
+}
+
+.scenic-auth-page .auth-switch button:hover {
+  color: var(--white);
+  border-bottom-color: var(--white);
+}
+
 /* Right: the working panel */
 .auth-panel {
   display: flex;
@@ -403,5 +538,14 @@
   }
   .auth-headline h1 {
     font-size: 28px;
+  }
+  .scenic-auth-page {
+    padding: 104px var(--space-3) var(--space-4);
+    background-position: 42% center;
+    background-size: cover;
+  }
+  .scenic-auth-page .auth-panel {
+    grid-column: 1;
+    padding: 0;
   }
 }
