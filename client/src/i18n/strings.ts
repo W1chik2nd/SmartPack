@@ -68,6 +68,7 @@ export const STRINGS = {
   optionalSection: { en: "Optional — sharpens your recommendations", zh: "非必填 —— 让推荐更贴合你" },
   requiredSection: { en: "Required", zh: "必填" },
   pickMultiple: { en: "Pick any that apply", zh: "可多选" },
+  otherPlaceholder: { en: "Tell us in your own words", zh: "请自己填写" },
   optionsLoadError: { en: "Could not load the questionnaire options.", zh: "无法加载问卷选项。" },
   incompleteWarning: {
     en: "Some answers are missing — recommendations may be less personalized. Tap again to continue anyway.",

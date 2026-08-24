@@ -73,6 +73,11 @@ export type ProfileField = {
   min?: number;
   max?: number;
   options?: ProfileOption[];
+  /** Present when this field offers a free-text "other" choice. */
+  otherId?: string;
+  /** The payload key the free text is sent under. */
+  otherKey?: string;
+  otherMax?: number;
 };
 
 /** The questionnaire catalog. Unauthenticated: needed during sign-up step 2. */

@@ -12,6 +12,12 @@ type Props = {
   onToggle: (id: string) => void;
   /** Short helper line under the legend, e.g. "Pick any that apply". */
   hint?: string;
+  /** Option id that opens the free-text box, when this field offers one. */
+  otherId?: string;
+  otherValue?: string;
+  otherMax?: number;
+  otherLabel?: string;
+  onOtherChange?: (value: string) => void;
 };
 
 /**
@@ -28,8 +34,14 @@ export default function OptionGroup({
   multiple,
   onToggle,
   hint,
+  otherId,
+  otherValue,
+  otherMax,
+  otherLabel,
+  onOtherChange,
 }: Props) {
   const { lang } = useLang();
+  const otherPicked = otherId != null && selected.includes(otherId);
 
   return (
     <fieldset className="field style-options">
@@ -53,6 +65,24 @@ export default function OptionGroup({
           </label>
         );
       })}
+
+      {/* Only rendered once "other" is picked. An always-visible box would
+          invite text that gets discarded the moment the option is unchecked. */}
+      {otherPicked && (
+        <div className="option-other">
+          <label className="option-other-label" htmlFor={`q-${name}-other`}>
+            {otherLabel}
+          </label>
+          <input
+            id={`q-${name}-other`}
+            type="text"
+            maxLength={otherMax}
+            value={otherValue ?? ""}
+            onChange={(e) => onOtherChange?.(e.target.value)}
+            autoFocus
+          />
+        </div>
+      )}
     </fieldset>
   );
 }

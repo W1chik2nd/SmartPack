@@ -5,7 +5,7 @@
 // The assistant is personalized with the signed-in user's questionnaire
 // profile, which is why /api/chat requires a session.
 
-import { optionLabels } from "./profile.ts";
+import { OTHER_ID, optionLabels } from "./profile.ts";
 
 export type ProfileForPrompt = {
   name: string;
@@ -20,7 +20,10 @@ export type ProfileForPrompt = {
   /** JSON array of style option ids — the current shape. */
   style_prefs?: string | null;
   wear_feel?: string | null;
+  /** The user's own wording when they picked "other". */
+  wear_feel_other?: string | null;
   travel_habits?: string | null;
+  travel_habits_other?: string | null;
   /**
    * Pre-questionnaire single style choice. Rows created before the
    * multi-select existed only have this, so it is the fallback.
@@ -42,10 +45,17 @@ function parseList(raw: string | null | undefined): string[] {
 function labelLine(
   heading: string,
   key: string,
-  raw: string | null | undefined
+  raw: string | null | undefined,
+  otherText?: string | null
 ): string | null {
   const ids = parseList(raw);
-  return ids.length > 0 ? `- ${heading}: ${optionLabels(key, ids).join(", ")}` : null;
+  if (ids.length === 0) return null;
+  // "Other" tells the assistant nothing on its own. Where the user wrote their
+  // own wording, that text replaces the generic label.
+  const labels = ids.map((id, i) =>
+    id === OTHER_ID && otherText ? otherText : optionLabels(key, ids)[i]
+  );
+  return `- ${heading}: ${labels.join(", ")}`;
 }
 
 export function buildSystemPrompt(profile: ProfileForPrompt): string {
@@ -76,8 +86,13 @@ export function buildSystemPrompt(profile: ProfileForPrompt): string {
       ? `- Seasonal color type: ${optionLabels("seasonColorType", [profile.season_color_type])[0]}`
       : null,
     styleLine,
-    labelLine("Comfort preferences", "wearFeel", profile.wear_feel),
-    labelLine("Travel and packing habits", "travelHabits", profile.travel_habits),
+    labelLine("Comfort preferences", "wearFeel", profile.wear_feel, profile.wear_feel_other),
+    labelLine(
+      "Travel and packing habits",
+      "travelHabits",
+      profile.travel_habits,
+      profile.travel_habits_other
+    ),
   ]
     .filter(Boolean)
     .join("\n");

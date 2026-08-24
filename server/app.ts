@@ -62,8 +62,11 @@ type UserRow = {
   style_prefs: string | null;
   /** JSON array of wear-comfort option ids. */
   wear_feel: string | null;
+  /** The user's own wording when they picked "other". */
+  wear_feel_other: string | null;
   /** JSON array of travel-habit option ids. */
   travel_habits: string | null;
+  travel_habits_other: string | null;
   /** Pre-questionnaire single choice; still read as a fallback. */
   style: string | null;
 };
