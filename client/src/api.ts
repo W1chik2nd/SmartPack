@@ -84,12 +84,133 @@ export function login(email: string, password: string): Promise<AuthResponse> {
   });
 }
 
+export type Scenario = {
+  id: string;
+  label: string;
+  image: string;
+};
+
+export function scenarios(): Promise<{ scenarios: Scenario[] }> {
+  return request<{ scenarios: Scenario[] }>("/api/scenarios");
+}
+
 export function me(): Promise<{ user: User }> {
   return request<{ user: User }>("/api/me");
 }
 
 export function logout(): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>("/api/logout", { method: "POST" });
+}
+
+// ---- 衣柜:拍照识别 + 电商搜同款 ----
+
+/** 落库后的衣柜单品。细节字段供后续穿搭推荐分析。 */
+export type WardrobeItem = {
+  id: string;
+  title: string; // 大标题,如“黄色宽松工装裤”
+  category: string;
+  subtype: string; // 具体款式,如“工装裤”
+  count: number;
+  colors: string[];
+  fit: string;
+  material: string;
+  seasons: string[];
+  styleTags: string[];
+  details: string;
+  hasPhoto: boolean;
+  createdAt: string;
+};
+
+export type Product = {
+  title: string;
+  imageUrl: string;
+  price: string;
+  url: string;
+};
+
+export type RecognizeResponse = {
+  item: WardrobeItem;
+  provider: "jd" | "taobao" | null;
+  products: Product[];
+  productsError?: string;
+};
+
+export function recognizeClothing(
+  imageDataUrl: string
+): Promise<RecognizeResponse> {
+  return request<RecognizeResponse>("/api/wardrobe/recognize", {
+    method: "POST",
+    body: JSON.stringify({ image: imageDataUrl }),
+  });
+}
+
+export function listWardrobeItems(): Promise<{ items: WardrobeItem[] }> {
+  return request<{ items: WardrobeItem[] }>("/api/wardrobe/items");
+}
+
+export function deleteWardrobeItem(id: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>(
+    `/api/wardrobe/items/${encodeURIComponent(id)}`,
+    { method: "DELETE" }
+  );
+}
+
+/** 照片地址。带 token 查询参数,因为 <img> 标签发不出 Authorization 头。 */
+export function wardrobePhotoUrl(id: string): string {
+  return `/api/wardrobe/photo/${encodeURIComponent(id)}?token=${encodeURIComponent(
+    getToken() ?? ""
+  )}`;
+}
+
+// ---- 扫码上传:手机拍照 → 电脑接收 ----
+
+/** 电脑端创建上传会话,拿到编进二维码的一次性 token。 */
+export function createUploadSession(): Promise<{ uploadToken: string }> {
+  return request<{ uploadToken: string }>("/api/upload-session", {
+    method: "POST",
+  });
+}
+
+/** 手机端上传照片。不需要登录态,token 即凭证。 */
+export function uploadSessionPhoto(
+  uploadToken: string,
+  imageDataUrl: string
+): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>("/api/upload-session/photo", {
+    method: "POST",
+    body: JSON.stringify({ uploadToken, image: imageDataUrl }),
+  });
+}
+
+/** 电脑端轮询取照片;image 为 null 表示手机还没传。 */
+export function fetchUploadedPhoto(
+  uploadToken: string
+): Promise<{ image: string | null }> {
+  return request<{ image: string | null }>(
+    `/api/upload-session/photo?uploadToken=${encodeURIComponent(uploadToken)}`
+  );
+}
+
+/** 关闭二维码弹窗时结束会话。 */
+export function endUploadSession(uploadToken: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>(
+    `/api/upload-session?uploadToken=${encodeURIComponent(uploadToken)}`,
+    { method: "DELETE" }
+  );
+}
+
+// ---- 天气 / AI 助手 ----
+
+export type Weather = {
+  tempC: number;
+  condition: string;
+};
+
+/** Without coordinates the server answers for its default city. */
+export function weather(lat?: number, lon?: number): Promise<Weather> {
+  const query =
+    lat != null && lon != null ? `?lat=${lat}&lon=${lon}` : "";
+  return request<Weather>(`/api/weather${query}`);
 }
 
 export type ChatMessage = {

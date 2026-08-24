@@ -1,0 +1,218 @@
+/* Trip Planner — scenario picker styles (from the wireframe reference).
+   Tokens from theme.css; imported via styles.css. */
+
+/* ---------- scenario picker (first screen after auth) ---------- */
+
+.scenarios {
+  padding: 88px var(--space-3) var(--space-4);
+  animation: fadeIn 0.3s ease both;
+}
+
+.scenarios-head {
+  max-width: 1100px;
+  margin: 0 auto var(--space-4);
+  text-align: left;
+}
+
+/* Back to the dashboard */
+.scenarios-back {
+  display: inline-block;
+  margin-bottom: var(--space-2);
+  padding: 6px 14px;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--text);
+  background: var(--white);
+  border: 2px solid var(--black);
+  cursor: pointer;
+}
+
+.scenarios-back:hover {
+  background: var(--black);
+  color: var(--white);
+}
+
+.scenarios-back:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+.scenarios-eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--black);
+  background: var(--yellow);
+  padding: 6px 12px;
+  border: 2px solid var(--black);
+}
+
+.scenarios-title {
+  margin-top: var(--space-3);
+  font-size: 48px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: -0.015em;
+  line-height: 1.05;
+}
+
+.scenarios .error-banner {
+  max-width: 1100px;
+  margin: 0 auto var(--space-3);
+}
+
+/* Viewport wraps the track and anchors the two paging arrows to its edges. */
+.scenario-viewport {
+  position: relative;
+}
+
+/* Horizontal track. Cards overflow the right edge on purpose so the row reads
+   as "more scenarios this way" (matches the reference).
+   No scroll-snap: mandatory snapping fought the programmatic recenter and the
+   arrow animations, causing jitter/ghosting. Stability is driven in JS instead
+   (recenter only when scrolling is idle), so free scroll stays smooth. */
+.scenario-track {
+  list-style: none;
+  display: flex;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding: var(--space-1) var(--space-3) var(--space-3);
+  margin: 0 calc(-1 * var(--space-3));
+  -webkit-overflow-scrolling: touch;
+  /* 拦掉 macOS 触控板横滑触发的浏览器"后退/前进"手势,消除橡皮筋卡顿。 */
+  overscroll-behavior-x: contain;
+  /* Native scrollbar is redundant now that arrows drive paging; hide it but
+     keep the element scrollable (wheel/trackpad/touch still work). */
+  scrollbar-width: none;
+}
+
+.scenario-track::-webkit-scrollbar {
+  display: none;
+}
+
+.scenario-track > li {
+  flex: 0 0 auto;
+}
+
+/* One scenario = a bordered block; image on top, label bottom-left. */
+.scenario-card {
+  display: flex;
+  flex-direction: column;
+  width: clamp(240px, 24vw, 300px);
+  height: clamp(360px, 62vh, 520px);
+  padding: 0;
+  background: var(--surface);
+  border: var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.scenario-card:hover {
+  transform: translate(-3px, -3px);
+  box-shadow: 6px 6px 0 var(--black);
+}
+
+/* 滚动进行中关掉 hover 效果:卡片从光标下划过会不断触发 transform + box-shadow
+   重绘,是横滑卡顿的主因之一。滚动停下后类被移除,hover 立即恢复。 */
+.scenario-track.is-scrolling .scenario-card:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.scenario-card:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+/* Selected state: flat primary-color border + hard shadow, no glow. */
+.scenario-card.is-selected {
+  box-shadow: 6px 6px 0 var(--red);
+  transform: translate(-3px, -3px);
+}
+
+.scenario-image {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: block;
+  border-bottom: var(--border);
+  /* Placeholder shown when the asset is missing/hidden: a flat Bauhaus block. */
+  background: var(--bg);
+  overflow: hidden;
+}
+
+.scenario-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  /* hover 命中稳定在卡片上,别在图片/卡片之间抖动;拖拽时也不选中/拖图。 */
+  pointer-events: none;
+  user-select: none;
+}
+
+.scenario-label {
+  flex: 0 0 auto;
+  padding: var(--space-2);
+  font-size: 22px;
+  font-weight: var(--weight-heavy);
+  letter-spacing: 0.02em;
+  color: var(--text);
+}
+
+/* Paging arrows: square Bauhaus blocks pinned to the viewport edges, blue with
+   a hard offset shadow. They overlay the row's left/right margins. */
+.scenario-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 48px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  font-size: 32px;
+  font-weight: var(--weight-heavy);
+  line-height: 1;
+  color: var(--white);
+  background: var(--blue);
+  border: var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  box-shadow: 4px 4px 0 var(--black);
+  transition: background 0.15s ease;
+}
+
+.scenario-arrow-prev {
+  left: calc(-1 * var(--space-2));
+}
+
+.scenario-arrow-next {
+  right: calc(-1 * var(--space-2));
+}
+
+.scenario-arrow:hover {
+  background: var(--red);
+}
+
+.scenario-arrow:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+@media (max-width: 600px) {
+  .scenarios-title {
+    font-size: 32px;
+  }
+  .scenario-arrow {
+    width: 40px;
+    height: 56px;
+    font-size: 26px;
+  }
+}
