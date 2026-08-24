@@ -25,6 +25,7 @@ import { handleCatalogRoutes, SCENARIO_IDS } from "./catalog-routes.ts";
 import { dirname, join } from "node:path";
 import { buildGeneratedPackingPlan, buildPackingPlan } from "./packing.ts";
 import { createAccountService, publicUser } from "./account-routes.ts";
+import { analyzePersonalColor, visionConfigured } from "./vision.ts";
 
 export type App = {
   handle: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
@@ -89,6 +90,32 @@ export function createApp(
     }
 
     if (await accounts.handle(req, res, url, json, readBody)) {
+      return;
+    }
+
+    // The personal-colour helper is part of the sign-up questionnaire, so it
+    // remains available before a session exists. Only the uploaded image is
+    // sent to the configured vision provider; the inferred season is returned
+    // to the client and saved only when the user submits the questionnaire.
+    if (req.method === "POST" && url.pathname === "/api/personal-color/analyze") {
+      if (!visionConfigured()) {
+        json(res, 503, {
+          error: "图片分析服务尚未配置，请设置 VISION_API_KEY。",
+        });
+        return;
+      }
+      const { image } = await readBody(req, 8_000_000);
+      if (typeof image !== "string" || !image.startsWith("data:image/")) {
+        json(res, 400, { error: "请上传有效的真人照片。" });
+        return;
+      }
+      try {
+        json(res, 200, await analyzePersonalColor(image));
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        console.error(`[personal-color] ${detail}`);
+        json(res, 502, { error: `个人色彩分析请求失败：${detail}` });
+      }
       return;
     }
 

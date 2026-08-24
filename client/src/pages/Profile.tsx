@@ -8,6 +8,7 @@ import {
   type User,
 } from "../api";
 import { useLang } from "../i18n/useLang";
+import PersonalColorGuide from "../components/PersonalColorGuide";
 
 type Props = { user: User; onBack: () => void; onSaved: (user: User) => void };
 type Avatar = "woman" | "man";
@@ -63,6 +64,7 @@ export default function Profile({ user, onBack, onSaved }: Props) {
   const [wearFeel, setWearFeel] = useState(user.wearFeel);
   const [travelHabits, setTravelHabits] = useState(user.travelHabits);
   const [notice, setNotice] = useState<"saved" | "error" | "options" | null>(null);
+  const [colorGuideOpen, setColorGuideOpen] = useState(false);
   const avatar = avatarForGender(draft.gender);
 
   useEffect(() => {
@@ -273,6 +275,9 @@ export default function Profile({ user, onBack, onSaved }: Props) {
                 </button>
               ))}
             </div>
+            <button type="button" className="season-help-button" onClick={() => setColorGuideOpen(true)}>
+              不知道自己的四季型？做照片分析问卷 →
+            </button>
           </fieldset>
 
           <div className="preference-stack">
@@ -289,6 +294,15 @@ export default function Profile({ user, onBack, onSaved }: Props) {
           </div>
         </section>
       </form>
+      {colorGuideOpen && (
+        <PersonalColorGuide
+          onClose={() => setColorGuideOpen(false)}
+          onSeasonDetected={(season) => {
+            update("seasonColorType", season);
+            setColorGuideOpen(false);
+          }}
+        />
+      )}
     </main>
   );
 }

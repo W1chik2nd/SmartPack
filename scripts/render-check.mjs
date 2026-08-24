@@ -42,8 +42,10 @@ await build({
   absWorkingDir: root,
   // react-dom/server 是 CJS,里面 require("stream")。打进 ESM 产物会在
   // 运行时炸 "Dynamic require of stream is not supported",所以让 Node
-  // 自己去 require 它们。CSS import 在 SSR 里没有意义,一并排除。
-  external: ["react", "react-dom", "react-dom/server", "*.css"],
+  // 自己去 require 它们。SSR 不需要 CSS;用 empty loader 消化所有组件
+  // 的相对 CSS import,避免 external import 被搬到仓库根目录后路径失效。
+  external: ["react", "react-dom", "react-dom/server"],
+  loader: { ".css": "empty" },
   logLevel: "silent",
 });
 
