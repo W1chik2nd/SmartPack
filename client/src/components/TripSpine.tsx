@@ -162,6 +162,8 @@ type Props = {
 export default function TripSpine({ trip, activeDayId, onPickDay }: Props) {
   const { lang, t } = useLang();
   const days = trip.days;
+  const dayLabel = (day: Trip["days"][number]) =>
+    lang === "zh" ? `第${day.dayNumber}天` : `Day ${day.dayNumber}`;
   const height = canvasHeight(days.length);
   const curve = buildCurve(days.length);
   const points = samplePoints(curve);
@@ -228,7 +230,7 @@ export default function TripSpine({ trip, activeDayId, onPickDay }: Props) {
                   aria-current={active ? "true" : undefined}
                   onClick={() => onPickDay(day.id)}
                 >
-                  <span className="spine-day-number">Day {day.dayNumber}</span>
+                  <span className="spine-day-number">{dayLabel(day)}</span>
                   <span className="spine-day-date">{day.dateLabel}</span>
                   <span className="spine-day-city">
                     {lang === "zh" ? day.city : day.cityEn}
