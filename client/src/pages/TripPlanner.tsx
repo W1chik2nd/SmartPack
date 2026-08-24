@@ -7,6 +7,8 @@ import { SCENARIO_LABELS } from "../i18n/strings";
 type Props = {
   user: User;
   onBack: () => void;
+  /** 选好场景后进入行程计划页,带上场景 id。 */
+  onPlanTrip: (scenario: string) => void;
 };
 
 /**
@@ -20,7 +22,7 @@ type Props = {
  * 改 scrollLeft(那会和浏览器惯性/吸附打架,产生抖动虚影);箭头翻页则先把位置
  * 归到中间份再走一格,保证左右两个方向永远有余量,不会卡死。纯展示逻辑,留在前端。
  */
-export default function TripPlanner({ user, onBack }: Props) {
+export default function TripPlanner({ user, onBack, onPlanTrip }: Props) {
   const { lang, t } = useLang();
   const [items, setItems] = useState<Scenario[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -196,6 +198,19 @@ export default function TripPlanner({ user, onBack }: Props) {
           ›
         </button>
       </div>
+
+      {/* 选中场景后才出现:进入行程计划页。 */}
+      {selected && (
+        <div className="scenarios-actions">
+          <button
+            type="button"
+            className="scenarios-continue"
+            onClick={() => onPlanTrip(selected)}
+          >
+            {t("continueToItinerary")} ›
+          </button>
+        </div>
+      )}
     </div>
   );
 }

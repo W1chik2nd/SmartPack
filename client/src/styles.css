@@ -7,6 +7,8 @@
 @import "./chat.css";
 @import "./dashboard.css";
 @import "./scenarios.css";
+@import "./itinerary.css";
+@import "./day-plan.css";
 
 * {
   margin: 0;

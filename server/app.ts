@@ -9,26 +9,14 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { DatabaseSync } from "node:sqlite";
 import { scryptSync, randomBytes, timingSafeEqual, randomUUID } from "node:crypto";
-import {
-  recognizeClothing,
-  searchKeyword,
-  visionConfigured,
-  NotClothingError,
-} from "./vision.ts";
-import { searchProducts, ecommerceProvider } from "./ecommerce.ts";
-import {
-  createUploadSession,
-  getUploadSession,
-  attachImage,
-  consumeImage,
-  endUploadSession,
-} from "./upload-session.ts";
+import { handleUploadRoutes } from "./upload-routes.ts";
 import { createWardrobeStore } from "./wardrobe.ts";
 import { handleWardrobeRoutes } from "./wardrobe-routes.ts";
+import { createItineraryStore } from "./itinerary.ts";
+import { handleItineraryRoutes } from "./itinerary-routes.ts";
+import { handleAssistantRoutes } from "./assistant-routes.ts";
+import { handleCatalogRoutes } from "./catalog-routes.ts";
 import { dirname, join } from "node:path";
-import { aiConfigured, chatCompletion, type ChatMessage } from "./ai.ts";
-import { buildSystemPrompt } from "./prompts.ts";
-import { currentWeather, DEFAULT_COORDS } from "./weather.ts";
 
 // Password hashing (AGENTS.md §5): passwords require a password-specific KDF,
 // not a general-purpose hash like SHA256. We use scrypt because it is a
@@ -56,20 +44,6 @@ function publicUser(u: UserRow) {
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Scenario catalog (AGENTS.md §3): the set of packing scenarios lives on the
-// server, not the client. Both web and the future iOS client render whatever
-// this returns, so the list — and later the packing rules keyed off each id —
-// stay in one place. `image` points at a client-served asset; a missing file
-// degrades to the card's placeholder, so new scenarios need no code change.
-const SCENARIOS = [
-  { id: "commute", label: "通勤", image: "/scenarios/commute.jpg" },
-  { id: "travel", label: "旅行", image: "/scenarios/travel.jpg" },
-  { id: "business", label: "出差", image: "/scenarios/business.jpg" },
-  { id: "date", label: "约会", image: "/scenarios/date.jpg" },
-  { id: "sport", label: "运动", image: "/scenarios/sport.jpg" },
-  { id: "formal", label: "正式场合", image: "/scenarios/formal.jpg" },
-] as const;
 
 export type App = {
   handle: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
@@ -100,6 +74,8 @@ export function createApp(dbPath: string): App {
 
   // 照片存数据库同级的 photos/ 目录:测试用临时库时会自动隔离到临时目录。
   const wardrobe = createWardrobeStore(db, join(dirname(dbPath), "photos"));
+  // 行程规划:trips / trip_days / trip_stops 三张表,建表在 store 里。
+  const itinerary = createItineraryStore(db);
 
   // Dev databases created before the questionnaire existed lack the profile
   // columns; CREATE TABLE IF NOT EXISTS won't add them, so patch in place.
@@ -289,29 +265,16 @@ export function createApp(dbPath: string): App {
       return;
     }
 
-    // Live weather for the dashboard. Coordinates are optional query params;
-    // without them we fall back to the default city rather than failing the card.
-    if (req.method === "GET" && url.pathname === "/api/weather") {
-      const lat = Number(url.searchParams.get("lat") ?? DEFAULT_COORDS.lat);
-      const lon = Number(url.searchParams.get("lon") ?? DEFAULT_COORDS.lon);
-      if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
-        json(res, 400, { error: "Invalid coordinates." });
-        return;
-      }
-      const weather = await currentWeather(lat, lon);
-      json(res, 200, weather);
-      return;
-    }
-
-    if (req.method === "GET" && url.pathname === "/api/scenarios") {
-      // Signed-in only: the picker is the first screen after auth. The catalog
-      // itself is not secret, but gating it keeps every post-auth screen behind
-      // the same check and avoids an anonymous surface we would only tighten later.
-      if (!userForToken(bearerToken(req))) {
-        json(res, 401, { error: "Not signed in." });
-        return;
-      }
-      json(res, 200, { scenarios: SCENARIOS });
+    // 参考数据路由(场景目录 / 天气),见 catalog-routes.ts。
+    if (
+      await handleCatalogRoutes({
+        req,
+        res,
+        url,
+        json,
+        userFromHeader: () => userForToken(bearerToken(req)),
+      })
+    ) {
       return;
     }
 
@@ -332,102 +295,31 @@ export function createApp(dbPath: string): App {
       return;
     }
 
-    // SmartPack Assistant. Session-gated: the system prompt embeds the
-    // user's questionnaire profile, so anonymous chat has nothing to
-    // personalize with. The client sends the visible conversation each turn;
-    // the prompt itself never leaves the server.
-    if (req.method === "POST" && url.pathname === "/api/chat") {
-      const user = userForToken(bearerToken(req));
-      if (!user) {
-        json(res, 401, { error: "Not signed in." });
-        return;
-      }
-      if (!aiConfigured()) {
-        json(res, 503, {
-          error:
-            "AI is not configured. Set AI_API_KEY in server/.env (see server/.env.example).",
-        });
-        return;
-      }
-      const { messages } = await readBody(req);
-      const valid =
-        Array.isArray(messages) &&
-        messages.length > 0 &&
-        messages.length <= 40 &&
-        messages.every(
-          (m: ChatMessage) =>
-            (m?.role === "user" || m?.role === "assistant") &&
-            typeof m?.content === "string" &&
-            m.content.length > 0 &&
-            m.content.length <= 4000
-        );
-      if (!valid) {
-        json(res, 400, { error: "Invalid messages." });
-        return;
-      }
-      const systemPrompt = buildSystemPrompt(user);
-      const reply = await chatCompletion(systemPrompt, messages);
-      json(res, 200, { reply });
+    // 助手路由(/api/chat),见 assistant-routes.ts。
+    if (
+      await handleAssistantRoutes({
+        req,
+        res,
+        url,
+        json,
+        readBody,
+        userFromHeader: () => userForToken(bearerToken(req)),
+      })
+    ) {
       return;
     }
 
-    // 拍照识别 → (可选)电商搜同款。识别是硬依赖,搜同款未配置时优雅降级。
-    if (req.method === "POST" && url.pathname === "/api/wardrobe/recognize") {
-      const user = userForToken(bearerToken(req));
-      if (!user) {
-        json(res, 401, { error: "Not signed in." });
-        return;
-      }
-      if (!visionConfigured()) {
-        json(res, 503, {
-          error:
-            "识别服务未配置:请在 server/.env 填入 VISION_API_KEY(见 .env.example)。",
-        });
-        return;
-      }
-      const { image } = await readBody(req, 8_000_000);
-      if (typeof image !== "string" || !image.startsWith("data:image/")) {
-        json(res, 400, { error: "image must be a data:image/* URL." });
-        return;
-      }
-      let item;
-      try {
-        item = await recognizeClothing(image);
-      } catch (err: any) {
-        // 不是衣物 / 认不出衣物:这是用户操作问题(拍错了),不是服务故障。
-        // 用 422 区分开,前端据此提示重拍且不把这张加进衣柜。
-        if (err instanceof NotClothingError) {
-          json(res, 422, { error: err.message, notClothing: true });
-          return;
-        }
-        json(res, 502, { error: `识别失败:${err?.message ?? "unknown"}` });
-        return;
-      }
-      const provider = ecommerceProvider();
-      let products: Awaited<ReturnType<typeof searchProducts>> = [];
-      let productsError: string | undefined;
-      if (provider) {
-        try {
-          products = await searchProducts(searchKeyword(item));
-        } catch (err: any) {
-          // 搜同款失败不拖垮识别结果,报告但不报错。
-          productsError = err?.message ?? "unknown";
-        }
-      }
-      // 识别结果连同细节字段一起落库,这些细节是后续穿搭推荐要分析的原料。
-      const saved = wardrobe.add(user.id, {
-        title: item.title,
-        category: item.category,
-        subtype: item.subtype,
-        colors: item.colors,
-        fit: item.fit,
-        material: item.material,
-        seasons: item.seasons,
-        styleTags: item.styleTags,
-        details: item.details,
-        photoDataUrl: image,
-      });
-      json(res, 201, { item: saved, provider, products, productsError });
+    // 行程规划路由(行程列表/单个行程/景点配图),见 itinerary-routes.ts。
+    if (
+      await handleItineraryRoutes({
+        req,
+        res,
+        url,
+        itinerary,
+        json,
+        userFromHeader: () => userForToken(bearerToken(req)),
+      })
+    ) {
       return;
     }
 
@@ -448,74 +340,17 @@ export function createApp(dbPath: string): App {
       return;
     }
 
-    // 电脑端(已登录)创建扫码上传会话,token 会被编进二维码。
-    if (req.method === "POST" && url.pathname === "/api/upload-session") {
-      const user = userForToken(bearerToken(req));
-      if (!user) {
-        json(res, 401, { error: "Not signed in." });
-        return;
-      }
-      const session = createUploadSession(user.id);
-      json(res, 201, { uploadToken: session.token });
-      return;
-    }
-
-    // 手机端凭 uploadToken 直传照片 —— 故意不要求登录态:
-    // token 本身就是一次性凭证,这正是免去手机重新登录的关键。
-    if (req.method === "POST" && url.pathname === "/api/upload-session/photo") {
-      const { uploadToken, image } = await readBody(req, 8_000_000);
-      if (typeof uploadToken !== "string" || typeof image !== "string") {
-        json(res, 400, { error: "uploadToken and image are required." });
-        return;
-      }
-      if (!image.startsWith("data:image/")) {
-        json(res, 400, { error: "image must be a data:image/* URL." });
-        return;
-      }
-      if (!attachImage(uploadToken, image)) {
-        json(res, 404, { error: "上传链接已失效,请在电脑上重新生成二维码。" });
-        return;
-      }
-      json(res, 200, { ok: true });
-      return;
-    }
-
-    // 电脑端轮询:照片到了就取回(取回即销毁会话)。
-    if (req.method === "GET" && url.pathname === "/api/upload-session/photo") {
-      const user = userForToken(bearerToken(req));
-      if (!user) {
-        json(res, 401, { error: "Not signed in." });
-        return;
-      }
-      const uploadToken = url.searchParams.get("uploadToken") ?? "";
-      const session = getUploadSession(uploadToken);
-      if (!session) {
-        json(res, 404, { error: "上传链接已失效。" });
-        return;
-      }
-      // 只能取自己创建的会话,防止拿别人的 token 捞照片。
-      if (session.userId !== user.id) {
-        json(res, 403, { error: "Forbidden." });
-        return;
-      }
-      json(res, 200, { image: consumeImage(uploadToken) });
-      return;
-    }
-
-    // 电脑关闭二维码弹窗:显式结束会话,不必等 TTL 过期。
-    if (req.method === "DELETE" && url.pathname === "/api/upload-session") {
-      const user = userForToken(bearerToken(req));
-      if (!user) {
-        json(res, 401, { error: "Not signed in." });
-        return;
-      }
-      const uploadToken = url.searchParams.get("uploadToken") ?? "";
-      const session = getUploadSession(uploadToken);
-      // 只能结束自己的会话。已不存在也算成功(幂等)。
-      if (session && session.userId === user.id) {
-        endUploadSession(uploadToken);
-      }
-      json(res, 200, { ok: true });
+    // 扫码上传路由(建会话/手机传图/电脑取图/关会话),见 upload-routes.ts。
+    if (
+      await handleUploadRoutes({
+        req,
+        res,
+        url,
+        json,
+        readBody,
+        userFromHeader: () => userForToken(bearerToken(req)),
+      })
+    ) {
       return;
     }
 

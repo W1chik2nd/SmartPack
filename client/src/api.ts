@@ -224,3 +224,80 @@ export function chat(messages: ChatMessage[]): Promise<{ reply: string }> {
     body: JSON.stringify({ messages }),
   });
 }
+
+// ---- 行程规划(左侧总行程图 + 右侧每天行程)----
+
+/** 停靠点类型:景点 / 交通 / 餐饮 / 住宿。 */
+export type StopKind = "spot" | "transit" | "meal" | "hotel";
+
+export type TripStop = {
+  id: string;
+  position: number;
+  kind: StopKind;
+  name: string;
+  nameEn: string;
+  startTime: string;
+  duration: string;
+  note: string;
+  noteEn: string;
+  photoQuery: string;
+  /** 后端已解析过的配图;null 表示还要去 /api/itinerary/photo 补。 */
+  photoUrl: string | null;
+  photoCredit: string | null;
+  photoSourceUrl: string | null;
+};
+
+export type TripDay = {
+  id: string;
+  dayNumber: number;
+  /** 手绘稿里的 "x.xx"。 */
+  dateLabel: string;
+  city: string;
+  cityEn: string;
+  summary: string;
+  summaryEn: string;
+  stops: TripStop[];
+};
+
+export type Trip = {
+  id: string;
+  title: string;
+  titleEn: string;
+  scenario: string;
+  departLabel: string;
+  createdAt: string;
+  days: TripDay[];
+};
+
+export type StopPhoto = {
+  imageUrl: string;
+  credit: string;
+  sourceUrl: string;
+};
+
+/** 行程列表。UI 阶段后端会在空列表时自动补一份演示行程。 */
+export function itineraryTrips(
+  scenario?: string
+): Promise<{ trips: Trip[]; photoProvider: string }> {
+  const query = scenario ? `?scenario=${encodeURIComponent(scenario)}` : "";
+  return request<{ trips: Trip[]; photoProvider: string }>(
+    `/api/itinerary/trips${query}`
+  );
+}
+
+export function itineraryTrip(
+  id: string
+): Promise<{ trip: Trip; photoProvider: string }> {
+  return request<{ trip: Trip; photoProvider: string }>(
+    `/api/itinerary/trips/${encodeURIComponent(id)}`
+  );
+}
+
+/** 补一张景点配图。查不到时 photo 为 null,卡片显示占位块。 */
+export function stopPhoto(
+  stopId: string
+): Promise<{ photo: StopPhoto | null }> {
+  return request<{ photo: StopPhoto | null }>(
+    `/api/itinerary/photo/${encodeURIComponent(stopId)}`
+  );
+}
