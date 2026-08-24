@@ -62,13 +62,15 @@ function Checklist({
   checked: Record<string, boolean>;
   onToggle: (id: string) => void;
 }) {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   return (
     <section className="pk-list" aria-label={t("pkListTitle")}>
       <h1 className="pk-list-title">{t("pkListTitle")}</h1>
       {plan.categories.map((cat) => (
         <div className="pk-cat" key={cat.id}>
-          <h2 className="pk-cat-title">{cat.title}</h2>
+          <h2 className="pk-cat-title">
+            {lang === "zh" ? cat.title : cat.titleEn}
+          </h2>
           <ul className="pk-cat-items">
             {cat.items.map((item) => (
               <li key={item.id}>
@@ -78,7 +80,9 @@ function Checklist({
                     checked={!!checked[item.id]}
                     onChange={() => onToggle(item.id)}
                   />
-                  <span className="pk-row-label">{item.label}</span>
+                  <span className="pk-row-label">
+                    {lang === "zh" ? item.label : item.labelEn}
+                  </span>
                   <span className="pk-row-reuse" title={t("pkReuse")}>
                     ×{item.reuse}
                   </span>
@@ -102,7 +106,7 @@ function Essentials({
   checked: Record<string, boolean>;
   onToggle: (id: string) => void;
 }) {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   return (
     <section className="pk-essentials" aria-label={t("pkEssentials")}>
       <h2 className="pk-essentials-title">{t("pkEssentials")}</h2>
@@ -115,7 +119,9 @@ function Essentials({
                 checked={!!checked[e.id]}
                 onChange={() => onToggle(e.id)}
               />
-              <span className="pk-row-label">{e.label}</span>
+              <span className="pk-row-label">
+                {lang === "zh" ? e.label : e.labelEn}
+              </span>
             </label>
           </li>
         ))}
@@ -127,7 +133,7 @@ function Essentials({
 /** Core-piece cards: the most-reused hero pieces the whole plan leans on
     (sketch: T-shirt cards with reuse count / core piece). US 6.2, 1.3. */
 function CorePieces({ plan }: { plan: PackingPlan }) {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   return (
     <section className="pk-core" aria-label={t("pkCore")}>
       <div className="pk-core-grid">
@@ -138,7 +144,9 @@ function CorePieces({ plan }: { plan: PackingPlan }) {
             <p className="pk-core-reuse">
               {t("pkReuse")}:<strong>{piece.reuse}</strong>
             </p>
-            <p className="pk-core-name">{piece.label}</p>
+            <p className="pk-core-name">
+              {lang === "zh" ? piece.label : piece.labelEn}
+            </p>
             <p className="pk-core-tag">{t("pkCoreTag")}</p>
           </article>
         ))}
@@ -159,7 +167,7 @@ export default function PackingLayout({
   packedCount,
   onBack,
 }: LayoutProps) {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   return (
     <div className="pk-page">
       <BalanceSlider balance={balance} onBalance={onBalance} />
@@ -173,7 +181,11 @@ export default function PackingLayout({
 
         <header className="pk-header">
           <p className="pk-eyebrow">{t("pkEyebrow")}</p>
-          {plan && <p className="pk-summary">{plan.summary}</p>}
+          {plan && (
+            <p className="pk-summary">
+              {lang === "zh" ? plan.summary : plan.summaryEn}
+            </p>
+          )}
           <p className="pk-progress" aria-live="polite">
             {t("pkPacked")} {packedCount} / {totalItems}
             {loading && <span className="pk-loading"> · {t("pkUpdating")}</span>}
