@@ -33,10 +33,10 @@ before(async () => {
       email: "trip@example.com",
       password: "correct-horse",
       name: "Trip",
+      gender: "female",
       age: 30,
       heightCm: 170,
       weightKg: 60,
-      style: "Casual",
     }),
   });
   token = (await res.json()).token;
@@ -165,21 +165,25 @@ test("当天往返(起止同日)是合法的", async () => {
   assert.equal(res.status, 201);
 });
 
-test("行程含起止日最多 30 天", async () => {
-  const allowed = await save({
+test("正好 30 天(含首尾)可以保存", async () => {
+  // 4/1 → 4/30 = 30 天,是允许的上限。
+  const res = await save({
     ...KYOTO,
     startDate: "2026-04-01",
     endDate: "2026-04-30",
   });
-  assert.equal(allowed.status, 201, "30 天应允许保存");
+  assert.equal(res.status, 201);
+});
 
-  const tooLong = await save({
+test("超过 30 天的行程被拒", async () => {
+  // 4/1 → 5/1 = 31 天,超上限。
+  const res = await save({
     ...KYOTO,
     startDate: "2026-04-01",
     endDate: "2026-05-01",
   });
-  assert.equal(tooLong.status, 400, "31 天应拒绝保存");
-  assert.deepEqual(await tooLong.json(), {
+  assert.equal(res.status, 400);
+  assert.deepEqual(await res.json(), {
     error: "Trip must not exceed 30 days.",
   });
 });
@@ -201,10 +205,10 @@ test("行程只能看到自己的", async () => {
       email: "other@example.com",
       password: "correct-horse",
       name: "Other",
+      gender: "male",
       age: 30,
       heightCm: 170,
       weightKg: 60,
-      style: "Casual",
     }),
   });
   const otherToken = (await res.json()).token;

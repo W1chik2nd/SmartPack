@@ -7,7 +7,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
 import { createTripPlanStore } from "./trip-plan.ts";
-import { isIsoDate } from "./trip-plan-routes.ts";
+import { isIsoDate, tripDayCount, MAX_TRIP_DAYS } from "./trip-plan-routes.ts";
 import { normalizePlaces } from "./geocode.ts";
 
 /** 一个带 users 表的临时库 —— trip_plans.user_id 有外键指过去。 */
@@ -85,6 +85,16 @@ test("isIsoDate 挡掉格式对但不存在的日期", () => {
   assert.ok(!isIsoDate(""));
   assert.ok(!isIsoDate(undefined));
   assert.ok(!isIsoDate(20260401));
+});
+
+test("tripDayCount 含首尾计天数,30 天上限的边界", () => {
+  assert.equal(tripDayCount("2026-04-01", "2026-04-01"), 1, "同日 = 1 天");
+  assert.equal(tripDayCount("2026-04-01", "2026-04-02"), 2);
+  assert.equal(tripDayCount("2026-04-01", "2026-04-30"), 30, "正好上限");
+  assert.equal(tripDayCount("2026-04-01", "2026-05-01"), 31, "超上限一天");
+  // 跨月边界也要对(4 月 30 天)。
+  assert.equal(tripDayCount("2026-04-15", "2026-05-14"), 30);
+  assert.equal(MAX_TRIP_DAYS, 30);
 });
 
 test("normalizePlaces 提取名称、补充信息和坐标", () => {

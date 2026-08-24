@@ -11,6 +11,13 @@ import {
   tripDaysInclusive,
 } from "../shared/trip-constraints.ts";
 
+export { MAX_TRIP_DAYS };
+
+/** 对外保留 main 分支已有的命名,实现仍复用共享约束。 */
+export function tripDayCount(start: string, end: string): number {
+  return tripDaysInclusive(start, end);
+}
+
 type Ctx = {
   req: IncomingMessage;
   res: ServerResponse;
@@ -114,7 +121,7 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
       json(res, 400, { error: "endDate must not precede startDate." });
       return true;
     }
-    if (tripDaysInclusive(body.startDate, body.endDate) > MAX_TRIP_DAYS) {
+    if (tripDayCount(body.startDate, body.endDate) > MAX_TRIP_DAYS) {
       json(res, 400, { error: `Trip must not exceed ${MAX_TRIP_DAYS} days.` });
       return true;
     }

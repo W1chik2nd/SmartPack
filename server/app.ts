@@ -9,30 +9,25 @@
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { DatabaseSync } from "node:sqlite";
 import { scryptSync, randomBytes, timingSafeEqual, randomUUID } from "node:crypto";
-import {
-  recognizeClothing,
-  searchKeyword,
-  visionConfigured,
-  NotClothingError,
-} from "./vision.ts";
-import { searchProducts, ecommerceProvider } from "./ecommerce.ts";
-import {
-  createUploadSession,
-  getUploadSession,
-  attachImage,
-  consumeImage,
-  endUploadSession,
-} from "./upload-session.ts";
+import { handleUploadRoutes } from "./upload-routes.ts";
 import { createWardrobeStore } from "./wardrobe.ts";
 import { handleWardrobeRoutes } from "./wardrobe-routes.ts";
 import { createTripPlanStore } from "./trip-plan.ts";
 import { handleTripPlanRoutes } from "./trip-plan-routes.ts";
+import { createItineraryStore } from "./itinerary.ts";
+import { handleItineraryRoutes } from "./itinerary-routes.ts";
+import { handleAssistantRoutes } from "./assistant-routes.ts";
+import { assistantDataContext } from "./assistant-context.ts";
+import { handleCatalogRoutes, SCENARIO_IDS } from "./catalog-routes.ts";
 import { dirname, join } from "node:path";
-import { aiConfigured, chatCompletion, type ChatMessage } from "./ai.ts";
-import { buildSystemPrompt } from "./prompts.ts";
-import { currentWeather, DEFAULT_COORDS } from "./weather.ts";
+import {
+  PROFILE_COLUMNS,
+  profileOptionsPayload,
+  validateProfile,
+} from "./profile.ts";
+// ai / prompts / weather 的 import 已随路由拆分挪进 assistant-routes.ts
+// 和 catalog-routes.ts,这里只留 packing 还在本文件处理的那一个。
 import { buildPackingPlan } from "./packing.ts";
-
 // Password hashing (AGENTS.md §5): passwords require a password-specific KDF,
 // not a general-purpose hash like SHA256. We use scrypt because it is a
 // memory-hard password KDF that ships with Node — bcrypt/argon2 would add a
@@ -48,31 +43,52 @@ type UserRow = {
   name: string;
   pass_salt: string;
   pass_hash: string;
+  gender: string | null;
   age: number | null;
   height_cm: number | null;
   weight_kg: number | null;
+  bust_cm: number | null;
+  waist_cm: number | null;
+  hip_cm: number | null;
+  body_type: string | null;
+  season_color_type: string | null;
+  /** JSON array of style option ids. */
+  style_prefs: string | null;
+  /** JSON array of wear-comfort option ids. */
+  wear_feel: string | null;
+  /** The user's own wording when they picked "other". */
+  wear_feel_other: string | null;
+  /** JSON array of travel-habit option ids. */
+  travel_habits: string | null;
+  travel_habits_other: string | null;
+  /** Pre-questionnaire single choice; still read as a fallback. */
   style: string | null;
 };
 
 function publicUser(u: UserRow) {
-  return { id: u.id, email: u.email, name: u.name };
+  return {
+    id: u.id,
+    email: u.email,
+    name: u.name,
+    age: u.age,
+    heightCm: u.height_cm,
+    weightKg: u.weight_kg,
+    style: u.style,
+    gender: u.gender,
+    bustCm: u.bust_cm,
+    waistCm: u.waist_cm,
+    hipCm: u.hip_cm,
+    bodyType: u.body_type,
+    seasonColorType: u.season_color_type,
+    stylePrefs: u.style_prefs ? JSON.parse(u.style_prefs) : [],
+    wearFeel: u.wear_feel ? JSON.parse(u.wear_feel) : [],
+    wearFeelOther: u.wear_feel_other,
+    travelHabits: u.travel_habits ? JSON.parse(u.travel_habits) : [],
+    travelHabitsOther: u.travel_habits_other,
+  };
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-// Scenario catalog (AGENTS.md §3): the set of packing scenarios lives on the
-// server, not the client. Both web and the future iOS client render whatever
-// this returns, so the list — and later the packing rules keyed off each id —
-// stay in one place. `image` points at a client-served asset; a missing file
-// degrades to the card's placeholder, so new scenarios need no code change.
-const SCENARIOS = [
-  { id: "commute", label: "通勤", image: "/scenarios/commute.jpg" },
-  { id: "travel", label: "旅行", image: "/scenarios/travel.jpg" },
-  { id: "business", label: "出差", image: "/scenarios/business.jpg" },
-  { id: "date", label: "约会", image: "/scenarios/date.jpg" },
-  { id: "sport", label: "运动", image: "/scenarios/sport.jpg" },
-  { id: "formal", label: "正式场合", image: "/scenarios/formal.jpg" },
-] as const;
 
 export type App = {
   handle: (req: IncomingMessage, res: ServerResponse) => Promise<void>;
@@ -92,6 +108,17 @@ export function createApp(dbPath: string): App {
       height_cm   REAL,
       weight_kg   REAL,
       style       TEXT,
+      gender      TEXT,
+      bust_cm     REAL,
+      waist_cm    REAL,
+      hip_cm      REAL,
+      body_type   TEXT,
+      season_color_type TEXT,
+      style_prefs TEXT,
+      wear_feel TEXT,
+      wear_feel_other TEXT,
+      travel_habits TEXT,
+      travel_habits_other TEXT,
       created_at  TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS sessions (
@@ -105,21 +132,21 @@ export function createApp(dbPath: string): App {
   const wardrobe = createWardrobeStore(db, join(dirname(dbPath), "photos"));
   // 行程计划(目的地 + 日期区间)自带建表,见 trip-plan.ts。
   const tripPlans = createTripPlanStore(db);
-  const scenarioIds = new Set(SCENARIOS.map((s) => s.id) as readonly string[]);
+  // 合法场景 id 来自 catalog-routes,保存行程时据此校验(场景目录只有一处)。
+  const scenarioIds = SCENARIO_IDS;
+  // 行程规划:trips / trip_days / trip_stops 三张表,建表在 store 里。
+  const itinerary = createItineraryStore(db);
 
   // Dev databases created before the questionnaire existed lack the profile
   // columns; CREATE TABLE IF NOT EXISTS won't add them, so patch in place.
+  // The column list comes from profile.ts, so adding a questionnaire field
+  // there migrates existing databases without touching this loop.
   const existing = new Set(
     (db.prepare(`PRAGMA table_info(users)`).all() as { name: string }[]).map(
       (c) => c.name
     )
   );
-  for (const [col, type] of [
-    ["age", "INTEGER"],
-    ["height_cm", "REAL"],
-    ["weight_kg", "REAL"],
-    ["style", "TEXT"],
-  ] as const) {
+  for (const [col, type] of PROFILE_COLUMNS) {
     if (!existing.has(col)) db.exec(`ALTER TABLE users ADD COLUMN ${col} ${type}`);
   }
 
@@ -128,7 +155,7 @@ export function createApp(dbPath: string): App {
       "Content-Type": "application/json; charset=utf-8",
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS",
     });
     res.end(JSON.stringify(body));
   }
@@ -205,13 +232,24 @@ export function createApp(dbPath: string): App {
       return;
     }
 
+    // The questionnaire catalog. Deliberately unauthenticated: it is asked for
+    // during sign-up step 2, before any account or session exists. It carries
+    // no user data — only the option lists and their validation bounds — so
+    // there is nothing here to protect.
+    if (req.method === "GET" && url.pathname === "/api/profile-options") {
+      json(res, 200, profileOptionsPayload());
+      return;
+    }
+
     if (req.method === "POST" && url.pathname === "/api/register") {
-      // Registration is a single atomic call: account fields AND the style
+      // Registration is a single atomic call: account fields AND the
       // questionnaire together. The client collects them across two screens,
       // but nothing touches the database until the questionnaire is done —
       // an abandoned sign-up leaves no trace (product rule, enforced here).
-      const { email, password, name, age, heightCm, weightKg, style } =
-        await readBody(req);
+      // Only the fields marked required by the current questionnaire gate
+      // account creation; every optional answer may remain null.
+      const body = await readBody(req);
+      const { email, password } = body;
       if (typeof email !== "string" || !EMAIL_RE.test(email.trim())) {
         json(res, 400, { error: "Please enter a valid email address." });
         return;
@@ -220,24 +258,9 @@ export function createApp(dbPath: string): App {
         json(res, 400, { error: "Password must be at least 8 characters." });
         return;
       }
-      if (typeof name !== "string" || name.trim().length < 1) {
-        json(res, 400, { error: "Please enter your name." });
-        return;
-      }
-      if (!Number.isInteger(age) || age < 1 || age > 120) {
-        json(res, 400, { error: "Please enter a valid age." });
-        return;
-      }
-      if (!Number.isFinite(heightCm) || heightCm <= 0) {
-        json(res, 400, { error: "Please enter a valid height in cm." });
-        return;
-      }
-      if (!Number.isFinite(weightKg) || weightKg <= 0) {
-        json(res, 400, { error: "Please enter a valid weight in kg." });
-        return;
-      }
-      if (typeof style !== "string" || style.trim().length < 1) {
-        json(res, 400, { error: "Please choose a preferred style." });
+      const profile = validateProfile(body);
+      if (!profile.ok) {
+        json(res, 400, { error: profile.error });
         return;
       }
       const exists = db
@@ -250,19 +273,16 @@ export function createApp(dbPath: string): App {
       const id = randomUUID();
       const salt = randomBytes(16).toString("hex");
       const hash = hashPassword(password, salt).toString("hex");
+      const columns = Object.keys(profile.values);
       db.prepare(
-        `INSERT INTO users (id, email, name, pass_salt, pass_hash, age, height_cm, weight_kg, style)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO users (id, email, pass_salt, pass_hash, ${columns.join(", ")})
+         VALUES (?, ?, ?, ?, ${columns.map(() => "?").join(", ")})`
       ).run(
         id,
         email.trim(),
-        name.trim(),
         salt,
         hash,
-        age,
-        heightCm,
-        weightKg,
-        style.trim()
+        ...columns.map((c) => profile.values[c])
       );
 
       const user = db.prepare(`SELECT * FROM users WHERE id = ?`).get(id) as UserRow;
@@ -295,29 +315,16 @@ export function createApp(dbPath: string): App {
       return;
     }
 
-    // Live weather for the dashboard. Coordinates are optional query params;
-    // without them we fall back to the default city rather than failing the card.
-    if (req.method === "GET" && url.pathname === "/api/weather") {
-      const lat = Number(url.searchParams.get("lat") ?? DEFAULT_COORDS.lat);
-      const lon = Number(url.searchParams.get("lon") ?? DEFAULT_COORDS.lon);
-      if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
-        json(res, 400, { error: "Invalid coordinates." });
-        return;
-      }
-      const weather = await currentWeather(lat, lon);
-      json(res, 200, weather);
-      return;
-    }
-
-    if (req.method === "GET" && url.pathname === "/api/scenarios") {
-      // Signed-in only: the picker is the first screen after auth. The catalog
-      // itself is not secret, but gating it keeps every post-auth screen behind
-      // the same check and avoids an anonymous surface we would only tighten later.
-      if (!userForToken(bearerToken(req))) {
-        json(res, 401, { error: "Not signed in." });
-        return;
-      }
-      json(res, 200, { scenarios: SCENARIOS });
+    // 参考数据路由(场景目录 / 天气),见 catalog-routes.ts。
+    if (
+      await handleCatalogRoutes({
+        req,
+        res,
+        url,
+        json,
+        userFromHeader: () => userForToken(bearerToken(req)),
+      })
+    ) {
       return;
     }
 
@@ -338,42 +345,94 @@ export function createApp(dbPath: string): App {
       return;
     }
 
-    // SmartPack Assistant. Session-gated: the system prompt embeds the
-    // user's questionnaire profile, so anonymous chat has nothing to
-    // personalize with. The client sends the visible conversation each turn;
-    // the prompt itself never leaves the server.
-    if (req.method === "POST" && url.pathname === "/api/chat") {
+    if (req.method === "PUT" && url.pathname === "/api/profile") {
       const user = userForToken(bearerToken(req));
       if (!user) {
         json(res, 401, { error: "Not signed in." });
         return;
       }
-      if (!aiConfigured()) {
-        json(res, 503, {
-          error:
-            "AI is not configured. Set AI_API_KEY in server/.env (see server/.env.example).",
-        });
+      const body = await readBody(req);
+      const profile = validateProfile(body);
+      if (!profile.ok) {
+        json(res, 400, { error: profile.error });
         return;
       }
-      const { messages } = await readBody(req);
-      const valid =
-        Array.isArray(messages) &&
-        messages.length > 0 &&
-        messages.length <= 40 &&
-        messages.every(
-          (m: ChatMessage) =>
-            (m?.role === "user" || m?.role === "assistant") &&
-            typeof m?.content === "string" &&
-            m.content.length > 0 &&
-            m.content.length <= 4000
-        );
-      if (!valid) {
-        json(res, 400, { error: "Invalid messages." });
-        return;
-      }
-      const systemPrompt = buildSystemPrompt(user);
-      const reply = await chatCompletion(systemPrompt, messages);
-      json(res, 200, { reply });
+      const columns = Object.keys(profile.values);
+      db.prepare(
+        `UPDATE users SET ${columns.map((column) => `${column} = ?`).join(", ")} WHERE id = ?`
+      ).run(...columns.map((column) => profile.values[column]), user.id);
+      const updated = db.prepare(`SELECT * FROM users WHERE id = ?`).get(user.id) as UserRow;
+      json(res, 200, { user: publicUser(updated) });
+      return;
+    }
+
+    // 助手路由(/api/chat),见 assistant-routes.ts。
+    if (
+      await handleAssistantRoutes({
+        req,
+        res,
+        url,
+        json,
+        readBody,
+        userFromHeader: () => userForToken(bearerToken(req)),
+        actionContext: () => {
+          const actor = userForToken(bearerToken(req));
+          if (!actor) return null;
+          return {
+            userId: actor.id,
+            scenarioIds,
+            wardrobe,
+            tripPlans,
+            promptContext: assistantDataContext(
+              wardrobe.list(actor.id),
+              tripPlans.list(actor.id)
+            ),
+            currentProfile: () => {
+              const current = userForToken(bearerToken(req))!;
+              return {
+                name: current.name,
+                gender: current.gender,
+                age: current.age,
+                heightCm: current.height_cm,
+                weightKg: current.weight_kg,
+                bustCm: current.bust_cm,
+                waistCm: current.waist_cm,
+                hipCm: current.hip_cm,
+                bodyType: current.body_type,
+                seasonColorType: current.season_color_type,
+                stylePrefs: current.style_prefs ? JSON.parse(current.style_prefs) : [],
+                wearFeel: current.wear_feel ? JSON.parse(current.wear_feel) : [],
+                wearFeelOther: current.wear_feel_other,
+                travelHabits: current.travel_habits ? JSON.parse(current.travel_habits) : [],
+                travelHabitsOther: current.travel_habits_other,
+              };
+            },
+            updateProfile: (values: Record<string, string | number | null>) => {
+              const columns = Object.keys(values);
+              db.prepare(
+                `UPDATE users SET ${columns.map((column) => `${column} = ?`).join(", ")} WHERE id = ?`
+              ).run(...columns.map((column) => values[column]), actor.id);
+              const updated = db.prepare(`SELECT * FROM users WHERE id = ?`).get(actor.id) as UserRow;
+              return publicUser(updated);
+            },
+          };
+        },
+      })
+    ) {
+      return;
+    }
+
+    // 行程规划路由(行程列表/单个行程/景点配图),见 itinerary-routes.ts。
+    if (
+      await handleItineraryRoutes({
+        req,
+        res,
+        url,
+        itinerary,
+        json,
+        userFromHeader: () => userForToken(bearerToken(req)),
+      })
+    ) {
       return;
     }
 
@@ -392,66 +451,6 @@ export function createApp(dbPath: string): App {
       const raw = rawParam === null ? NaN : Number(rawParam);
       const balance = Number.isFinite(raw) ? raw : 50;
       json(res, 200, { plan: buildPackingPlan(balance) });
-      return;
-    }
-
-    // 拍照识别 → (可选)电商搜同款。识别是硬依赖,搜同款未配置时优雅降级。
-    if (req.method === "POST" && url.pathname === "/api/wardrobe/recognize") {
-      const user = userForToken(bearerToken(req));
-      if (!user) {
-        json(res, 401, { error: "Not signed in." });
-        return;
-      }
-      if (!visionConfigured()) {
-        json(res, 503, {
-          error:
-            "识别服务未配置:请在 server/.env 填入 VISION_API_KEY(见 .env.example)。",
-        });
-        return;
-      }
-      const { image } = await readBody(req, 8_000_000);
-      if (typeof image !== "string" || !image.startsWith("data:image/")) {
-        json(res, 400, { error: "image must be a data:image/* URL." });
-        return;
-      }
-      let item;
-      try {
-        item = await recognizeClothing(image);
-      } catch (err: any) {
-        // 不是衣物 / 认不出衣物:这是用户操作问题(拍错了),不是服务故障。
-        // 用 422 区分开,前端据此提示重拍且不把这张加进衣柜。
-        if (err instanceof NotClothingError) {
-          json(res, 422, { error: err.message, notClothing: true });
-          return;
-        }
-        json(res, 502, { error: `识别失败:${err?.message ?? "unknown"}` });
-        return;
-      }
-      const provider = ecommerceProvider();
-      let products: Awaited<ReturnType<typeof searchProducts>> = [];
-      let productsError: string | undefined;
-      if (provider) {
-        try {
-          products = await searchProducts(searchKeyword(item));
-        } catch (err: any) {
-          // 搜同款失败不拖垮识别结果,报告但不报错。
-          productsError = err?.message ?? "unknown";
-        }
-      }
-      // 识别结果连同细节字段一起落库,这些细节是后续穿搭推荐要分析的原料。
-      const saved = wardrobe.add(user.id, {
-        title: item.title,
-        category: item.category,
-        subtype: item.subtype,
-        colors: item.colors,
-        fit: item.fit,
-        material: item.material,
-        seasons: item.seasons,
-        styleTags: item.styleTags,
-        details: item.details,
-        photoDataUrl: image,
-      });
-      json(res, 201, { item: saved, provider, products, productsError });
       return;
     }
 
@@ -488,74 +487,17 @@ export function createApp(dbPath: string): App {
       return;
     }
 
-    // 电脑端(已登录)创建扫码上传会话,token 会被编进二维码。
-    if (req.method === "POST" && url.pathname === "/api/upload-session") {
-      const user = userForToken(bearerToken(req));
-      if (!user) {
-        json(res, 401, { error: "Not signed in." });
-        return;
-      }
-      const session = createUploadSession(user.id);
-      json(res, 201, { uploadToken: session.token });
-      return;
-    }
-
-    // 手机端凭 uploadToken 直传照片 —— 故意不要求登录态:
-    // token 本身就是一次性凭证,这正是免去手机重新登录的关键。
-    if (req.method === "POST" && url.pathname === "/api/upload-session/photo") {
-      const { uploadToken, image } = await readBody(req, 8_000_000);
-      if (typeof uploadToken !== "string" || typeof image !== "string") {
-        json(res, 400, { error: "uploadToken and image are required." });
-        return;
-      }
-      if (!image.startsWith("data:image/")) {
-        json(res, 400, { error: "image must be a data:image/* URL." });
-        return;
-      }
-      if (!attachImage(uploadToken, image)) {
-        json(res, 404, { error: "上传链接已失效,请在电脑上重新生成二维码。" });
-        return;
-      }
-      json(res, 200, { ok: true });
-      return;
-    }
-
-    // 电脑端轮询:照片到了就取回(取回即销毁会话)。
-    if (req.method === "GET" && url.pathname === "/api/upload-session/photo") {
-      const user = userForToken(bearerToken(req));
-      if (!user) {
-        json(res, 401, { error: "Not signed in." });
-        return;
-      }
-      const uploadToken = url.searchParams.get("uploadToken") ?? "";
-      const session = getUploadSession(uploadToken);
-      if (!session) {
-        json(res, 404, { error: "上传链接已失效。" });
-        return;
-      }
-      // 只能取自己创建的会话,防止拿别人的 token 捞照片。
-      if (session.userId !== user.id) {
-        json(res, 403, { error: "Forbidden." });
-        return;
-      }
-      json(res, 200, { image: consumeImage(uploadToken) });
-      return;
-    }
-
-    // 电脑关闭二维码弹窗:显式结束会话,不必等 TTL 过期。
-    if (req.method === "DELETE" && url.pathname === "/api/upload-session") {
-      const user = userForToken(bearerToken(req));
-      if (!user) {
-        json(res, 401, { error: "Not signed in." });
-        return;
-      }
-      const uploadToken = url.searchParams.get("uploadToken") ?? "";
-      const session = getUploadSession(uploadToken);
-      // 只能结束自己的会话。已不存在也算成功(幂等)。
-      if (session && session.userId === user.id) {
-        endUploadSession(uploadToken);
-      }
-      json(res, 200, { ok: true });
+    // 扫码上传路由(建会话/手机传图/电脑取图/关会话),见 upload-routes.ts。
+    if (
+      await handleUploadRoutes({
+        req,
+        res,
+        url,
+        json,
+        readBody,
+        userFromHeader: () => userForToken(bearerToken(req)),
+      })
+    ) {
       return;
     }
 

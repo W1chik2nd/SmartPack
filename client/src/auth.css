@@ -121,6 +121,13 @@
   outline: none;
 }
 
+/* Questionnaire only: inputs share the page background like the option tiles,
+   so the whole form reads as one surface with borders doing the structure.
+   Sign-in and step 1 keep white fields. */
+.quiz-page .field input {
+  background: var(--bg);
+}
+
 .field input:focus {
   /* flat focus ring, not a glow */
   outline: 3px solid var(--yellow);
@@ -141,9 +148,106 @@
   gap: var(--space-2);
 }
 
+/* Three measurements (bust / waist / hip) in one row */
+.field-row-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Questionnaire block divider: required answers above, optional below.
+   A solid bar, not a decorative rule — it separates two obligations. */
+.form-section {
+  margin: var(--space-3) 0 var(--space-2);
+  padding-left: var(--space-1);
+  border-left: 10px solid var(--blue);
+  font-size: 13px;
+  font-weight: var(--weight-heavy);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.form-section:first-child {
+  margin-top: 0;
+}
+
+/* "(optional)" marker inside a label — normal weight so the label still reads
+   as the primary text */
+.field-optional {
+  font-weight: var(--weight-regular);
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text-secondary);
+}
+
+.option-hint {
+  grid-column: 1 / -1;
+  margin-bottom: var(--space-1);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* Incomplete-profile notice under the submit button. Yellow, not red: the
+   first click did not fail, it asked for confirmation. */
+.incomplete-warning {
+  margin-top: var(--space-2);
+  padding: 12px var(--space-2);
+  font-size: 14px;
+  font-weight: var(--weight-bold);
+  color: var(--black);
+  background: var(--yellow);
+  border: var(--border);
+  border-radius: var(--radius);
+  animation: fadeIn 0.2s ease both;
+}
+
+/* Sign-up step 2 only: no side image, so the form owns the full width.
+   The option grids below get real room instead of a 440px column. */
+.quiz-page {
+  grid-template-columns: 1fr;
+}
+
+/* Side whitespace scales with the viewport instead of a fixed gutter: clamp
+   keeps a comfortable margin on laptops and stops the form from spanning edge
+   to edge on wide monitors, without ever squeezing it on small screens. */
+.quiz-page .auth-panel {
+  align-items: stretch;
+  padding: var(--space-4) clamp(var(--space-3), 9vw, 200px);
+}
+
+.quiz-page .auth-headline,
+.quiz-page .auth-card {
+  max-width: none;
+}
+
+/* Six squares per row on the questionnaire. Narrower viewports step down so
+   the tiles never shrink below a readable size. */
+.quiz-page .style-options {
+  min-width: 0;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.quiz-page .field-row-3 {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+@media (max-width: 1200px) {
+  .quiz-page .style-options {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .quiz-page .style-options {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .quiz-page .field-row-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 /* Questionnaire style picker: radio choices as flat selectable blocks */
 .style-options {
   border: none;
+  min-inline-size: 0;
 }
 
 .style-options legend {
@@ -164,15 +268,27 @@
   grid-column: 1 / -1;
 }
 
+/* Square tiles (AGENTS.md §8: geometry first, clean grid). aspect-ratio holds
+   the square at any column count, so the shape survives the responsive
+   step-downs without per-breakpoint sizing. Content stacks and centres because
+   a square has vertical room that a single text row does not. */
 .style-option {
+  position: relative;
+  min-width: 0;
   display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  padding: 10px 12px;
-  font-size: 14px;
+  align-items: flex-end;
+  justify-content: center;
+  aspect-ratio: 1;
+  padding: var(--space-1);
+  font-size: 22px;
   font-weight: var(--weight-bold);
+  line-height: 1.25;
+  text-align: center;
+  overflow-wrap: anywhere;
   border: 2px solid var(--black);
-  background: var(--white);
+  /* Same value as the page background: the border carries the shape, not a
+     contrasting fill. */
+  background: var(--bg);
   cursor: pointer;
 }
 
@@ -182,7 +298,14 @@
 }
 
 .style-option input {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 38px;
+  height: 38px;
+  margin: 0;
   accent-color: var(--blue);
+  transform: translate(-50%, -50%);
 }
 
 .style-option:has(input:focus-visible) {
