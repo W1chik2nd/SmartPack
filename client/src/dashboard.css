@@ -180,10 +180,40 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(10px, 1.6vh, 18px);
-  padding: var(--space-2) 0;
+  gap: 0;
+  width: 100%;
   min-height: 220px;
+  overflow: hidden;
 }
+
+.outfit-figure .dress-piece {
+  transform-origin: center center;
+}
+
+.outfit-figure .dress-piece-top.is-compact {
+  width: clamp(92px, 13vw, 142px);
+  height: auto;
+  aspect-ratio: 176 / 126;
+}
+
+.outfit-figure .dress-piece-bottom.is-compact {
+  width: clamp(64px, 9vw, 96px);
+  height: auto;
+  aspect-ratio: 118 / 156;
+  margin-top: -2px;
+}
+
+.outfit-figure .dress-piece-shoes.is-compact {
+  width: clamp(72px, 10vw, 112px);
+  height: auto;
+  aspect-ratio: 152 / 72;
+}
+
+.outfit-figure .dress-piece-accessory.is-compact {
+  position: absolute;
+  transform: translateX(clamp(52px, 6vw, 82px)) translateY(clamp(-18px, -2vw, -8px));
+}
+
 
 .today-itinerary {
   display: flex;

@@ -309,8 +309,16 @@ export default function Home({
                     <span className="outfit-figure" aria-label={todayOutfit?.place ?? selectedTrip.placeName}>
                       {todayOutfit ? (
                         todayOutfit.pieces
-                          .filter((piece) => piece.kind === "top" || piece.kind === "bottom")
-                          .map((piece) => <OutfitPieceVisual key={piece.id} piece={piece} compact />)
+                          .filter(
+                            (piece) =>
+                              piece.kind === "top" ||
+                              piece.kind === "bottom" ||
+                              piece.kind === "shoes" ||
+                              piece.kind === "accessory"
+                          )
+                          .map((piece) => (
+                            <OutfitPieceVisual key={piece.id} piece={piece} compact />
+                          ))
                       ) : (
                         <>
                           <span className="outfit-shirt pixel-garment" />
