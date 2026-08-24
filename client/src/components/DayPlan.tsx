@@ -48,8 +48,13 @@ type Props = {
 export default function DayPlan({ day }: Props) {
   const { lang, t } = useLang();
   const stops = day.stops;
+  const outfit = day.outfit ?? [];
+  const equipment = day.equipment ?? [];
   const height = Math.max(stops.length, 1) * ROW_H;
   const summary = lang === "zh" ? day.summary : day.summaryEn || day.summary;
+  const weather =
+    lang === "zh" ? day.weatherSummary : day.weatherSummaryEn || day.weatherSummary;
+  const risk = lang === "zh" ? day.weatherRisk : day.weatherRiskEn || day.weatherRisk;
 
   return (
     <section className="day-plan" aria-label={`Day ${day.dayNumber}`}>
@@ -60,6 +65,34 @@ export default function DayPlan({ day }: Props) {
           {summary} · {stops.length} {t("dayStops")}
         </span>
       </header>
+
+      <div className="day-decisions">
+        <section className="day-weather">
+          <h3>{t("dayWeather")}</h3>
+          <strong>{weather}</strong>
+          <p>{risk}</p>
+        </section>
+        <section>
+          <h3>{t("dayOutfit")}</h3>
+          <ul>
+            {outfit.map((item, index) => (
+              <li key={`${item.labelEn}-${index}`}>
+                {lang === "zh" ? item.label : item.labelEn}
+              </li>
+            ))}
+          </ul>
+        </section>
+        <section>
+          <h3>{t("dayEquipment")}</h3>
+          <ul>
+            {equipment.map((item, index) => (
+              <li key={`${item.labelEn}-${index}`}>
+                {lang === "zh" ? item.label : item.labelEn}
+              </li>
+            ))}
+          </ul>
+        </section>
+      </div>
 
       <div className="day-track">
         {/* 竖线与圆点是几何装饰,信息由卡片承载 */}

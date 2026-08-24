@@ -382,7 +382,6 @@
 
 .profile-submit:hover { color: var(--black); background: var(--yellow); }
 .profile-submit:disabled { cursor: wait; opacity: 0.55; }
-
 .profile-page input:focus-visible,
 .profile-page select:focus-visible,
 .profile-page button:focus-visible,
@@ -399,7 +398,6 @@
   .avatar-stage { width: 210px; }
   .measurement-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
-
 @media (max-width: 560px) {
   .profile-page { padding-right: 14px; padding-left: 14px; }
   .profile-api-status { max-width: 140px; text-align: right; }
@@ -409,7 +407,6 @@
   .profile-actions { align-items: stretch; flex-direction: column; }
   .profile-submit { width: 100%; }
 }
-
 @media (prefers-reduced-motion: reduce) {
   .profile-page { animation: none; }
 }

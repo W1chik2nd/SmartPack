@@ -1,12 +1,4 @@
-// 行程规划持久化 —— 一次行程 = trips 一行 + trip_days 若干行 + trip_stops 若干行。
-//
-// 为什么拆三张表:左侧"总行程图"只需要按天的概览(日期 + 城市),
-// 右侧"每天的行程"才需要逐个停靠点。分开存,左边那份查询不用拖着
-// 几十个景点走。
-//
-// 当前阶段是 UI 先行:真正的 AI 生成行程还没接,所以 seedDemoTrip()
-// 造一份假数据(成都 3 天)让页面能跑起来。
-// TODO: 接入 AI 行程生成后,把 seedDemoTrip 换成真实写入。
+// 行程规划持久化:规范化存 trips / trip_days / trip_stops。
 import { DatabaseSync } from "node:sqlite";
 import { randomUUID } from "node:crypto";
 import {
@@ -15,25 +7,23 @@ import {
   DEMO_TITLE,
   DEMO_TITLE_EN,
 } from "./itinerary-demo.ts";
+import { insertGeneratedItinerary } from "./itinerary-generation.ts";
+import type { BilingualItem, GeneratedTripPlan } from "./trip-agent-types.ts";
 
 /** 停靠点类型:景点 / 交通 / 餐饮 / 住宿。右侧时间轴按类型换图标。 */
 export type StopKind = "spot" | "transit" | "meal" | "hotel";
 
 export type TripStop = {
   id: string;
-  /** 当天内的顺序,从 0 开始。 */
   position: number;
   kind: StopKind;
   name: string;
   /** 英文名,供语言切换用;API 保持语言中立(AGENTS.md §3)。 */
   nameEn: string;
-  /** 如 "09:30";没有具体时间就是空串。 */
   startTime: string;
-  /** 停留时长文本,如 "2h"。 */
   duration: string;
   note: string;
   noteEn: string;
-  /** 配图检索关键词,喂给 photos.ts。 */
   photoQuery: string;
   /** 已解析的配图;null 表示还没查过或查不到。 */
   photoUrl: string | null;
@@ -52,6 +42,12 @@ export type TripDay = {
   /** 当天主题一句话。 */
   summary: string;
   summaryEn: string;
+  weatherSummary: string;
+  weatherSummaryEn: string;
+  weatherRisk: string;
+  weatherRiskEn: string;
+  outfit: BilingualItem[];
+  equipment: BilingualItem[];
   stops: TripStop[];
 };
 
@@ -64,6 +60,7 @@ export type Trip = {
   /** 出发日期文本,手绘图左上角的 "x.xx 出发"。 */
   departLabel: string;
   createdAt: string;
+  sourcePlanId: string | null;
   days: TripDay[];
 };
 
@@ -86,6 +83,12 @@ export type ItineraryStore = {
   get: (userId: string, tripId: string) => Trip | null;
   /** 造一份演示行程并返回。UI 阶段用,接入 AI 生成后废弃。 */
   seedDemoTrip: (userId: string, scenario: string) => Trip;
+  saveGenerated: (
+    userId: string,
+    sourcePlanId: string,
+    scenario: string,
+    generated: GeneratedTripPlan
+  ) => Trip;
   /** 把查到的配图写回停靠点,下次不用再查供应商。 */
   setStopPhoto: (userId: string, stopId: string, photo: PhotoPatch) => void;
   /** 取停靠点(带用户校验、带所在城市),供配图路由用。 */
@@ -99,6 +102,7 @@ type TripRow = {
   scenario: string;
   depart_label: string;
   created_at: string;
+  source_plan_id: string | null;
 };
 
 type DayRow = {
@@ -109,6 +113,12 @@ type DayRow = {
   city_en: string;
   summary: string;
   summary_en: string;
+  weather_summary: string;
+  weather_summary_en: string;
+  weather_risk: string;
+  weather_risk_en: string;
+  outfit_json: string;
+  equipment_json: string;
 };
 
 type StopRow = {
@@ -156,6 +166,7 @@ export function createItineraryStore(db: DatabaseSync): ItineraryStore {
       title_en      TEXT NOT NULL DEFAULT '',
       scenario      TEXT NOT NULL DEFAULT 'travel',
       depart_label  TEXT NOT NULL DEFAULT '',
+      source_plan_id TEXT,
       created_at    TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE TABLE IF NOT EXISTS trip_days (
@@ -167,6 +178,12 @@ export function createItineraryStore(db: DatabaseSync): ItineraryStore {
       city_en     TEXT NOT NULL DEFAULT '',
       summary     TEXT NOT NULL DEFAULT '',
       summary_en  TEXT NOT NULL DEFAULT ''
+      ,weather_summary TEXT NOT NULL DEFAULT ''
+      ,weather_summary_en TEXT NOT NULL DEFAULT ''
+      ,weather_risk TEXT NOT NULL DEFAULT ''
+      ,weather_risk_en TEXT NOT NULL DEFAULT ''
+      ,outfit_json TEXT NOT NULL DEFAULT '[]'
+      ,equipment_json TEXT NOT NULL DEFAULT '[]'
     );
     CREATE TABLE IF NOT EXISTS trip_stops (
       id                TEXT PRIMARY KEY,
@@ -188,12 +205,37 @@ export function createItineraryStore(db: DatabaseSync): ItineraryStore {
     CREATE INDEX IF NOT EXISTS idx_trip_days_trip ON trip_days(trip_id, day_number);
     CREATE INDEX IF NOT EXISTS idx_trip_stops_day ON trip_stops(day_id, position);
   `);
+  const columns = (table: string) =>
+    new Set(
+      (db.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[]).map(
+        (column) => column.name
+      )
+    );
+  const tripColumns = columns("trips");
+  if (!tripColumns.has("source_plan_id")) {
+    db.exec(`ALTER TABLE trips ADD COLUMN source_plan_id TEXT`);
+  }
+  const dayColumns = columns("trip_days");
+  for (const [name, type] of [
+    ["weather_summary", "TEXT NOT NULL DEFAULT ''"],
+    ["weather_summary_en", "TEXT NOT NULL DEFAULT ''"],
+    ["weather_risk", "TEXT NOT NULL DEFAULT ''"],
+    ["weather_risk_en", "TEXT NOT NULL DEFAULT ''"],
+    ["outfit_json", "TEXT NOT NULL DEFAULT '[]'"],
+    ["equipment_json", "TEXT NOT NULL DEFAULT '[]'"],
+  ]) {
+    if (!dayColumns.has(name)) {
+      db.exec(`ALTER TABLE trip_days ADD COLUMN ${name} ${type}`);
+    }
+  }
 
   /** 装配一趟行程:天按 day_number 排,停靠点按 position 排。 */
   function hydrate(row: TripRow): Trip {
     const dayRows = db
       .prepare(
-        `SELECT id, day_number, date_label, city, city_en, summary, summary_en
+        `SELECT id, day_number, date_label, city, city_en, summary, summary_en,
+                weather_summary, weather_summary_en, weather_risk, weather_risk_en,
+                outfit_json, equipment_json
            FROM trip_days WHERE trip_id = ? ORDER BY day_number`
       )
       .all(row.id) as DayRow[];
@@ -211,6 +253,7 @@ export function createItineraryStore(db: DatabaseSync): ItineraryStore {
       scenario: row.scenario,
       departLabel: row.depart_label,
       createdAt: row.created_at,
+      sourcePlanId: row.source_plan_id,
       days: dayRows.map((d) => ({
         id: d.id,
         dayNumber: d.day_number,
@@ -219,6 +262,12 @@ export function createItineraryStore(db: DatabaseSync): ItineraryStore {
         cityEn: d.city_en,
         summary: d.summary,
         summaryEn: d.summary_en,
+        weatherSummary: d.weather_summary,
+        weatherSummaryEn: d.weather_summary_en,
+        weatherRisk: d.weather_risk,
+        weatherRiskEn: d.weather_risk_en,
+        outfit: JSON.parse(d.outfit_json) as BilingualItem[],
+        equipment: JSON.parse(d.equipment_json) as BilingualItem[],
         stops: (stopsFor.all(d.id) as StopRow[]).map(toStop),
       })),
     };
@@ -298,6 +347,17 @@ export function createItineraryStore(db: DatabaseSync): ItineraryStore {
         }
       }
       return hydrate(findTrip(userId, tripId)!);
+    },
+
+    saveGenerated(userId, sourcePlanId, scenario, generated) {
+      const id = insertGeneratedItinerary(
+        db,
+        userId,
+        sourcePlanId,
+        scenario,
+        generated
+      );
+      return hydrate(findTrip(userId, id)!);
     },
 
     stop(userId, stopId) {

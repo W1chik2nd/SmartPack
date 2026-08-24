@@ -1,23 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  deleteTripPlan,
   weather,
   listTripPlans,
   type User,
   type Weather,
   type TripPlan,
 } from "../api";
-import ChatWidget from "../components/ChatWidget";
+import TripSwitcher from "../components/TripSwitcher";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/strings";
-import { CITIES, storedCity, storeCity, type City } from "../i18n/cities";
+import { dashboardTrips, tripAfterDeletionId } from "../lib/trip-dashboard";
 
 type Props = {
   user: User;
   onOpenTrips: () => void;
   onOpenWardrobe: () => void;
-  onOpenItinerary: () => void;
-  onOpenPacking: () => void;
+  onOpenItinerary: (itineraryId: string) => void;
+  onOpenPacking: (tripPlanId: string) => void;
   onOpenProfile: () => void;
+  onOpenOutfit: () => void;
 };
 
 // Placeholder navigation targets. Wire real routes here as the pages land.
@@ -25,7 +27,6 @@ type Props = {
 const TODO_LINKS = {
   weather: () => {},
   dates: () => {},
-  outfit: () => {},
 };
 
 export default function Home({
@@ -35,14 +36,28 @@ export default function Home({
   onOpenItinerary,
   onOpenPacking,
   onOpenProfile,
+  onOpenOutfit,
 }: Props) {
   const { lang, t } = useLang();
   const [now, setNow] = useState(new Date());
-  const [city, setCity] = useState<City>(storedCity);
   const [wx, setWx] = useState<Weather | null>(null);
   const [wxError, setWxError] = useState(false);
-  // 已保存的行程,最新在前;进主页时拉一次,保存后跳回来会重新挂载再拉。
+  const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
   const [trips, setTrips] = useState<TripPlan[] | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deletingTripId, setDeletingTripId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState(false);
+  const [switchDirection, setSwitchDirection] = useState<-1 | 1>(1);
+  const deletedTripIds = useRef(new Set<string>());
+  const travelTrips = dashboardTrips(trips ?? []);
+  const selectedTrip =
+    travelTrips.find((trip) => trip.id === selectedTripId) ??
+    travelTrips[0] ??
+    null;
+  const selectedTripIndex = Math.max(
+    0,
+    travelTrips.findIndex((trip) => trip.id === selectedTrip?.id)
+  );
 
   // Live clock: half-minute ticks keep date, time, and greeting current.
   useEffect(() => {
@@ -50,21 +65,61 @@ export default function Home({
     return () => clearInterval(timer);
   }, []);
 
-  // 拉取行程列表。失败(如未登录)就当作空,主页不因此报错。
+  // Generation happens on the server. Poll only while a saved trip is still
+  // processing, then stop once the durable SQLite status changes.
   useEffect(() => {
-    listTripPlans()
-      .then(({ plans }) => setTrips(plans))
-      .catch(() => setTrips([]));
+    let cancelled = false;
+    let poll: number | undefined;
+    async function refresh() {
+      try {
+        const { plans } = await listTripPlans();
+        if (cancelled) return;
+        setTrips(plans.filter((plan) => !deletedTripIds.current.has(plan.id)));
+        if (plans.some((plan) => plan.generationStatus === "processing")) {
+          poll = window.setTimeout(refresh, 2_000);
+        }
+      } catch {
+        if (!cancelled) setTrips([]);
+      }
+    }
+    void refresh();
+    return () => {
+      cancelled = true;
+      if (poll !== undefined) window.clearTimeout(poll);
+    };
   }, []);
 
-  // Weather follows the picked city; the choice persists across sessions.
+  // Keep selection stable as background status updates replace the trip list.
+  useEffect(() => {
+    if (selectedTrip && selectedTrip.id !== selectedTripId) {
+      setSelectedTripId(selectedTrip.id);
+    } else if (!selectedTrip && selectedTripId) {
+      setSelectedTripId(null);
+    }
+  }, [selectedTrip?.id, selectedTripId]);
+
+  useEffect(() => {
+    setDeleteConfirmId(null);
+    setDeleteError(false);
+  }, [selectedTrip?.id]);
+
+  // Weather always follows the destination selected by the trip switcher.
   useEffect(() => {
     setWx(null);
     setWxError(false);
-    weather(city.lat, city.lon)
-      .then(setWx)
-      .catch(() => setWxError(true));
-  }, [city]);
+    if (!selectedTrip) return;
+    let active = true;
+    weather(selectedTrip.lat, selectedTrip.lon)
+      .then((result) => {
+        if (active) setWx(result);
+      })
+      .catch(() => {
+        if (active) setWxError(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, [selectedTrip?.id, selectedTrip?.lat, selectedTrip?.lon]);
 
   function greeting(): string {
     const hour = now.getHours();
@@ -72,6 +127,31 @@ export default function Home({
     if (hour < 12) return t("goodMorning");
     if (hour < 18) return t("goodAfternoon");
     return t("goodEvening");
+  }
+
+  async function removeSelectedTrip() {
+    if (!selectedTrip) return;
+    const id = selectedTrip.id;
+    const nextId = tripAfterDeletionId(travelTrips, id);
+    setDeletingTripId(id);
+    setDeleteError(false);
+    try {
+      await deleteTripPlan(id);
+      deletedTripIds.current.add(id);
+      setTrips((current) => current?.filter((trip) => trip.id !== id) ?? []);
+      setSelectedTripId((current) => (current === id ? nextId : current));
+      setDeleteConfirmId(null);
+    } catch {
+      setDeleteError(true);
+    } finally {
+      setDeletingTripId(null);
+    }
+  }
+
+  function selectTrip(id: string, direction: -1 | 1) {
+    setSwitchDirection(direction);
+    setWx(null);
+    setSelectedTripId(id);
   }
 
   const locale = lang === "zh" ? "zh-CN" : "en-GB";
@@ -84,9 +164,6 @@ export default function Home({
     hour: "2-digit",
     minute: "2-digit",
   });
-
-  // 最新一条行程(列表已按新→旧排序),用于"行程"卡片。
-  const latestTrip = trips && trips.length > 0 ? trips[0] : null;
 
   // 一条行程的日期区间显示。按本地年月日解析,不走 UTC,免得跨时区错一天。
   function tripDates(trip: TripPlan): string {
@@ -108,8 +185,6 @@ export default function Home({
 
   return (
     <div className="home dashboard">
-      <ChatWidget />
-
       {/* Greeting bar */}
       <header className="dash-greeting">
         <h1>
@@ -122,50 +197,60 @@ export default function Home({
 
       <div className="dash-layout">
         {/* Left: today card, laid out after the wireframe */}
-        <section className="today-card" aria-label="Today">
+        <div className="today-card-shell">
+          <TripSwitcher
+            trips={travelTrips}
+            selectedId={selectedTrip?.id ?? null}
+            onSelect={selectTrip}
+          />
+          <section
+            key={selectedTrip?.id ?? "empty-trip"}
+            className={`today-card trip-card-enter-${switchDirection === 1 ? "right" : "left"}`}
+            aria-label="Today"
+          >
           <div className="today-header">
             <button className="today-dates" onClick={TODO_LINKS.dates}>
               {t("upcoming")} · {dateLong} <span aria-hidden="true">›</span>
             </button>
-            <label className="today-location">
-              <span className="visually-hidden">{t("cityLabel")}</span>
-              <select
-                value={city.id}
-                onChange={(e) => {
-                  const next = CITIES.find((c) => c.id === e.target.value);
-                  if (next) {
-                    storeCity(next.id);
-                    setCity(next);
-                  }
-                }}
-              >
-                {CITIES.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {lang === "zh" ? c.zh : c.en}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="trip-switch-copy" aria-live="polite">
+              <span>{t("destination")}</span>
+              <strong title={selectedTrip?.placeName}>
+                {selectedTrip?.placeName ?? t("noDestination")}
+              </strong>
+              {travelTrips.length > 0 && (
+                <small>
+                  {selectedTripIndex + 1}/{travelTrips.length}
+                </small>
+              )}
+            </div>
           </div>
 
           <div className="today-body">
             <div className="today-left">
               <button className="today-weather" onClick={TODO_LINKS.weather}>
-                <h2>{t("todaysWeather")}</h2>
-                {wx ? (
+                <h2>{t("destinationWeatherToday")}</h2>
+                {selectedTrip && wx ? (
                   <p className="weather-reading">
                     {Math.round(wx.tempC)}°C
                     <span className="weather-cond">{wx.condition}</span>
                   </p>
                 ) : (
                   <p className="weather-reading weather-pending">
-                    {wxError ? t("weatherUnavailable") : t("weatherLoading")}
+                    {!selectedTrip
+                      ? t("noDestination")
+                      : wxError
+                        ? t("weatherUnavailable")
+                        : t("weatherLoading")}
                   </p>
                 )}
                 <span className="card-arrow" aria-hidden="true">›</span>
               </button>
 
-              <button className="today-checklist" onClick={onOpenPacking}>
+              <button
+                className="today-checklist"
+                onClick={() => selectedTrip && onOpenPacking(selectedTrip.id)}
+                disabled={!selectedTrip?.itineraryId}
+              >
                 <h2>{t("checklist")}</h2>
                 <img
                   className="checklist-bag"
@@ -177,38 +262,106 @@ export default function Home({
               </button>
             </div>
 
-            <button className="today-outfit" onClick={TODO_LINKS.outfit}>
+            <button className="today-outfit" onClick={onOpenOutfit}>
               <h2>{t("todaysOutfit")}</h2>
               {/* Geometric garment drawing (shirt + trousers), CSS only */}
               <span className="outfit-figure" aria-hidden="true">
-                <span className="outfit-shirt" />
-                <span className="outfit-trousers" />
+                <span className="outfit-shirt pixel-garment" />
+                <span className="outfit-trousers pixel-garment" />
               </span>
               <span className="card-arrow" aria-hidden="true">›</span>
             </button>
 
-            <button className="today-itinerary" onClick={onOpenItinerary}>
-              <h2>{t("itinerary")}</h2>
-              {latestTrip ? (
-                <span className="trip-summary">
-                  <span className="trip-place">
-                    {latestTrip.placeName}
-                    <span className="trip-scenario">
-                      {SCENARIO_LABELS[latestTrip.scenario]?.[lang] ??
-                        latestTrip.scenario}
+            <div className="today-itinerary">
+              <button
+                type="button"
+                className="trip-open"
+                onClick={() =>
+                  selectedTrip?.itineraryId
+                    ? onOpenItinerary(selectedTrip.itineraryId)
+                    : onOpenTrips()
+                }
+              >
+                <h2>{t("itinerary")}</h2>
+                {selectedTrip ? (
+                  <span className="trip-summary">
+                    <span className="trip-place">
+                      {selectedTrip.placeName}
+                      <span className="trip-scenario">
+                        {SCENARIO_LABELS[selectedTrip.scenario]?.[lang] ??
+                          selectedTrip.scenario}
+                      </span>
                     </span>
+                    <span className="trip-dates">{tripDates(selectedTrip)}</span>
+                    {selectedTrip.generationStatus === "processing" && (
+                      <span className="trip-generation-status is-processing">
+                        {t("tripGeneratingHome")}
+                      </span>
+                    )}
+                    {selectedTrip.generationStatus === "failed" && (
+                      <span className="trip-generation-status is-failed">
+                        {t("tripGenerationFailedHome")}
+                      </span>
+                    )}
                   </span>
-                  <span className="trip-dates">{tripDates(latestTrip)}</span>
-                </span>
-              ) : (
-                <span className="trip-empty">
-                  {trips === null ? "" : t("noTripYet")}
-                </span>
+                ) : (
+                  <span className="trip-empty">
+                    {trips === null ? "" : t("noTripYet")}
+                  </span>
+                )}
+                <span className="card-arrow" aria-hidden="true">›</span>
+              </button>
+
+              {selectedTrip &&
+                deletingTripId === null &&
+                deleteConfirmId !== selectedTrip.id && (
+                <button
+                  type="button"
+                  className="trip-delete-trigger"
+                  onClick={() => setDeleteConfirmId(selectedTrip.id)}
+                >
+                  {t("deleteTrip")}
+                </button>
               )}
-              <span className="card-arrow" aria-hidden="true">›</span>
-            </button>
+
+              {selectedTrip && deleteConfirmId === selectedTrip.id && (
+                <div
+                  className="trip-delete-confirm"
+                  role="group"
+                  aria-label={t("deleteTrip")}
+                >
+                  <strong>{selectedTrip.placeName}</strong>
+                  <p>{t("deleteTripWarning")}</p>
+                  {deleteError && (
+                    <p className="trip-delete-error" role="alert">
+                      {t("deleteTripFailed")}
+                    </p>
+                  )}
+                  <div>
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirmId(null)}
+                      disabled={deletingTripId === selectedTrip.id}
+                    >
+                      {t("cancelDelete")}
+                    </button>
+                    <button
+                      type="button"
+                      className="trip-delete-danger"
+                      onClick={removeSelectedTrip}
+                      disabled={deletingTripId === selectedTrip.id}
+                    >
+                      {deletingTripId === selectedTrip.id
+                        ? t("deletingTrip")
+                        : t("confirmDeleteTrip")}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
-        </section>
+          </section>
+        </div>
 
         {/* Right: primary navigation tiles */}
         <nav className="dash-nav" aria-label="Sections">

@@ -1,0 +1,84 @@
+/* 各类衣物的像素细节。基础轮廓在 outfit.css，这里只描述款式差异。 */
+.garment-shirt::after {
+  right: auto;
+  bottom: 0;
+  left: 48%;
+  width: 3%;
+  height: 72%;
+  background: var(--black);
+  box-shadow: -10px 14px 0 -1px var(--detail-color), 10px 14px 0 -1px var(--detail-color);
+}
+
+.garment-knit::after {
+  right: auto;
+  bottom: 14%;
+  left: 20%;
+  width: 60%;
+  height: 5%;
+  background: var(--detail-color);
+  box-shadow: 0 10px 0 var(--black);
+}
+
+.garment-skirt {
+  clip-path: polygon(
+    18% 0, 82% 0, 82% 8%, 86% 8%, 86% 20%, 90% 20%,
+    90% 36%, 94% 36%, 94% 52%, 98% 52%, 98% 100%,
+    2% 100%, 2% 52%, 6% 52%, 6% 36%, 10% 36%,
+    10% 20%, 14% 20%, 14% 8%, 18% 8%
+  );
+}
+
+.garment-skirt::before {
+  left: 18%;
+  width: 64%;
+  background: var(--detail-color);
+}
+
+.garment-jeans::after {
+  content: "";
+  position: absolute;
+  top: 22%;
+  left: 16%;
+  width: 18%;
+  height: 10%;
+  border: 3px solid var(--black);
+  border-top: 0;
+  background: var(--white);
+  box-shadow: 57px 0 0 -3px var(--white), 57px 0 0 0 var(--black);
+}
+
+.garment-sneakers::before,
+.garment-sneakers::after {
+  box-shadow:
+    inset 0 -6px 0 var(--black),
+    inset 0 -11px 0 var(--detail-color),
+    inset 12px 0 0 -8px var(--black),
+    inset -8px 16px 0 -6px var(--detail-color);
+}
+
+.garment-loafers::before,
+.garment-loafers::after {
+  box-shadow:
+    inset 0 -5px 0 var(--black),
+    inset 0 -10px 0 var(--detail-color),
+    inset 16px 18px 0 -12px var(--black);
+}
+
+.garment-loafers::before { top: 12px; height: 46px; }
+.garment-loafers::after { height: 52px; }
+
+.dress-piece.is-compact.garment-shirt::after {
+  box-shadow: -4px 6px 0 -1px var(--detail-color), 4px 6px 0 -1px var(--detail-color);
+}
+
+.dress-piece.is-compact.garment-knit::after {
+  box-shadow: 0 4px 0 var(--black);
+}
+
+.dress-piece.is-compact.garment-jeans::after {
+  border-width: 1px;
+  box-shadow: 21px 0 0 -1px var(--white), 21px 0 0 0 var(--black);
+}
+
+.dress-piece.is-compact.garment-loafers::before { top: 6px; height: 23px; }
+.dress-piece.is-compact.garment-loafers::after { height: 26px; }

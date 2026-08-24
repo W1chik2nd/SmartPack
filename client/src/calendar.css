@@ -88,9 +88,9 @@
 .calendar-day.is-past,
 .calendar-day.is-past:hover,
 .calendar-day:disabled {
-  color: var(--text-secondary);
-  background: #e6e6e6;
-  border-color: #c4c4c4;
+  color: var(--disabled-text);
+  background: var(--disabled-surface);
+  border-color: var(--disabled-text);
   cursor: not-allowed;
   opacity: 0.6;
 }
