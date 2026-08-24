@@ -69,8 +69,26 @@ export function renderProfile() {
   return renderToStaticMarkup(
     <LangProvider>
       <Profile
-        user={{ id: "user-1", email: "anna@example.com", name: "Anna" }}
+        user={{
+          id: "user-1",
+          email: "anna@example.com",
+          name: "Anna",
+          age: 28,
+          heightCm: 168,
+          weightKg: 56,
+          style: "minimal",
+          gender: "woman",
+          chestCm: 84,
+          waistCm: 66,
+          hipsCm: 90,
+          bodyType: "hourglass",
+          season: "spring",
+          stylePreferences: ["minimal"],
+          temperature: "average",
+          packingHabits: ["light"],
+        }}
         onBack={() => {}}
+        onSaved={() => {}}
       />
     </LangProvider>
   );
