@@ -6,6 +6,7 @@ export type Lang = "en" | "zh";
 
 export const STRINGS = {
   // nav / shell
+  brandName: { en: "WearRoute", zh: "行装" },
   navSignIn: { en: "Sign In", zh: "登录" },
   navCreateAccount: { en: "Create Account", zh: "注册" },
   navSignOut: { en: "Sign Out", zh: "退出登录" },
@@ -18,7 +19,7 @@ export const STRINGS = {
   landingEnter: { en: "Start the journey", zh: "继续旅程" },
 
   // login
-  loginTitle: { en: "Sign in to WearRoute", zh: "登录 WearRoute" },
+  loginTitle: { en: "Sign in to WearRoute", zh: "登录行装" },
   loginSubtitle: {
     en: "Your wardrobe, your trips, one plan.",
     zh: "你的衣橱、你的行程,一份方案。",
@@ -32,7 +33,7 @@ export const STRINGS = {
 
   // register step 1
   step1: { en: "Step 1 of 2", zh: "第 1 步,共 2 步" },
-  registerTitle: { en: "Create your WearRoute account", zh: "创建 WearRoute 账号" },
+  registerTitle: { en: "Create your WearRoute account", zh: "创建行装账号" },
   registerSubtitle: {
     en: "One account. Every outfit. Every trip.",
     zh: "一个账号,所有穿搭与行程。",
@@ -50,7 +51,7 @@ export const STRINGS = {
   quizTitle: { en: "Tell us about yourself", zh: "介绍一下你自己" },
   quizSubtitle: {
     en: "WearRoute tailors every outfit to you. Complete this to finish creating your account.",
-    zh: "WearRoute 会为你量身定制每套穿搭。完成问卷即注册成功。",
+    zh: "行装会为你量身定制每套穿搭。完成问卷即注册成功。",
   },
   name: { en: "Name", zh: "姓名" },
   gender: { en: "Gender", zh: "性别" },
@@ -193,7 +194,7 @@ export const STRINGS = {
   profileRequired: { en: "Required", zh: "必填" },
   dashFooter: {
     en: "WearRoute — an AI scenario wardrobe. Sections open detailed pages as they are built.",
-    zh: "WearRoute —— AI 场景衣橱。各板块的详细页面将陆续上线。",
+    zh: "行装 —— AI 场景衣橱。各板块的详细页面将陆续上线。",
   },
 
   // trip planner (scenario picker)
@@ -264,14 +265,14 @@ export const STRINGS = {
   chatTitle: { en: "Assistant", zh: "助手" },
   chatGreeting: {
     en: "Hi! I'm your WearRoute assistant. Ask me what to wear today, or tell me about a trip — destination, dates, occasions — and I'll plan outfits and a packing list.",
-    zh: "你好!我是你的 WearRoute 助手。可以问我今天穿什么,或告诉我行程——目的地、日期、场合——我来帮你规划穿搭和行李清单。",
+    zh: "你好!我是你的行装助手。可以问我今天穿什么,或告诉我行程——目的地、日期、场合——我来帮你规划穿搭和行李清单。",
   },
   chatPlaceholder: { en: "Ask about outfits or packing…", zh: "问穿搭或打包…" },
   chatSend: { en: "Send", zh: "发送" },
   chatThinking: { en: "Thinking…", zh: "思考中…" },
   chatUnavailable: { en: "The assistant is unavailable.", zh: "助手暂不可用。" },
-  chatOpen: { en: "Open WearRoute assistant", zh: "打开 WearRoute 助手" },
-  chatClose: { en: "Close WearRoute assistant", zh: "关闭 WearRoute 助手" },
+  chatOpen: { en: "Open WearRoute assistant", zh: "打开行装助手" },
+  chatClose: { en: "Close WearRoute assistant", zh: "关闭行装助手" },
   chatCloseDialog: { en: "Close assistant", zh: "关闭助手" },
 
   // wardrobe
@@ -336,7 +337,7 @@ export const STRINGS = {
   pkWardrobeGap: { en: "Wardrobe gap", zh: "衣橱缺口" },
 
   // phone upload page
-  phoneTitle: { en: "WearRoute Photo Upload", zh: "WearRoute 拍照上传" },
+  phoneTitle: { en: "WearRoute Photo Upload", zh: "行装拍照上传" },
   phoneOpening: {
     en: "Opening the camera… if nothing happens, tap the button below.",
     zh: "正在调起相机…若没反应,点下面的按钮。",

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { DatabaseSync } from "node:sqlite";
 import type { GeneratedPacking } from "./trip-agent-types.ts";
 import type { StoredGeneratedPacking } from "./packing.ts";
+import type { AsyncValue } from "./async-value.ts";
 
 export type GeneratedPackingRecord = {
   tripPlanId: string;
@@ -15,9 +16,9 @@ export type PackingPlanStore = {
     tripPlanId: string,
     tripDays: number,
     packing: GeneratedPacking
-  ) => GeneratedPackingRecord;
-  get: (userId: string, tripPlanId: string) => GeneratedPackingRecord | null;
-  latest: (userId: string, scenario?: string) => GeneratedPackingRecord | null;
+  ) => AsyncValue<GeneratedPackingRecord>;
+  get: (userId: string, tripPlanId: string) => AsyncValue<GeneratedPackingRecord | null>;
+  latest: (userId: string, scenario?: string) => AsyncValue<GeneratedPackingRecord | null>;
 };
 
 export function createPackingPlanStore(db: DatabaseSync): PackingPlanStore {

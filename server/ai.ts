@@ -83,7 +83,7 @@ export function structuredResponseRequestBody(
     text: {
       format: {
         type: "json_schema",
-        name: "smartpack_trip_plan",
+        name: "wearroute_trip_plan",
         strict: true,
         schema: options.schema,
       },

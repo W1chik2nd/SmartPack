@@ -28,7 +28,11 @@ export type * from "./api-types";
 
 type AuthResponse = { token: string; user: User };
 
-const TOKEN_KEY = "smartpack_token";
+const TOKEN_KEY = "wearroute_token";
+const apiEnv = (import.meta as ImportMeta & {
+  env?: { VITE_API_BASE_URL?: string };
+}).env;
+const API_BASE_URL = (apiEnv?.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -64,7 +68,7 @@ async function request<T>(
   // reads like a validation bug. Name the real problem instead.
   let res: Response;
   try {
-    res = await fetch(path, { ...options, headers });
+    res = await fetch(`${API_BASE_URL}${path}`, { ...options, headers });
   } catch (err) {
     const detail = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
     throw new Error(
@@ -157,7 +161,7 @@ export function deleteWardrobeItem(id: string): Promise<{ ok: boolean }> {
 
 /** 照片地址。带 token 查询参数,因为 <img> 标签发不出 Authorization 头。 */
 export function wardrobePhotoUrl(id: string): string {
-  return `/api/wardrobe/photo/${encodeURIComponent(id)}?token=${encodeURIComponent(
+  return `${API_BASE_URL}/api/wardrobe/photo/${encodeURIComponent(id)}?token=${encodeURIComponent(
     getToken() ?? ""
   )}`;
 }

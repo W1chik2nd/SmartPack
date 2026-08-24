@@ -1,4 +1,4 @@
-# AGENTS.md — SmartPack 项目 AI 协作规约
+# AGENTS.md — WearRoute 项目 AI 协作规约
 
 这是给所有 AI coding agent 看的唯一事实来源。开工前先读完这份。
 `CLAUDE.md` 只是指向本文件的指针,不要在那边另写规则。
@@ -7,7 +7,7 @@
 
 ## 1. 这是什么项目
 
-SmartPack:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么、行李带什么,都交给 AI,不用动脑、不会带错。**
+WearRoute:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么、行李带什么,都交给 AI,不用动脑、不会带错。**
 
 它把五样东西揉在一起做决策:个人衣橱 + 穿衣偏好 + 行程场景 + 目的地天气 + 行李空间限制,一次性生成可直接执行的穿搭方案和打包清单。
 
@@ -24,9 +24,8 @@ SmartPack:AI 场景化衣橱 + 打包助手。一句话——**出门穿什么�
 - web 端(`client/` + `server/`)已经跑起来了,是当前的主线。
 - `ios/` 下是原生 SwiftUI 客户端,覆盖 web 端的全部页面,**调同一套后端 API,不含业务逻辑**。
   目录结构、和 web 的逐文件对应关系、手机适配清单都在 `ios/README.md`。
-- iOS 端已用真实 iOS SDK 编译通过(零警告),并在 iPhone 17 模拟器上跑起来过。
-  注意这台机器的 Xcode 是 **beta 且不在 `/Applications`**,命令行构建要带 `DEVELOPER_DIR`,
-  见第 10 节。
+- iOS 端已用真实 iOS SDK 编译通过(零警告),并在 iPhone 模拟器和真机上跑起来过。
+  这台机器使用 `/Applications/Xcode-beta.app`,命令行构建要带 `DEVELOPER_DIR`,见第 10 节。
 
 ---
 
@@ -81,7 +80,7 @@ web 和 iOS(SwiftUI)两端前端不能复用代码,能复用的只有后端。�
 **Web app(当前阶段,已定):**
 - 前端:**React + TypeScript + Vite**
 - 后端:**Node + TypeScript**
-- 数据库:**SQLite** 起步(开发用,零配置),上线前再平滑迁移到 PostgreSQL
+- 数据库:本地开发使用 **SQLite**,生产环境使用 **PostgreSQL / Neon**
 - 前后端同为 TypeScript,类型尽量共享,减少上下文切换
 
 **iOS(已定):**
@@ -134,23 +133,23 @@ web 和 iOS(SwiftUI)两端前端不能复用代码,能复用的只有后端。�
 
 ## 10. 常用命令
 
-构建 iOS app。**Xcode 是 beta 且装在 `~/Downloads`**,`xcode-select` 还指向 Command Line
-Tools,所以要显式给 `DEVELOPER_DIR`(不需要 sudo):
+构建 iOS app。**Xcode 是 beta 且装在 `/Applications/Xcode-beta.app`**,命令行构建要显式给
+`DEVELOPER_DIR`(不需要 sudo):
 
 ```bash
-DEVELOPER_DIR=/Users/xavier/Downloads/Xcode-beta.app/Contents/Developer xcodebuild -project ios/SmartPack.xcodeproj -scheme SmartPack -destination 'platform=iOS Simulator,name=iPhone 17' build
+DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer xcodebuild -project ios/SmartPack.xcodeproj -scheme SmartPack -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
 ```
 
 装到模拟器上跑:
 
 ```bash
-DEVELOPER_DIR=/Users/xavier/Downloads/Xcode-beta.app/Contents/Developer xcrun simctl install "iPhone 17" <DerivedData>/Build/Products/Debug-iphonesimulator/SmartPack.app
+DEVELOPER_DIR=/Applications/Xcode-beta.app/Contents/Developer xcrun simctl install "iPhone 17 Pro" <DerivedData>/Build/Products/Debug-iphonesimulator/SmartPack.app
 ```
 
 设备名从 `xcrun simctl list devices available` 里挑。
 
-把 Xcode 挪到 `/Applications` 并 `sudo xcode-select -s` 之后,上面的 `DEVELOPER_DIR`
-前缀就可以省掉。
+执行 `sudo xcode-select -s /Applications/Xcode-beta.app/Contents/Developer` 之后,上面的
+`DEVELOPER_DIR` 前缀就可以省掉。
 
 ---
 

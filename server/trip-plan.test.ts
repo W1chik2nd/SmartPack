@@ -17,7 +17,7 @@ import { normalizePlaces } from "./geocode.ts";
 
 /** 一个带 users 表的临时库 —— trip_plans.user_id 有外键指过去。 */
 function freshDb() {
-  const dir = mkdtempSync(join(tmpdir(), "smartpack-trip-"));
+  const dir = mkdtempSync(join(tmpdir(), "wearroute-trip-"));
   const db = new DatabaseSync(join(dir, "test.db"));
   db.exec(`
     CREATE TABLE users (id TEXT PRIMARY KEY, email TEXT, name TEXT);

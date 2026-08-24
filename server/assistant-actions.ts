@@ -4,6 +4,7 @@ import { isIsoDate, tripDayCount, MAX_TRIP_DAYS } from "./trip-input.ts";
 import type { TripPlanStore } from "./trip-plan.ts";
 import type { WardrobeStore, NewItem, ItemPatch } from "./wardrobe.ts";
 import { validateProfile, type ProfileValues } from "./profile.ts";
+import type { AsyncValue } from "./async-value.ts";
 
 export const ASSISTANT_PAGES = [
   "home", "trips", "tripSetup", "itinerary", "wardrobe", "profile", "packing",
@@ -43,8 +44,8 @@ export type AssistantActionContext = {
   scenarioIds: ReadonlySet<string>;
   wardrobe: WardrobeStore;
   tripPlans: TripPlanStore;
-  updateProfile: (values: ProfileValues) => unknown;
-  currentProfile: () => Record<string, unknown>;
+  updateProfile: (values: ProfileValues) => AsyncValue<unknown>;
+  currentProfile: () => AsyncValue<Record<string, unknown>>;
 };
 
 export type AssistantDataContext = AssistantActionContext & {
@@ -149,21 +150,21 @@ export function parseAssistantEnvelope(content: string): AssistantEnvelope {
   return { reply, actions };
 }
 
-export function executeAssistantActions(
+export async function executeAssistantActions(
   actions: AssistantAction[], ctx: AssistantActionContext
-): { actions: ClientAssistantAction[]; errors: string[] } {
+): Promise<{ actions: ClientAssistantAction[]; errors: string[] }> {
   const completed: ClientAssistantAction[] = [];
   const errors: string[] = [];
   for (const action of actions) {
     if (action.type === "navigate") { completed.push(action); continue; }
     if (action.type === "updateProfile") {
-      const profile = validateProfile({ ...ctx.currentProfile(), ...action.profile });
-      if (!profile.ok) { errors.push(profile.error); continue; }
-      completed.push({ type: "profileUpdated", user: ctx.updateProfile(profile.values) });
+      const profile = validateProfile({ ...(await ctx.currentProfile()), ...action.profile });
+      if (profile.ok === false) { errors.push(profile.error); continue; }
+      completed.push({ type: "profileUpdated", user: await ctx.updateProfile(profile.values) });
       continue;
     }
     if (action.type === "addWardrobeItem") {
-      ctx.wardrobe.add(ctx.userId, action.item);
+      await ctx.wardrobe.add(ctx.userId, action.item);
       completed.push({ type: "wardrobeChanged" });
       continue;
     }
@@ -173,12 +174,12 @@ export function executeAssistantActions(
       continue;
     }
     if (action.type === "updateWardrobeItem") {
-      if (!ctx.wardrobe.update(ctx.userId, action.id, action.patch)) errors.push("Wardrobe item not found.");
+      if (!(await ctx.wardrobe.update(ctx.userId, action.id, action.patch))) errors.push("Wardrobe item not found.");
       else completed.push({ type: "wardrobeChanged" });
       continue;
     }
     if (action.type === "deleteWardrobeItem") {
-      if (!ctx.wardrobe.remove(ctx.userId, action.id)) errors.push("Wardrobe item not found.");
+      if (!(await ctx.wardrobe.remove(ctx.userId, action.id))) errors.push("Wardrobe item not found.");
       else completed.push({ type: "wardrobeChanged" });
       continue;
     }
@@ -191,7 +192,7 @@ export function executeAssistantActions(
       errors.push("The trip details are incomplete or invalid.");
       continue;
     }
-    ctx.tripPlans.save(ctx.userId, { ...p, placeDetail: p.placeDetail ?? "" });
+    await ctx.tripPlans.save(ctx.userId, { ...p, placeDetail: p.placeDetail ?? "" });
     completed.push({ type: "tripCreated" }, { type: "navigate", page: "home" });
   }
   return { actions: completed, errors };

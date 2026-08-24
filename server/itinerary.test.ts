@@ -18,7 +18,7 @@ const ANNA = "user-anna";
 const BEN = "user-ben";
 
 before(() => {
-  dir = mkdtempSync(join(tmpdir(), "smartpack-itin-"));
+  dir = mkdtempSync(join(tmpdir(), "wearroute-itin-"));
   db = new DatabaseSync(join(dir, "test.db"));
   // trips.user_id 外键指向 users,建一张最小的 users 表满足引用。
   db.exec(`

@@ -4,6 +4,7 @@
 // 两条都是只读查询,没有自己的表:场景目录是服务端常量,天气来自 Open-Meteo。
 import { type IncomingMessage, type ServerResponse } from "node:http";
 import { currentWeather, DEFAULT_COORDS } from "./weather.ts";
+import type { AsyncValue } from "./async-value.ts";
 
 // 场景目录(AGENTS.md §3):打包场景的集合放服务端,不放客户端。
 // web 和将来的 iOS 端都只渲染这里返回的内容,所以这份列表 —— 以及之后按
@@ -30,7 +31,7 @@ type Ctx = {
   url: URL;
   json: (res: ServerResponse, status: number, body: unknown) => void;
   /** 从 Authorization 头解析用户;未登录返回 null。 */
-  userFromHeader: () => { id: string } | null;
+  userFromHeader: () => AsyncValue<{ id: string } | null>;
 };
 
 /** 处理了就返回 true,让 app.ts 知道不用继续匹配后面的路由。 */
@@ -59,7 +60,7 @@ export async function handleCatalogRoutes(ctx: Ctx): Promise<boolean> {
   if (req.method === "GET" && url.pathname === "/api/scenarios") {
     // 仅登录可见:场景选择是登录后的第一屏。目录本身不是秘密,但一起挡在
     // 同一道检查后面,免得留一个以后还要收紧的匿名入口。
-    if (!userFromHeader()) {
+    if (!(await userFromHeader())) {
       json(res, 401, { error: "Not signed in." });
       return true;
     }

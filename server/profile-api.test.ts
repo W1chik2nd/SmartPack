@@ -7,7 +7,7 @@ import { join } from "node:path";
 import { createApp } from "./app.ts";
 
 test("registration profile is returned from SQLite and remains editable", async () => {
-  const dir = mkdtempSync(join(tmpdir(), "smartpack-profile-api-"));
+  const dir = mkdtempSync(join(tmpdir(), "wearroute-profile-api-"));
   const app = createApp(join(dir, "test.db"));
   const server = createServer(app.handle);
   await new Promise<void>((resolve) => server.listen(0, resolve));

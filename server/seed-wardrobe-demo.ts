@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 import { createWardrobeStore } from "./wardrobe.ts";
 
 const root = dirname(fileURLToPath(import.meta.url));
-const dbPath = join(root, "data", "smartpack.db");
+const dbPath = join(root, "data", "wearroute.db");
 const email = process.argv[2] ?? "test@example.com";
 
 if (!existsSync(dbPath)) {

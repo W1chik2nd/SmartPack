@@ -132,7 +132,7 @@ const generated: GeneratedTripPlan = {
 };
 
 before(async () => {
-  dir = mkdtempSync(join(tmpdir(), "smartpack-generation-"));
+  dir = mkdtempSync(join(tmpdir(), "wearroute-generation-"));
   app = createApp(join(dir, "test.db"), {
     generateTrip: async (input) => {
       received = input;

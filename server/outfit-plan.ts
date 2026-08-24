@@ -258,7 +258,13 @@ export function buildOutfitPlan(
   trip: TripPlan | null,
   wardrobe: WardrobeItem[],
   now = new Date(),
-  agentDays?: { date: string; place: string; scene: string; outfit: BilingualItem[] }[]
+  agentDays?: {
+    date: string;
+    place: string;
+    placeEn: string;
+    scene: string;
+    outfit: BilingualItem[];
+  }[]
 ): OutfitPlan {
   const today = isoToday(now);
   const startDate = trip?.startDate ?? today;

@@ -13,6 +13,7 @@
 //   US 7.1 — a tickable checklist so nothing gets left behind
 //   US 1.3 — surface how often each core piece is used
 import type {
+  CorePiece,
   EssentialItem,
   PackingCategory,
   PackingItem,

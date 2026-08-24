@@ -12,6 +12,7 @@ import {
   parseTripInput,
   tripDayCount,
 } from "./trip-input.ts";
+import type { AsyncValue } from "./async-value.ts";
 export {
   estimateTripGeneration,
   isIsoDate,
@@ -28,7 +29,7 @@ type Ctx = {
   scenarioIds: ReadonlySet<string>;
   json: (res: ServerResponse, status: number, body: unknown) => void;
   readBody: (req: IncomingMessage, maxBytes?: number) => Promise<any>;
-  userFromHeader: () => { id: string } | null;
+  userFromHeader: () => AsyncValue<{ id: string } | null>;
 };
 
 /** 处理了就返回 true,让 app.ts 知道不用继续匹配后面的路由。 */
@@ -39,12 +40,12 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
 
   const weatherMatch = path.match(/^\/api\/trip-plans\/([^/]+)\/weather$/);
   if (method === "GET" && weatherMatch) {
-    const user = ctx.userFromHeader();
+    const user = await ctx.userFromHeader();
     if (!user) {
       json(res, 401, { error: "Not signed in." });
       return true;
     }
-    const plan = tripPlans.get(user.id, weatherMatch[1]);
+    const plan = await tripPlans.get(user.id, weatherMatch[1]);
     if (!plan) {
       json(res, 404, { error: "Trip not found." });
       return true;
@@ -55,12 +56,12 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
 
   const itemMatch = path.match(/^\/api\/trip-plans\/([^/]+)$/);
   if (method === "GET" && itemMatch) {
-    const user = ctx.userFromHeader();
+    const user = await ctx.userFromHeader();
     if (!user) {
       json(res, 401, { error: "Not signed in." });
       return true;
     }
-    const plan = tripPlans.get(user.id, itemMatch[1]);
+    const plan = await tripPlans.get(user.id, itemMatch[1]);
     if (!plan) {
       json(res, 404, { error: "Trip not found." });
       return true;
@@ -75,12 +76,12 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
   }
 
   if (method === "DELETE" && itemMatch) {
-    const user = ctx.userFromHeader();
+    const user = await ctx.userFromHeader();
     if (!user) {
       json(res, 401, { error: "Not signed in." });
       return true;
     }
-    if (!tripPlans.remove(user.id, itemMatch[1])) {
+    if (!(await tripPlans.remove(user.id, itemMatch[1]))) {
       json(res, 404, { error: "Trip not found." });
       return true;
     }
@@ -92,7 +93,7 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
   // 要登录态:这个接口会代我们向 Nominatim 发请求,开放给匿名用户等于把它变成
   // 公开代理,既会拖累第三方额度,也让我们的 User-Agent 承担滥用后果。
   if (method === "GET" && path === "/api/places") {
-    const user = ctx.userFromHeader();
+    const user = await ctx.userFromHeader();
     if (!user) {
       json(res, 401, { error: "Not signed in." });
       return true;
@@ -119,7 +120,7 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
 
   // 保存行程:场景 + 目的地 + 日期区间。
   if (method === "POST" && path === "/api/trip-plans") {
-    const user = ctx.userFromHeader();
+    const user = await ctx.userFromHeader();
     if (!user) {
       json(res, 401, { error: "Not signed in." });
       return true;
@@ -127,22 +128,22 @@ export async function handleTripPlanRoutes(ctx: Ctx): Promise<boolean> {
     const body = await readBody(req);
 
     const parsed = parseTripInput(body, scenarioIds);
-    if (!parsed.ok) {
+    if (parsed.ok === false) {
       json(res, 400, { error: parsed.error });
       return true;
     }
-    json(res, 201, { plan: tripPlans.save(user.id, parsed.plan) });
+    json(res, 201, { plan: await tripPlans.save(user.id, parsed.plan) });
     return true;
   }
 
   // 行程列表(仪表盘「最近日程」和行程页回显都会用到)。
   if (method === "GET" && path === "/api/trip-plans") {
-    const user = ctx.userFromHeader();
+    const user = await ctx.userFromHeader();
     if (!user) {
       json(res, 401, { error: "Not signed in." });
       return true;
     }
-    json(res, 200, { plans: tripPlans.list(user.id) });
+    json(res, 200, { plans: await tripPlans.list(user.id) });
     return true;
   }
 

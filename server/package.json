@@ -1,11 +1,18 @@
 {
-  "name": "smartpack-server",
+  "name": "wearroute-server",
   "version": "0.1.0",
   "private": true,
   "type": "module",
   "scripts": {
     "dev": "node --experimental-strip-types --use-env-proxy --env-file-if-exists=.env index.ts",
-    "start": "node --experimental-strip-types --use-env-proxy --env-file-if-exists=.env index.ts",
+    "start": "node --experimental-strip-types index.ts",
+    "migrate:sqlite": "node --experimental-strip-types migrate-sqlite.ts",
     "test": "node --experimental-strip-types --test app.test.ts app-features.test.ts assistant-actions.test.ts assistant-context.test.ts assistant-routes.test.ts profile.test.ts profile-api.test.ts integrations.test.ts upload-session.test.ts wardrobe.test.ts vision.test.ts packing.test.ts itinerary.test.ts trip-plan.test.ts trip-plan-routes.test.ts trip-agent.test.ts trip-generation.test.ts outfit-plan.test.ts"
+  },
+  "devDependencies": {
+    "@types/pg": "8.23.1"
+  },
+  "dependencies": {
+    "pg": "8.23.0"
   }
 }

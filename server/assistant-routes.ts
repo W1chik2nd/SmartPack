@@ -11,6 +11,7 @@ import {
   parseAssistantEnvelope,
   type AssistantDataContext,
 } from "./assistant-actions.ts";
+import type { AsyncValue } from "./async-value.ts";
 
 /** buildSystemPrompt 需要的用户画像字段。 */
 type ProfileUser = Parameters<typeof buildSystemPrompt>[0];
@@ -22,8 +23,8 @@ type Ctx = {
   json: (res: ServerResponse, status: number, body: unknown) => void;
   readBody: (req: IncomingMessage, maxBytes?: number) => Promise<any>;
   /** 从 Authorization 头解析用户;未登录返回 null。 */
-  userFromHeader: () => ProfileUser | null;
-  actionContext: () => AssistantDataContext | null;
+  userFromHeader: () => AsyncValue<ProfileUser | null>;
+  actionContext: () => AsyncValue<AssistantDataContext | null>;
 };
 
 /** 处理了就返回 true,让 app.ts 知道不用继续匹配后面的路由。 */
@@ -32,7 +33,7 @@ export async function handleAssistantRoutes(ctx: Ctx): Promise<boolean> {
 
   if (req.method !== "POST" || url.pathname !== "/api/chat") return false;
 
-  const user = userFromHeader();
+  const user = await userFromHeader();
   if (!user) {
     json(res, 401, { error: "Not signed in." });
     return true;
@@ -63,7 +64,7 @@ export async function handleAssistantRoutes(ctx: Ctx): Promise<boolean> {
     return true;
   }
 
-  const actionContext = ctx.actionContext();
+  const actionContext = await ctx.actionContext();
   if (!actionContext) {
     json(res, 401, { error: "Not signed in." });
     return true;
@@ -71,7 +72,7 @@ export async function handleAssistantRoutes(ctx: Ctx): Promise<boolean> {
   const systemPrompt = buildSystemPrompt(user) + actionContext.promptContext;
   const content = await chatCompletion(systemPrompt, messages);
   const envelope = parseAssistantEnvelope(content);
-  const result = executeAssistantActions(envelope.actions, actionContext);
+  const result = await executeAssistantActions(envelope.actions, actionContext);
   const resultMessage = result.actions.length > 0
     ? "Action completed successfully."
     : "";

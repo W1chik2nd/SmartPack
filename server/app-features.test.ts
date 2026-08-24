@@ -13,7 +13,7 @@ let token: string;
 let dir: string;
 
 before(async () => {
-  dir = mkdtempSync(join(tmpdir(), "smartpack-features-test-"));
+  dir = mkdtempSync(join(tmpdir(), "wearroute-features-test-"));
   app = createApp(join(dir, "test.db"));
   server = createServer(app.handle);
   await new Promise<void>((resolve) => server.listen(0, resolve));

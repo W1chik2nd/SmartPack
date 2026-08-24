@@ -201,7 +201,7 @@ export default function Profile({ user, onBack, onSaved }: Props) {
           <span aria-hidden="true">←</span> {t("backToHome")}
         </button>
         <div>
-          <p className="profile-kicker">WearRoute / 03</p>
+          <p className="profile-kicker">{t("brandName")} / 03</p>
           <h1>{t("profileTitle")}</h1>
         </div>
       </header>
