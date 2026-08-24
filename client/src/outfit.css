@@ -205,7 +205,7 @@
   image-rendering: pixelated;
 }
 
-.dress-piece:not(.dress-piece-photo) {
+.dress-piece {
   filter:
     drop-shadow(var(--pixel-outline) 0 0 var(--black))
     drop-shadow(calc(var(--pixel-outline) * -1) 0 0 var(--black))
@@ -328,25 +328,6 @@
   bottom: 1px;
   width: 94px;
   height: 64px;
-}
-
-/* 上传照片先缩到低分辨率再放大，浏览器用 nearest-neighbour 形成真实像素格。 */
-.dress-piece-photo {
-  width: 176px;
-  height: 126px;
-  display: grid;
-  place-items: center;
-  border: 4px solid var(--black);
-  background: var(--bg);
-  overflow: hidden;
-}
-.dress-piece-photo img {
-  width: 48px;
-  height: 36px;
-  object-fit: cover;
-  background: var(--bg);
-  image-rendering: pixelated;
-  transform: scale(3.6667, 3.5);
 }
 
 .tone-red { --piece-color: var(--red); --detail-color: var(--red); }

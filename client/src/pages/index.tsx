@@ -10,7 +10,7 @@ import {
   type OutfitDay,
 } from "../api";
 import TripSwitcher from "../components/TripSwitcher";
-import OutfitPieceVisual from "../components/OutfitPieceVisual";
+import DashboardOutfit from "../components/DashboardOutfit";
 import { useLang } from "../i18n/useLang";
 import { SCENARIO_LABELS } from "../i18n/strings";
 import { dashboardTrips, tripAfterDeletionId } from "../lib/trip-dashboard";
@@ -306,26 +306,10 @@ export default function Home({
                     onClick={() => onOpenOutfit(selectedTrip.id)}
                   >
                     <h2>{t("todaysOutfit")}</h2>
-                    <span className="outfit-figure" aria-label={todayOutfit?.place ?? selectedTrip.placeName}>
-                      {todayOutfit ? (
-                        todayOutfit.pieces
-                          .filter(
-                            (piece) =>
-                              piece.kind === "top" ||
-                              piece.kind === "bottom" ||
-                              piece.kind === "shoes" ||
-                              piece.kind === "accessory"
-                          )
-                          .map((piece) => (
-                            <OutfitPieceVisual key={piece.id} piece={piece} compact />
-                          ))
-                      ) : (
-                        <>
-                          <span className="outfit-shirt pixel-garment" />
-                          <span className="outfit-trousers pixel-garment" />
-                        </>
-                      )}
-                    </span>
+                    <DashboardOutfit
+                      day={todayOutfit}
+                      placeName={selectedTrip.placeName}
+                    />
                     <span className="card-arrow" aria-hidden="true">›</span>
                   </button>
 
