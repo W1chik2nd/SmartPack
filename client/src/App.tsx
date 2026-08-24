@@ -24,6 +24,7 @@ import PackingList from "./pages/PackingList";
 import TripSetup from "./pages/TripSetup";
 import Profile from "./pages/Profile";
 import OutfitOverview from "./pages/OutfitOverview";
+import TripWeather from "./pages/TripWeather";
 import ChatWidget from "./components/ChatWidget";
 
 type Route =
@@ -38,7 +39,8 @@ type Route =
   | "wardrobe"
   | "profile"
   | "packing"
-  | "outfit";
+  | "outfit"
+  | "weather";
 
 /** ?upload=<token> 是手机扫码进来的上传页,免登录。 */
 const uploadToken = new URLSearchParams(window.location.search).get("upload");
@@ -61,6 +63,7 @@ function Shell() {
     undefined
   );
   const [retryPlan, setRetryPlan] = useState<TripPlan | null>(null);
+  const [weatherTripPlanId, setWeatherTripPlanId] = useState<string | null>(null);
 
   useEffect(() => {
     // 手机上传页不需要登录态,跳过 me() 免得白等一次请求。
@@ -251,6 +254,10 @@ function Shell() {
             setPackingTripPlanId(tripPlanId);
             setRoute("packing");
           }}
+          onOpenWeather={(tripPlanId) => {
+            setWeatherTripPlanId(tripPlanId);
+            setRoute("weather");
+          }}
           onOpenProfile={() => setRoute("profile")}
           onOpenOutfit={(tripPlanId) => {
             setOutfitTripPlanId(tripPlanId);
@@ -312,6 +319,12 @@ function Shell() {
       {route === "outfit" && user && (
         <OutfitOverview
           tripPlanId={outfitTripPlanId}
+          onBack={() => setRoute("home")}
+        />
+      )}
+      {route === "weather" && user && weatherTripPlanId && (
+        <TripWeather
+          tripPlanId={weatherTripPlanId}
           onBack={() => setRoute("home")}
         />
       )}
