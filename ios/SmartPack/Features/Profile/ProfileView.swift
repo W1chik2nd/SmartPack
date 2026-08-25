@@ -98,8 +98,21 @@ struct ProfileView: View {
             if let avatar = avatarName(answers) {
                 ZStack(alignment: .bottom) {
                     Circle().fill(Theme.white)
-                    BundleImage(name: avatar, contentMode: .fit)
-                        .frame(width: 188, height: 198, alignment: .bottom)
+                    if avatar == ProfileAvatar.neutralAsset {
+                        // The neutral plate carries its own grey ground, so it
+                        // covers the circle instead of standing inside it — at
+                        // `.fit` its rectangle reads as a grey box on white.
+                        // Mirrors the `object-fit: cover` rule for this one
+                        // asset in `client/src/profile.css`. Aligned to the top
+                        // because the crop has to come off the shoulders: the
+                        // head sits too near the plate's top edge to survive a
+                        // centred one.
+                        BundleImage(name: avatar, contentMode: .fill)
+                            .frame(width: 210, height: 210, alignment: .top)
+                    } else {
+                        BundleImage(name: avatar, contentMode: .fit)
+                            .frame(width: 188, height: 198, alignment: .bottom)
+                    }
                 }
                 .frame(width: 210, height: 210)
                 .clipShape(Circle())
@@ -327,11 +340,15 @@ struct ProfileView: View {
 }
 
 enum ProfileAvatar {
+    /// Every gender outside the two illustrated portraits — non-binary,
+    /// prefer-not-to-say, and unanswered — lands on this one.
+    static let neutralAsset = "profile-neutral"
+
     static func assetName(gender: String?) -> String {
         switch gender {
         case "male": return "profile-male"
         case "female": return "profile-female"
-        default: return "profile-neutral"
+        default: return neutralAsset
         }
     }
 }

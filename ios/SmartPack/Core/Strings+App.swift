@@ -6,6 +6,10 @@ enum Strings {
 
     // MARK: - Nav / shell
 
+    /// The wordmark itself is translated, not transliterated: the Chinese
+    /// product name is 行装. Mirrors `brandName` in `client/src/i18n/strings.ts`.
+    static let brandName = LocalizedText(en: "WearRoute", zh: "行装")
+
     static let navSignIn = LocalizedText(en: "Sign In", zh: "登录")
     static let navCreateAccount = LocalizedText(en: "Create Account", zh: "注册")
     static let navSignOut = LocalizedText(en: "Sign Out", zh: "退出登录")

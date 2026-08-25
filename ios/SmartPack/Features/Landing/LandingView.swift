@@ -30,9 +30,9 @@ struct LandingView: View {
                     LogoMark(color: Theme.blue)
                         .frame(width: 46, height: 41)
                         .alignmentGuide(.firstTextBaseline) { $0.height * 0.86 }
-                    Text("WearRoute")
+                    Text(Strings.brandName(lang))
                         .font(Theme.heavy(40))
-                        .tracking(-0.8)
+                        .tracking(lang == .zh ? 0 : -0.8)
                         .foregroundStyle(Theme.blue)
                 }
                 .opacity(presented ? 1 : 0)

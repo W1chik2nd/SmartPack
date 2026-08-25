@@ -4,6 +4,7 @@ import SwiftUI
 /// blank cyan frame. It uses only the established Bauhaus tokens and logo.
 struct LaunchIntroView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.lang) private var lang
     @State private var appeared = false
 
     var body: some View {
@@ -16,9 +17,9 @@ struct LaunchIntroView: View {
                     .rotationEffect(.degrees(appeared ? 0 : -8))
                     .scaleEffect(appeared ? 1 : 0.72)
 
-                Text("WEARROUTE")
+                Text(Strings.brandName(lang))
                     .font(Theme.heavy(32))
-                    .tracking(1.2)
+                    .tracking(lang == .zh ? 2 : -0.6)
                     .foregroundStyle(Theme.blue)
                     .offset(y: appeared ? 0 : 10)
 
@@ -33,7 +34,7 @@ struct LaunchIntroView: View {
             }
             .opacity(appeared ? 1 : 0)
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("WearRoute")
+            .accessibilityLabel(Strings.brandName(lang))
         }
         .onAppear {
             if reduceMotion {
