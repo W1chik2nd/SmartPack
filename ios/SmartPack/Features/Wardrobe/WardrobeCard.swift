@@ -1,9 +1,8 @@
 import SwiftUI
 
-/// One wardrobe piece: photo (or the hand-drawn tee when there is none), the
-/// count badge, a delete control, and the title/detail lines. The full detail
-/// text stays in the database for outfit analysis and is deliberately not
-/// printed on the card.
+/// One wardrobe piece rendered from the server-provided visual description.
+/// Uploaded photos remain analysis inputs and never replace the shared pixel
+/// representation used by the web and iOS wardrobes.
 struct WardrobeCard: View {
     let item: WardrobeItem
     let onDelete: () -> Void
@@ -13,21 +12,10 @@ struct WardrobeCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             ZStack(alignment: .topLeading) {
-                if item.hasPhoto {
-                    AsyncImage(url: APIClient.wardrobePhotoURL(id: item.id)) { image in
-                        image.resizable().aspectRatio(contentMode: .fill)
-                    } placeholder: {
-                        Theme.bg
-                    }
+                OutfitPieceVisual(piece: item.visual, scale: visualScale)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .frame(height: 132)
-                    .frame(maxWidth: .infinity)
-                    .clipped()
-                } else {
-                    TeeSketch()
-                        .frame(height: 132)
-                        .frame(maxWidth: .infinity)
-                        .background(Theme.bg)
-                }
+                    .background(Theme.bg)
 
                 Text("×\(item.count)")
                     .font(Theme.heavy(12))
@@ -66,18 +54,14 @@ struct WardrobeCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .bauhausCard(shadow: 4)
     }
-}
 
-/// The hand-drawn tee that stands in for a missing photo.
-struct TeeSketch: View {
-    var body: some View {
-        SVGPathShape(
-            data: "M30 12 L42 6 Q50 15 58 6 L70 12 L87 27 L74 39 L71 32 L72 76 Q50 84 28 76 L29 32 L26 39 L13 27 Z",
-            viewBox: CGRect(x: 0, y: 0, width: 100, height: 90)
-        )
-        .stroke(Theme.text, style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
-        .padding(Theme.space2)
-        .accessibilityHidden(true)
+    private var visualScale: CGFloat {
+        switch item.visual.kind {
+        case .top: 0.78
+        case .bottom: 0.72
+        case .shoes: 0.86
+        case .accessory: 1.35
+        }
     }
 }
 

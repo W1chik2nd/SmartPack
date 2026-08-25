@@ -175,13 +175,15 @@ private struct SignedInShell: View {
 /// Product identity belongs on Today; navigation and account actions use their
 /// standard iOS homes instead of repeating this web-style header on every page.
 struct HomeBrandBar: View {
+    @Environment(\.lang) private var lang
+
     var body: some View {
         HStack(spacing: 10) {
             LogoMark()
                 .frame(width: 30, height: 27)
-            Text("WEARROUTE")
+            Text(Strings.brandName(lang))
                 .font(Theme.heavy(17))
-                .tracking(-0.2)
+                .tracking(lang == .zh ? 0 : -0.2)
                 .foregroundStyle(Theme.text)
             Spacer(minLength: 0)
         }
@@ -191,7 +193,7 @@ struct HomeBrandBar: View {
         .background(Theme.bg)
         .overlay(alignment: .bottom) { Rule() }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("WearRoute")
+        .accessibilityLabel(Strings.brandName(lang))
     }
 }
 

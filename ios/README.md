@@ -42,6 +42,9 @@ open ios/SmartPack.xcodeproj
 并在 `NSAppTransportSecurity → NSExceptionDomains` 里加上同一个域名/IP。
 后端上 HTTPS 之后，这两处开发期例外都应该删掉。
 
+连接已部署的 HTTPS 后端时，按照
+[iOS 连接生产后端说明](../docs/ios-production-backend.md)配置地址、验证健康检查并重新安装 App。
+
 ## 和 web 端的对应关系
 
 | web | iOS |

@@ -20,21 +20,39 @@ enum WardrobeFilter: String, CaseIterable, Identifiable {
         }
     }
 
-    private var categories: [String] {
-        switch self {
-        case .all: return []
-        case .tops: return ["T恤", "衬衫", "针织衫", "卫衣", "外套", "上装", "衣服"]
-        case .pants: return ["裤装", "裤子"]
-        case .skirts: return ["裙装", "裙子"]
-        case .shoes: return ["鞋履", "鞋子"]
-        case .accessories: return ["配饰"]
-        }
-    }
-
     func apply(to items: [WardrobeItem]) -> [WardrobeItem] {
         guard self != .all else { return items }
-        let allowed = Set(categories)
-        return items.filter { allowed.contains($0.category) }
+        return items.filter { Self.category(of: $0) == self }
+    }
+
+    private static func category(of item: WardrobeItem) -> WardrobeFilter? {
+        let category = item.category.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let detail = "\(item.subtype) \(item.title)".lowercased()
+        let text = "\(item.category) \(item.subtype) \(item.title)".lowercased()
+
+        if ["top", "上衣", "上装", "衣服"].contains(category) { return .tops }
+        if ["accessory", "accessories", "配饰"].contains(category) { return .accessories }
+        if ["shoe", "shoes", "footwear", "鞋履", "鞋子"].contains(category) { return .shoes }
+        if ["bottom", "下装"].contains(category) {
+            return matches(detail, #"skirt|dress|裙装|裙子|半裙|连衣裙|a字裙"#) ? .skirts : .pants
+        }
+
+        if matches(text, #"skirt|dress|裙装|裙子|半裙|连衣裙|a字裙"#) { return .skirts }
+        if matches(text, #"accessor|配饰|包|帽|围巾|眼镜|腕表|手表|项链|腰带|皮带"#) {
+            return .accessories
+        }
+        if matches(text, #"shoe|sneaker|loafer|boot|sandal|鞋履|鞋子|鞋|靴"#) { return .shoes }
+        if matches(text, #"pants|trouser|jeans|shorts|bottom|裤装|裤子|长裤|短裤|牛仔裤|工装裤|下装"#) {
+            return .pants
+        }
+        if matches(text, #"top|shirt|tee|blouse|sweater|jacket|coat|hoodie|上衣|上装|t恤|衬衫|针织|卫衣|夹克|外套"#) {
+            return .tops
+        }
+        return nil
+    }
+
+    private static func matches(_ text: String, _ pattern: String) -> Bool {
+        text.range(of: pattern, options: .regularExpression) != nil
     }
 }
 
