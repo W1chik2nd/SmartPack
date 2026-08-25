@@ -13,11 +13,14 @@ struct AccessoryPiece: View {
             let h = geo.size.height
             switch piece.accessoryStyle ?? .bag {
             case .bag: bag(w, h)
+            case .tote: tote(w, h)
+            case .waistbag: waistbag(w, h)
             case .hat: hat(w, h)
             case .glasses: glasses(w, h)
             case .scarf: scarf(w, h)
             case .watch: watch(w, h)
             case .necklace: necklace(w, h)
+            case .belt: belt(w, h)
             }
         }
     }
@@ -46,6 +49,46 @@ struct AccessoryPiece: View {
                 .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: outline))
                 .frame(width: w * 0.84, height: h * 0.68)
                 .offset(x: w * 0.08, y: h * 0.32)
+        }
+    }
+
+    private func tote(_ w: CGFloat, _ h: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            ForEach([0.24, 0.62], id: \.self) { left in
+                Rectangle()
+                    .strokeBorder(Theme.black, lineWidth: max(2, outline))
+                    .frame(width: w * 0.14, height: h * 0.48)
+                    .offset(x: w * left, y: 0)
+            }
+            Rectangle()
+                .fill(accent)
+                .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: outline))
+                .frame(width: w * 0.82, height: h * 0.72)
+                .offset(x: w * 0.09, y: h * 0.28)
+            Rectangle()
+                .fill(Theme.white)
+                .frame(width: w * 0.18, height: h * 0.13)
+                .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: max(1.5, outline * 0.7)))
+                .offset(x: w * 0.41, y: h * 0.57)
+        }
+    }
+
+    private func waistbag(_ w: CGFloat, _ h: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            Rectangle()
+                .fill(Theme.black)
+                .frame(width: w, height: max(3, h * 0.12))
+                .offset(y: h * 0.25)
+            Rectangle()
+                .fill(accent)
+                .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: outline))
+                .frame(width: w * 0.66, height: h * 0.52)
+                .offset(x: w * 0.17, y: h * 0.30)
+            Rectangle()
+                .fill(Theme.white)
+                .frame(width: w * 0.30, height: max(3, h * 0.08))
+                .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: max(1.5, outline * 0.7)))
+                .offset(x: w * 0.35, y: h * 0.47)
         }
     }
 
@@ -135,6 +178,25 @@ struct AccessoryPiece: View {
                 .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: outline))
                 .frame(width: w * 0.22, height: h * 0.22)
                 .offset(x: w * 0.39, y: h * 0.68)
+        }
+    }
+
+    private func belt(_ w: CGFloat, _ h: CGFloat) -> some View {
+        ZStack(alignment: .topLeading) {
+            Rectangle()
+                .fill(accent)
+                .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: outline))
+                .frame(width: w, height: h * 0.28)
+                .offset(y: h * 0.36)
+            Rectangle()
+                .fill(Theme.white)
+                .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: max(2, outline * 1.2)))
+                .frame(width: w * 0.28, height: h * 0.50)
+                .offset(x: w * 0.36, y: h * 0.25)
+            Rectangle()
+                .fill(Theme.black)
+                .frame(width: w * 0.12, height: max(2, h * 0.08))
+                .offset(x: w * 0.50, y: h * 0.46)
         }
     }
 }

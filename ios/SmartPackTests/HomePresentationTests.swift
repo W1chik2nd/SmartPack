@@ -54,6 +54,34 @@ final class HomePresentationTests: XCTestCase {
         XCTAssertEqual(piece.wardrobeItemId, "wardrobe-1")
     }
 
+    func testLatestWardrobeVisualContractDecodes() throws {
+        let json = Data(#"{"items":[{"id":"wardrobe-1","title":"藏蓝轻薄夹克","category":"上衣","subtype":"夹克","count":1,"colors":["藏蓝"],"fit":"regular","material":"technical","seasons":["spring"],"styleTags":[],"details":"防风","hasPhoto":true,"createdAt":"2026-08-25T00:00:00Z","visual":{"id":"wardrobe-1","kind":"top","label":"藏蓝轻薄夹克","labelEn":"藏蓝轻薄夹克","tone":"blue","pattern":"solid","sleeve":"long","garmentStyle":"jacket","accessoryStyle":null,"fit":"regular","material":"technical","detail":"防风","wardrobeItemId":"wardrobe-1"}}]}"#.utf8)
+
+        let response = try JSONDecoder().decode(WardrobeItemsResponse.self, from: json)
+
+        XCTAssertEqual(response.items.first?.visual.garmentStyle, .jacket)
+        XCTAssertEqual(response.items.first?.visual.wardrobeItemId, "wardrobe-1")
+    }
+
+    func testEveryServerOutfitStyleHasAnIOSCase() {
+        for value in ["bag", "tote", "waistbag", "hat", "glasses", "scarf", "watch", "necklace", "belt"] {
+            XCTAssertNotNil(AccessoryStyle(rawValue: value), value)
+        }
+        for value in ["tee", "shirt", "knit", "jacket", "hoodie", "trousers", "skirt", "jeans", "shorts", "loafers", "sneakers", "boots"] {
+            XCTAssertNotNil(GarmentStyle(rawValue: value), value)
+        }
+    }
+
+    func testWardrobeFiltersSplitGenericBottomsBySubtype() {
+        let skirt = wardrobeItem(id: "skirt", title: "米色 A 字裙", category: "下装", subtype: "A字裙")
+        let trousers = wardrobeItem(id: "trousers", title: "藏蓝直筒裤", category: "下装", subtype: "直筒裤")
+        let top = wardrobeItem(id: "top", title: "黄色连帽卫衣", category: "上衣", subtype: "连帽卫衣")
+
+        XCTAssertEqual(WardrobeFilter.skirts.apply(to: [skirt, trousers, top]).map(\.id), ["skirt"])
+        XCTAssertEqual(WardrobeFilter.pants.apply(to: [skirt, trousers, top]).map(\.id), ["trousers"])
+        XCTAssertEqual(WardrobeFilter.tops.apply(to: [skirt, trousers, top]).map(\.id), ["top"])
+    }
+
     func testTripWeatherContractDecodes() throws {
         let json = Data(#"{"trip":{"id":"trip-1","destination":"Tromsø","destinationDetail":"Norway","startDate":"2026-08-25","endDate":"2026-08-26","dayCount":2},"forecast":{"source":"Open-Meteo","available":true,"note":"","days":[{"date":"2026-08-25","condition":"Rain","minTempC":8.2,"maxTempC":13.4,"precipitationProbability":75,"uvIndex":1.3,"maxWindKph":22.5}]}}"#.utf8)
 
@@ -130,6 +158,12 @@ final class HomePresentationTests: XCTestCase {
         )
     }
 
+    func testMapZoomControlsStayCompactAndTouchable() {
+        XCTAssertGreaterThanOrEqual(MapZoomControlLayout.buttonSize, 44)
+        XCTAssertEqual(MapZoomControlLayout.totalWidth, 101)
+        XCTAssertLessThan(MapZoomControlLayout.totalWidth, 120)
+    }
+
     func testWeatherArtworkUsesSharedConditionMapping() {
         XCTAssertEqual(WeatherArtwork.assetName(for: "Clear"), "weather-clear")
         XCTAssertEqual(WeatherArtwork.assetName(for: "Snow showers"), "weather-snow-showers")
@@ -192,6 +226,30 @@ final class HomePresentationTests: XCTestCase {
             material: .cotton,
             detail: "",
             wardrobeItemId: nil
+        )
+    }
+
+    private func wardrobeItem(
+        id: String,
+        title: String,
+        category: String,
+        subtype: String
+    ) -> WardrobeItem {
+        WardrobeItem(
+            id: id,
+            title: title,
+            category: category,
+            subtype: subtype,
+            count: 1,
+            colors: [],
+            fit: "regular",
+            material: "cotton",
+            seasons: [],
+            styleTags: [],
+            details: "",
+            hasPhoto: false,
+            createdAt: "2026-08-25T00:00:00Z",
+            visual: piece(id: id, kind: category == "上衣" ? .top : .bottom)
         )
     }
 }

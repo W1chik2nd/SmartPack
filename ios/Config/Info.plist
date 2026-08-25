@@ -20,43 +20,18 @@
 	<string>0.1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSCameraUsageDescription</key>
+	<string>拍照识别衣物,把它加进你的电子衣橱。Used to photograph clothing so WearRoute can add it to your wardrobe.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>从相册选择衣物照片或个人色彩分析照片。Used to pick clothing or personal-colour analysis photos.</string>
+	<!-- Production API origin. APIClient appends each /api/* path. -->
+	<key>SmartPackAPIBaseURL</key>
+	<string>https://wearroute.onrender.com</string>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 	</array>
-
-	<!-- Where the WearRoute backend lives. The simulator shares the Mac's
-	     localhost; a real device needs the Mac's LAN address here, plus a
-	     matching NSExceptionDomains entry below. -->
-	<key>SmartPackAPIBaseURL</key>
-	<string>http://192.168.67.230:4177</string>
-
-	<!-- Development only: the backend runs over plain HTTP on the local
-	     machine. Remove both of these once the API is served over HTTPS. -->
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>192.168.67.230</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-			</dict>
-			<key>localhost</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-			</dict>
-		</dict>
-	</dict>
-
-	<key>NSCameraUsageDescription</key>
-	<string>拍照识别衣物,把它加进你的电子衣橱。Used to photograph clothing so WearRoute can add it to your wardrobe.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>从相册选择衣物照片或个人色彩分析照片。Used to pick clothing or personal-colour analysis photos.</string>
 </dict>
 </plist>

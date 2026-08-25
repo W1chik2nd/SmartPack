@@ -136,6 +136,8 @@ struct WardrobeItem: Codable, Identifiable, Hashable {
     let details: String
     let hasPhoto: Bool
     let createdAt: String
+    /// Description-derived display contract shared with the web wardrobe.
+    let visual: OutfitPiece
 
     /// Card subtitle: cut · fit · fabric, skipping whatever is blank.
     var metaLine: String {
@@ -235,11 +237,13 @@ enum OutfitMaterial: String, Codable {
 }
 
 enum AccessoryStyle: String, Codable {
-    case bag, hat, glasses, scarf, watch, necklace
+    case bag, tote, waistbag, hat, glasses, scarf, watch, necklace, belt
 }
 
 enum GarmentStyle: String, Codable {
-    case tee, shirt, knit, trousers, skirt, jeans, loafers, sneakers
+    case tee, shirt, knit, jacket, hoodie
+    case trousers, skirt, jeans, shorts
+    case loafers, sneakers, boots
 }
 
 struct OutfitPiece: Codable, Identifiable, Hashable {

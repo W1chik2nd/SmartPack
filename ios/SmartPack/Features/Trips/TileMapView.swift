@@ -154,23 +154,47 @@ struct TileMapView: View {
     }
 
     private var zoomControls: some View {
-        VStack(spacing: 0) {
-            zoomButton("+", 1, enabled: view.zoom < Self.maxZoom)
-            Rule(width: Theme.hairline)
-            zoomButton("−", -1, enabled: view.zoom > Self.minZoom)
+        HStack(spacing: MapZoomControlLayout.spacing) {
+            zoomButton(
+                systemName: "plus",
+                delta: 1,
+                enabled: view.zoom < Self.maxZoom,
+                fill: Theme.blue,
+                tint: Theme.white
+            )
+            zoomButton(
+                systemName: "minus",
+                delta: -1,
+                enabled: view.zoom > Self.minZoom,
+                fill: Theme.white,
+                tint: Theme.text
+            )
         }
-        .bauhausPanel(width: Theme.hairline)
-        .padding(Theme.space1)
+        .padding(.top, MapZoomControlLayout.inset)
+        .padding(.trailing, MapZoomControlLayout.inset)
     }
 
-    private func zoomButton(_ glyph: String, _ delta: Int, enabled: Bool) -> some View {
+    private func zoomButton(
+        systemName: String,
+        delta: Int,
+        enabled: Bool,
+        fill: Color,
+        tint: Color
+    ) -> some View {
         Button { zoomBy(delta) } label: {
-            Text(glyph)
-                .font(Theme.heavy(20))
-                .foregroundStyle(enabled ? Theme.text : Theme.disabledText)
-                .frame(width: 36, height: 36)
-                .background(Theme.white)
+            Image(systemName: systemName)
+                .font(.system(size: 17, weight: .black))
+                .foregroundStyle(enabled ? tint : Theme.disabledText)
+                .frame(
+                    width: MapZoomControlLayout.buttonSize,
+                    height: MapZoomControlLayout.buttonSize
+                )
+                .background(enabled ? fill : Theme.disabledSurface)
+                .overlay(Rectangle().strokeBorder(Theme.black, lineWidth: Theme.hairline))
+                .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .bauhausShadow(MapZoomControlLayout.shadow)
         .disabled(!enabled)
         .accessibilityLabel(delta > 0 ? "Zoom in" : "Zoom out")
     }
@@ -184,6 +208,16 @@ struct TileMapView: View {
             .padding(.vertical, 2)
             .background(Theme.white.opacity(0.85))
     }
+}
+
+/// Fixed geometry keeps the overlay compact instead of accepting the map's
+/// full-width proposal, while preserving Apple's 44-point minimum tap target.
+enum MapZoomControlLayout {
+    static let buttonSize: CGFloat = 44
+    static let spacing: CGFloat = 10
+    static let inset: CGFloat = 12
+    static let shadow: CGFloat = 3
+    static let totalWidth = buttonSize * 2 + spacing + shadow
 }
 
 /// Where the map is looking. Kept separate from the caller's `center` so a
